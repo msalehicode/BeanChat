@@ -1,0 +1,89 @@
+cmake_minimum_required(VERSION 3.16)
+
+project(BeanChat VERSION 0.1 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+find_package(Qt6 REQUIRED COMPONENTS Quick Multimedia)
+
+# opus
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(OPUS REQUIRED opus)
+
+
+# ffmpeg
+pkg_check_modules(FFMPEG REQUIRED
+    libavcodec
+    libavformat
+    libavutil
+    libswscale
+)
+
+
+
+qt_standard_project_setup(REQUIRES 6.8)
+
+qt_add_executable(appBeanChat
+    main.cpp
+)
+
+qt_add_qml_module(appBeanChat
+    URI BeanChat
+    VERSION 1.0
+    QML_FILES
+        Main.qml
+        MainPage.qml
+        SettingsPage.qml
+        VideoChat.qml
+        TextChat.qml
+        PrivateChatPage.qml
+
+    SOURCES
+        audiocapture.h audiocapture.cpp
+        setup.h
+        opusencoder.h opusencoder.cpp
+        cameracapture.h cameracapture.cpp
+        myvideoitem.h myvideoitem.cpp
+        videoencoder.h videoencoder.cpp
+        ffmpegencoder.h ffmpegencoder.cpp
+        audiospeaker.h audiospeaker.cpp
+        monitorcapture.h monitorcapture.cpp
+
+    RESOURCES icons/headphone.png icons/headphone-red.png icons/microphone.png icons/microphone-red.png icons/videocall.png icons/videocall-red.png icons/voice.png icons/folder.png icons/chat.png icons/beanChatIcon.png
+
+)
+
+# Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
+# If you are developing for iOS or macOS you should consider setting an
+# explicit, fixed bundle identifier manually though.
+set_target_properties(appBeanChat PROPERTIES
+#    MACOSX_BUNDLE_GUI_IDENTIFIER com.example.appBeanChat
+    MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
+    MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
+    MACOSX_BUNDLE TRUE
+    WIN32_EXECUTABLE TRUE
+)
+
+
+
+# Opus
+target_include_directories(appBeanChat PRIVATE ${OPUS_INCLUDE_DIRS})
+target_link_libraries(appBeanChat PRIVATE ${OPUS_LIBRARIES})
+
+# ffmpeg
+target_include_directories(appBeanChat PRIVATE ${FFMPEG_INCLUDE_DIRS})
+target_link_libraries(appBeanChat PRIVATE ${FFMPEG_LIBRARIES})
+
+
+
+target_link_libraries(appBeanChat
+    PRIVATE Qt6::Quick
+    Qt6::Multimedia
+)
+
+include(GNUInstallDirs)
+install(TARGETS appBeanChat
+    BUNDLE DESTINATION .
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
