@@ -15,23 +15,6 @@ Item {
     property int iconW: 30
 
 
-    ListModel
-    {
-        id:listmodelChannelClients
-
-        ListElement {
-            name: "Alex"
-            camera: 0
-            talking: 0
-        }
-
-        ListElement {
-            name: "P.A.thfinder"
-            camera: 1
-            talking: 1
-        }
-    }
-
     ListModel {
         id: channelsModel
 
@@ -232,6 +215,7 @@ Item {
                 id:channelList
                 width: widthBase
                 height: parent.height
+                property int handleWidth: 10 //to tell others i've handle with this width
 
                 Rectangle
                 {
@@ -292,10 +276,10 @@ Item {
                                     height: width
                                     source: (function(status) {
                                         switch(status) {
-                                            case "voice": return "icons/voice.png";
-                                            case "text":  return "icons/chat.png";
-                                            case "file": return "icons/folder.png";
-                                            default:  return "";
+                                        case "voice": return "icons/voice.png";
+                                        case "text":  return "icons/chat.png";
+                                        case "file": return "icons/folder.png";
+                                        default:  return "";
                                         }
                                     })(type)
                                 }
@@ -405,7 +389,7 @@ Item {
                 Rectangle
                 {
                     id: handle
-                    width: 15
+                    width: parent.handleWidth
                     height: parent.height
                     x: parent.width - width+10
                     y: 0
@@ -447,72 +431,132 @@ Item {
             Item
             {
                 id:centerContentBase
-                width: parent.width-(chatBase.width+channelList.width+leftPanel.width)
+                width: parent.width-(chatBase.width+(channelList.width)+leftPanel.width)
                 height: parent.height
                 clip: true
 
                 Rectangle {
                     id: centerContent
                     anchors.fill: parent
+                    anchors.left: parent.left
+                    anchors.leftMargin: channelList.handleWidth
                     color: "transparent"
 
-                    Item {
-                        id: gridContainer
 
-                        width: clientsGrid.width
-                        height: clientsGrid.height
+                    GridView
+                    {
+                        id:channelClientsGridView
 
-                        anchors.centerIn: parent
+                        property int minTileWidth: 220
+                        property int maxTileWidth: 320
 
-                        Grid {
-                            id: clientsGrid
+                        property int columns:
+                            Math.max(1,
+                                     Math.ceil(Math.sqrt(count)))
 
-                            property int cellWidth: 300
-                            property int cellHeight: 150
+                        property int rows:
+                            Math.ceil(count / columns)
 
-                            spacing: 10
+                        cellWidth: Math.max(
+                                       minTileWidth,
+                                       Math.min(
+                                           maxTileWidth,
+                                           parent.width / columns))
 
-                            columns: Math.max(
-                                         1,
-                                         Math.floor(centerContent.width /
-                                                    (cellWidth + spacing))
-                                     )
+                        cellHeight: cellWidth * 9 / 16
 
-                            Repeater {
-                                model: listmodelChannelClients
+                        property int contentRowsHeight:
+                            rows * cellHeight
 
-                                delegate: Rectangle {
-                                            width: clientsGrid.cellWidth
-                                            height: clientsGrid.cellHeight
-                                            radius: 15
-                                            color: "grey"
+                        width: Math.min(
+                                   parent.width,
+                                   Math.min(count, columns) * cellWidth)
 
-                                            border.width: model.talking ? 2.5 : 0
-                                            border.color: "yellow"
+                        height: Math.min(
+                                    parent.height,
+                                    contentRowsHeight)
 
-                                            Rectangle {
-                                                id: userPicture
-                                                width: 50
-                                                height: width
-                                                radius: width / 2
-                                                anchors.centerIn: parent
-                                                color: "white"
-                                            }
+                        x: (parent.width - width) / 2
 
-                                            Text {
-                                                text: name
-                                                anchors.top: userPicture.bottom
-                                                anchors.horizontalCenter: parent.horizontalCenter
-                                                color: "white"
-                                                font.pixelSize: 15
-                                            }
-                                        }
+                        y: contentRowsHeight < parent.height
+                           ? (parent.height - contentRowsHeight) / 2
+                           : 0
+
+                        model: participantModel
+
+                        delegate:Rectangle
+                        {
+                            width: channelClientsGridView.cellWidth - 20
+                            height:channelClientsGridView.cellHeight - 20
+                            radius: 30
+                            color: "grey"
+
+
+
+                            Rectangle
+                            {
+                                id:userProfile
+                                visible: !model.isCameraOpen
+                                anchors.fill: parent
+                                color:"purple"
+                                radius: parent.radius
+                                border.width: model.isTalking ? 4 : 0
+                                border.color: "yellow"
+                                Rectangle {
+                                    id: userPicture
+                                    width: 50
+                                    height: width
+                                    radius: width / 2
+                                    anchors.centerIn: parent
+                                    color: "white"
+                                }
+
+                                Text {
+                                    text: model.username
+                                    anchors.top: userPicture.bottom
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    color: "white"
+                                    font.pixelSize: 15
+                                }
                             }
 
-                            width: childrenRect.width
-                            height: childrenRect.height
+                            Rectangle
+                            {
+                                id:userWithVideo
+                                anchors.fill: parent
+                                radius:parent.radius
+                                visible: isCameraOpen
+                                color:"transparent"
+                                clip: true
+                                VideoItem
+                                {
+                                    anchors.fill: parent
+                                    sink: videoSink
+                                    radius: 45
+                                    Component.onCompleted: {
+                                        console.log(username, videoSink)
+                                    }
+                                    Rectangle
+                                    {
+                                        id:indicatorTalkingWhenCameraIsOpen //cant show talking status over video so use this..
+                                        anchors.fill: parent
+                                        color:"transparent"
+                                        radius: userWithVideo.radius
+                                        border.width: model.isTalking ? 4 : 0
+                                        border.color: "yellow"
+                                    }
+                                }
+                                Text {
+                                    text: model.username
+                                    anchors.top: parent.top
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    color: "white"
+                                    font.pixelSize: 15
+                                }
+                            }
                         }
                     }
+
                 }
             }
 

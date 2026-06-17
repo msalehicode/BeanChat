@@ -22,6 +22,7 @@ public:
 signals:
     void frameChanged();
     void frameReady(const QVideoFrame &frame);
+    void imageReady(const QImage &image);
 
 private:
     QCamera *camera = nullptr;

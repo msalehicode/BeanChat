@@ -10,7 +10,6 @@
 #include <QScreen>
 #include <QDebug>
 
-
 #include "audiocapture.h"
 #include "opusencoder.h"
 
@@ -20,6 +19,9 @@
 
 #include "monitorcapture.h"
 
+#include "participantmodel.h"
+
+#include <QSGRendererInterface>
 // #include "videoencoder.h"
 // #include "ffmpegencoder.h"
 #include "audiospeaker.h"
@@ -133,9 +135,6 @@ int main(int argc, char *argv[])
     //         &encoder, &VideoEncoder::encodeFrame);
 
 
-    //camera feed to QML custom component
-    qmlRegisterType<MyVideoItem>("CustomVideo", 1, 0, "VideoItem");
-
 
 
     //speaker
@@ -182,10 +181,46 @@ int main(int argc, char *argv[])
 
 
 
+    //test
+    ParticipantModel participants;
+    const int userCount = 7;
+
+    for (int i = 0; i < userCount; ++i)
+    {
+        participants.addUser(
+            QString("User %1").arg(i + 1),
+            (i%2==0?false:true),   // microphone
+            (i%2==0?true:false));  // camera
+    }
+
+    for (int i = 0; i < userCount; ++i)
+    {
+        Participant *p =
+            participants.findUser(
+                QString("User %1").arg(i + 1));
+
+        if (!p)
+            continue;
+
+        QObject::connect(
+            &cam,
+            &CameraCapture::imageReady,
+            p->videoSink(),
+            &VideoSink::setImage,
+            Qt::QueuedConnection);
+    }
+
+    // qDebug() << "Mike =" << mike;
+    // qDebug() << "Sarah =" << sarah;
+
+    // qDebug() << "Mike sink =" << mike->videoSink();
+    // qDebug() << "Sarah sink =" << sarah->videoSink();
 
 
 
-
+    //register to QML
+    qmlRegisterType<MyVideoItem>("CustomVideo", 1, 0, "VideoItem");
+    qmlRegisterUncreatableType<VideoSink>("CustomVideo", 1, 0, "VideoSink", "VideoSink cannot be created from QML");
 
 
 
@@ -195,6 +230,8 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("camera", &cam);
     engine.rootContext()->setContextProperty("microphone", &audio);
     engine.rootContext()->setContextProperty("speaker", &speaker);
+    engine.rootContext()->setContextProperty("participantModel", &participants);
+
 
     QObject::connect(
         &engine,
@@ -206,18 +243,11 @@ int main(int argc, char *argv[])
 
 
 
-    //connect frames to QML item
-    QObject *root = engine.rootObjects().first();
-    auto videoItem =
-        root->findChild<MyVideoItem*>("videoItem");
-    if (videoItem)
-    {
-        QObject::connect(&cam,
-                         &CameraCapture::frameReady,
-                         videoItem,
-                         &MyVideoItem::setFrame,
-                         Qt::DirectConnection);
-    }
+    //check renreder
+    auto *window =
+        qobject_cast<QQuickWindow*>(
+            engine.rootObjects().first());
+    qDebug() << "render" << window->rendererInterface()->graphicsApi();
 
     //monitor preview
     // auto monitorItem =

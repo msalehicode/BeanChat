@@ -39,18 +39,31 @@ qt_add_qml_module(appBeanChat
         PrivateChatPage.qml
 
     SOURCES
-        audiocapture.h audiocapture.cpp
+        # just in case
         setup.h
-        opusencoder.h opusencoder.cpp
+
+        # general
+        videosink.h
+        participant.h
+        participantmodel.h
+
+        # capture
+        audiocapture.h audiocapture.cpp
         cameracapture.h cameracapture.cpp
-        myvideoitem.h myvideoitem.cpp
-        videoencoder.h videoencoder.cpp
-        ffmpegencoder.h ffmpegencoder.cpp
         audiospeaker.h audiospeaker.cpp
         monitorcapture.h monitorcapture.cpp
 
-    RESOURCES icons/headphone.png icons/headphone-red.png icons/microphone.png icons/microphone-red.png icons/videocall.png icons/videocall-red.png icons/voice.png icons/folder.png icons/chat.png icons/beanChatIcon.png
 
+        # qml components
+        myvideoitem.h myvideoitem.cpp
+
+        # encode decode
+        opusencoder.h opusencoder.cpp
+        videoencoder.h videoencoder.cpp
+        ffmpegencoder.h ffmpegencoder.cpp
+
+    # icons
+    RESOURCES icons/headphone.png icons/headphone-red.png icons/microphone.png icons/microphone-red.png icons/videocall.png icons/videocall-red.png icons/voice.png icons/folder.png icons/chat.png icons/beanChatIcon.png
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

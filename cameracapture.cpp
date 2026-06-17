@@ -21,19 +21,13 @@ void CameraCapture::start()
                 if (!frame.isValid())
                     return;
 
-                QVideoFrame copy(frame);
-
-                if (!copy.map(QVideoFrame::ReadOnly))
-                    return;
-
-                QImage img = copy.toImage();
-
-                copy.unmap();
+                QImage img = frame.toImage();
 
                 if (!img.isNull())
                 {
                     m_frame = img;
                     emit frameChanged();
+                    emit imageReady(img);
                 }
 
                 emit frameReady(frame);
