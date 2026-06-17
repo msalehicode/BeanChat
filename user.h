@@ -1,0 +1,39 @@
+#ifndef USER_H
+#define USER_H
+
+#include <QObject>
+#include <QTcpSocket>
+#include "../BeanChatServer/src/network/packet.h"
+#include "../BeanChatServer/src/network/packets.h"
+#include "../BeanChatServer/src/network/packethelpers.h"
+
+class User : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QString messages READ getMessages WRITE setMessages NOTIFY messagesChanged FINAL)
+
+public:
+    explicit User(QObject *parent = nullptr);
+
+    Q_INVOKABLE void joinChannel(int channelId);
+    Q_INVOKABLE void login(QString username, QString tokenlike);
+    Q_INVOKABLE void createChannel(QString channelName, QString password);
+    Q_INVOKABLE void sendMessage(QString message);
+
+
+    QString getMessages() const;
+    void setMessages(const QString &newMessages);
+
+signals:
+
+    void messagesChanged();
+
+public slots:
+    void onReadyRead();
+private:
+    QTcpSocket socket;
+    QString m_username = "max";
+    QString m_messages;
+};
+
+#endif // USER_H

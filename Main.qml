@@ -23,9 +23,19 @@ Window {
         if(page==="settings")
             mainStack.push(settingsPage)
         else if(page==="pv")
-            mainStack.push(settingsPage)
+            mainStack.push(privatePage)
         else
             mainStack.pop()
+    }
+
+    PrivateChatPage
+    {
+        id:privatePage
+    }
+
+    SettingsPage
+    {
+        id: settingsPage
     }
 
     MainPage
@@ -33,10 +43,8 @@ Window {
         id:mainPage
     }
 
-    SettingsPage
-    {
-        id: settingsPage
-    }
+
+
 
     StackView
     {

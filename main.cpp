@@ -26,6 +26,7 @@
 // #include "ffmpegencoder.h"
 #include "audiospeaker.h"
 
+#include "user.h"
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
@@ -177,10 +178,13 @@ int main(int argc, char *argv[])
 
 
 
+    User usr;
 
 
 
 
+    ParticipantModel participants;
+/*
     //test
     ParticipantModel participants;
     const int userCount = 7;
@@ -215,7 +219,7 @@ int main(int argc, char *argv[])
 
     // qDebug() << "Mike sink =" << mike->videoSink();
     // qDebug() << "Sarah sink =" << sarah->videoSink();
-
+*/
 
 
     //register to QML
@@ -231,6 +235,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("microphone", &audio);
     engine.rootContext()->setContextProperty("speaker", &speaker);
     engine.rootContext()->setContextProperty("participantModel", &participants);
+    engine.rootContext()->setContextProperty("user", &usr);
 
 
     QObject::connect(

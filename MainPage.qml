@@ -14,6 +14,11 @@ Item {
     property int iconH: 30
     property int iconW: 30
 
+    Rectangle
+    {
+        anchors.fill: parent
+        color:"black"
+    }
 
     ListModel {
         id: channelsModel

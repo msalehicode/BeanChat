@@ -4,7 +4,7 @@ project(BeanChat VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Quick Multimedia)
+find_package(Qt6 REQUIRED COMPONENTS Core Quick Multimedia Network)
 
 # opus
 find_package(PkgConfig REQUIRED)
@@ -64,6 +64,13 @@ qt_add_qml_module(appBeanChat
 
     # icons
     RESOURCES icons/headphone.png icons/headphone-red.png icons/microphone.png icons/microphone-red.png icons/videocall.png icons/videocall-red.png icons/voice.png icons/folder.png icons/chat.png icons/beanChatIcon.png
+    SOURCES user.h user.cpp
+    SOURCES
+        ../BeanChatServer/src/network/packet.h ../BeanChatServer/src/network/packet.cpp
+        ../BeanChatServer/src/network/packets.h
+        ../BeanChatServer/src/network/packethelpers.h
+
+
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
@@ -92,6 +99,8 @@ target_link_libraries(appBeanChat PRIVATE ${FFMPEG_LIBRARIES})
 target_link_libraries(appBeanChat
     PRIVATE Qt6::Quick
     Qt6::Multimedia
+    Qt6::Core
+    Qt6::Network
 )
 
 include(GNUInstallDirs)
