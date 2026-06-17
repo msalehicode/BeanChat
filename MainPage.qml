@@ -20,67 +20,7 @@ Item {
         color:"black"
     }
 
-    ListModel {
-        id: channelsModel
 
-        ListElement {
-            type: "file"
-            name: "GENERAL"
-        }
-
-        ListElement {
-            type: "text"
-            name: "general"
-        }
-
-        ListElement {
-            type: "text"
-            name: "memes"
-        }
-
-        ListElement {
-            type: "voice"
-            name: "Voice Chat"
-        }
-
-        ListElement {
-            type: "user"
-            name: "Alice"
-            videoCall:false
-            talking:false
-            indent: 1
-        }
-
-        ListElement {
-            type: "user"
-            name: "Bob"
-            videoCall:false
-            talking:false
-            indent: 1
-        }
-
-
-        ListElement {
-            type: "voice"
-            name: "Voice Chat 2"
-        }
-
-        ListElement {
-            type: "user"
-            name: "Alex"
-            talking:false
-            videoCall:false
-            indent: 1
-        }
-
-        ListElement {
-            type: "user"
-            name: "P.A.thfinder"
-            talking:true
-            videoCall:true
-            indent: 1
-        }
-    }
 
     Column
     {
@@ -244,69 +184,132 @@ Item {
                         }
                     }
 
-                    ListView {
+                    ListView
+                    {
                         width: parent.width
                         height: parent.height-(serverTitle.height+userStuff.height)
-                        model: channelsModel
                         clip: true
-                        spacing: 5
+                        model: channelModel
+                        spacing: 10
+                        delegate: Column
+                        {
+                            width: ListView.view.width
 
-                        delegate: Rectangle {
-                            width: parent.width/1.20
-                            height: 40
-                            radius: height
-                            // anchors.horizontalCenter: parent.horizontalCenter
-                            color:type!=="user"? "#2f3136" :"#808185"
-                            anchors.left: parent.left
-                            anchors.leftMargin: indent ? indent * parent.width/10 : 5
-
-
-                            Row {
-                                anchors.verticalCenter: parent.verticalCenter
-                                spacing: 5
-
-                                Rectangle
+                            Rectangle
+                            {
+                                width: parent.width
+                                height: 35
+                                color:"black"
+                                Text
                                 {
-                                    visible: type==="user" ? true : false
-                                    width: 30
-                                    height: width
-                                    radius: width
-                                    color: talking ? "#e5c35b" : "#b29747"
-                                }
-
-                                Image
-                                {
-                                    visible: type!=="user"?true:false
-                                    width: 30
-                                    height: width
-                                    source: (function(status) {
-                                        switch(status) {
-                                        case "voice": return "icons/voice.png";
-                                        case "text":  return "icons/chat.png";
-                                        case "file": return "icons/folder.png";
-                                        default:  return "";
-                                        }
-                                    })(type)
-                                }
-
-                                Text {
-                                    text: name
+                                    anchors.centerIn: parent
+                                    text: channelName
                                     color:"white"
-                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                                MouseArea
+                                {
+                                    anchors.fill: parent
+                                    onDoubleClicked:
+                                    {
+                                        console.log("try to join channel id:" , channelId, " name=", channelName)
+                                        user.joinChannel(channelId)
+                                    }
                                 }
                             }
-                            Image
+
+                            Repeater
                             {
-                                visible: type==="user"? (videoCall?true:false) : false
-                                width: 25
-                                height: width
-                                anchors.right: parent.right
-                                anchors.rightMargin: 5
-                                anchors.verticalCenter: parent.verticalCenter
-                                source: "icons/videocall.png"
+                                model: users
+
+                                delegate: Rectangle
+                                {
+                                    width: parent.width/2
+                                    anchors.horizontalCenter:parent.horizontalCenter
+                                    height: 25
+                                    color:"transparent"
+                                    Rectangle
+                                    {
+                                        width: parent.width
+                                        height: 20
+                                        color: "purple"
+                                        Text
+                                        {
+                                            anchors.centerIn: parent
+                                            text: modelData.username
+                                            font.pixelSize: 20
+                                            color:"white"
+                                        }
+                                    }
+
+
+                                }
                             }
                         }
                     }
+
+                    // ListView {
+                    //     width: parent.width
+                    //     height: parent.height-(serverTitle.height+userStuff.height)
+                    //     model: channelsModel
+                    //     clip: true
+                    //     spacing: 5
+
+                    //     delegate: Rectangle {
+                    //         width: parent.width/1.20
+                    //         height: 40
+                    //         radius: height
+                    //         // anchors.horizontalCenter: parent.horizontalCenter
+                    //         color:type!=="user"? "#2f3136" :"#808185"
+                    //         anchors.left: parent.left
+                    //         anchors.leftMargin: indent ? indent * parent.width/10 : 5
+
+
+                    //         Row {
+                    //             anchors.verticalCenter: parent.verticalCenter
+                    //             spacing: 5
+
+                    //             Rectangle
+                    //             {
+                    //                 visible: type==="user" ? true : false
+                    //                 width: 30
+                    //                 height: width
+                    //                 radius: width
+                    //                 color: talking ? "#e5c35b" : "#b29747"
+                    //             }
+
+                    //             Image
+                    //             {
+                    //                 visible: type!=="user"?true:false
+                    //                 width: 30
+                    //                 height: width
+                    //                 source: (function(status) {
+                    //                     switch(status) {
+                    //                     case "voice": return "icons/voice.png";
+                    //                     case "text":  return "icons/chat.png";
+                    //                     case "file": return "icons/folder.png";
+                    //                     default:  return "";
+                    //                     }
+                    //                 })(type)
+                    //             }
+
+                    //             Text {
+                    //                 text: name
+                    //                 color:"white"
+                    //                 anchors.verticalCenter: parent.verticalCenter
+                    //             }
+                    //         }
+                    //         Image
+                    //         {
+                    //             visible: type==="user"? (videoCall?true:false) : false
+                    //             width: 25
+                    //             height: width
+                    //             anchors.right: parent.right
+                    //             anchors.rightMargin: 5
+                    //             anchors.verticalCenter: parent.verticalCenter
+                    //             source: "icons/videocall.png"
+                    //         }
+                    //     }
+                    // }
 
                     Rectangle
                     {

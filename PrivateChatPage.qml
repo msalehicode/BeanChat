@@ -35,6 +35,11 @@ Item {
                 height: implicitHeight
             }
 
+            Button{
+                text:" ask server state"
+                onClicked: user.askForServerState();
+            }
+
             Button
             {
                 text:"create channel"

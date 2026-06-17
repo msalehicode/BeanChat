@@ -69,6 +69,7 @@ qt_add_qml_module(appBeanChat
         ../BeanChatServer/src/network/packet.h ../BeanChatServer/src/network/packet.cpp
         ../BeanChatServer/src/network/packets.h
         ../BeanChatServer/src/network/packethelpers.h
+        SOURCES channelmodel.h channelmodel.cpp
 
 
 )
