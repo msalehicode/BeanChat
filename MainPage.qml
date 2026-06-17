@@ -146,7 +146,7 @@ Item {
                         {
                             width: 60
                             height: 60
-                            source:"beanChatIcon.png"
+                            source:"icons/beanChatIcon.png"
                             anchors.centerIn: parent
                         }
                         MouseArea

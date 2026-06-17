@@ -1,2 +1,3 @@
 /BeanChat/build*
-*.txt.usr
+*.txt.user
+/build/
