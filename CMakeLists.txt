@@ -10,6 +10,9 @@ find_package(Qt6 REQUIRED COMPONENTS Core Quick Multimedia Network)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(OPUS REQUIRED opus)
 
+# rnnoise
+pkg_check_modules(RNNOISE REQUIRED IMPORTED_TARGET rnnoise)
+
 
 # ffmpeg
 pkg_check_modules(FFMPEG REQUIRED
@@ -94,6 +97,9 @@ target_link_libraries(appBeanChat PRIVATE ${OPUS_LIBRARIES})
 # ffmpeg
 target_include_directories(appBeanChat PRIVATE ${FFMPEG_INCLUDE_DIRS})
 target_link_libraries(appBeanChat PRIVATE ${FFMPEG_LIBRARIES})
+
+# rnnoise
+target_link_libraries(appBeanChat PRIVATE PkgConfig::RNNOISE)
 
 
 

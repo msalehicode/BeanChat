@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 
 import CustomVideo 1.0
-
+import QtQuick.Controls.Material
 Item {
     anchors.fill: parent
     property int widthBase: 200 //uses for userlist and chanenlist
@@ -384,7 +384,7 @@ Item {
                                 MouseArea
                                 {
                                     anchors.fill: parent
-                                    onClicked: camera.stop();
+                                    onClicked: console.log("camera")
                                 }
                             }
                         }

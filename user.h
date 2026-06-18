@@ -6,8 +6,14 @@
 #include "../BeanChatServer/src/network/packet.h"
 #include "../BeanChatServer/src/network/packets.h"
 #include "../BeanChatServer/src/network/packethelpers.h"
+#include "../BeanChatServer/src/network/voicepackets.h"
 
+#include <QUdpSocket>
 #include "channelmodel.h"
+#include <QTimer>
+#include <QDataStream>
+
+#include <QNetworkDatagram>
 
 class User : public QObject
 {
@@ -32,6 +38,7 @@ public:
     QString myUsername() const;
     void setMyUsername(const QString &newMyUsername);
 
+    void sendVoicePcm(const QByteArray& pcm);
 signals:
 
     void messagesChanged();
@@ -40,13 +47,27 @@ signals:
 
     void myUsernameChanged();
 
+    void voiceReceived(QByteArray pcm);
+
 public slots:
     void onReadyRead();
+
+private slots:
+    // void sendFakeVoice();
+
 private:
     QTcpSocket socket;
+    QUdpSocket m_udpSocket;
     QString m_myUsername = "";
     int m_myId =-1;
+    quint64 m_myChannelId=1; //default is lobby id 1
+
+    //voice
+    QTimer m_voiceTimer;
+    quint32 m_sequence = 0;
+
     QString m_messages;
+
     ChannelModel* m_channelModel=nullptr;
     Q_PROPERTY(int myId READ myId WRITE setMyId NOTIFY myIdChanged FINAL)
     Q_PROPERTY(QString myUsername READ myUsername WRITE setMyUsername NOTIFY myUsernameChanged FINAL)

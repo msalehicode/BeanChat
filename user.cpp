@@ -10,7 +10,88 @@ User::User(ChannelModel *channelModel, QObject *parent)
             this,
             &User::onReadyRead);
 
+
+    m_udpSocket.bind();
+
+    //for test send fake voice data..
+    // connect(
+    //     &m_voiceTimer,
+    //     &QTimer::timeout,
+    //     this,
+    //     &User::sendFakeVoice);
+
+    // m_voiceTimer.start(20);
+
+    connect(
+        &m_udpSocket,
+        &QUdpSocket::readyRead,
+        this,
+        [this]()
+        {
+            while(m_udpSocket.hasPendingDatagrams())
+            {
+                auto datagram =
+                    m_udpSocket.receiveDatagram();
+
+                QByteArray data =
+                    datagram.data();
+
+                QDataStream in(data);
+
+                quint16 type;
+
+                in >> type;
+
+                if(type != 101)
+                    continue;
+
+                VoicePacket packet;
+
+                in >> packet;
+
+                emit voiceReceived(
+                    packet.audioData);
+
+                // qDebug()
+                //     << "Voice received from"
+                //     << packet.senderId
+                //     << "seq"
+                //     << packet.sequence
+                //     << "size"
+                //     << packet.audioData.size();
+            }
+        });
+
 }
+
+// void User::sendFakeVoice()
+// {
+//     VoicePacket voice;
+
+//     voice.senderId = myId();
+
+//     voice.sequence = ++m_sequence;
+
+//     voice.audioData = QByteArray(320,'A');
+
+//     QByteArray data;
+
+//     QDataStream out(
+//         &data,
+//         QIODevice::WriteOnly);
+
+//     out << quint16(101);
+//     out << voice;
+
+//     m_udpSocket.writeDatagram(
+//         data,
+//         QHostAddress("127.0.0.1"),
+//         9988);
+
+//     qDebug()
+//         << "Voice packet sent"
+//         << voice.sequence;
+// }
 
 void User::joinChannel(int channelId)
 {
@@ -59,6 +140,38 @@ void User::createChannel(QString channelName, QString password)
     p.payload = PacketHelpers::pack(cc);
 
     socket.write(p.serialize());
+}
+
+void User::sendVoicePcm(
+    const QByteArray& pcm)
+{
+    if(m_myId < 0)
+        return;
+
+    VoicePacket voice;
+
+    voice.senderId =
+        static_cast<quint64>(myId());
+
+    voice.sequence =
+        ++m_sequence;
+
+    voice.audioData =
+        pcm;
+
+    QByteArray data;
+
+    QDataStream out(
+        &data,
+        QIODevice::WriteOnly);
+
+    out << quint16(101);
+    out << voice;
+
+    m_udpSocket.writeDatagram(
+        data,
+        QHostAddress("127.0.0.1"),
+        9988);
 }
 
 void User::sendMessage(QString message)
@@ -110,10 +223,21 @@ void User::onReadyRead()
 
     case PacketType::UserJoinedChannel:
     {
-        qInfo () << "user joined a channel";
         auto resp =
             PacketHelpers::unpack<UserJoinedChannelPacket>(
                 packet.payload);
+
+        if(resp.userId == static_cast<quint64>(myId()))
+        {
+            qDebug() << "voice: channel switched.";
+            m_myChannelId = resp.channelId;
+        }
+        else if(resp.channelId == m_myChannelId)
+            qDebug() << "voice: user joined to your channel.";
+        else if(resp.oldChannelId ==m_myChannelId)
+            qDebug() << "voice: user left your channel.";
+        else
+            qInfo () << "user (" << resp.userId << ") has left " << resp.oldChannelId << " and joined to " << resp.channelId ;
 
         m_channelModel->moveUser(resp.userId,resp.channelId);
     }break;
@@ -138,6 +262,26 @@ void User::onReadyRead()
             setMyId(resp.id);
             qDebug() << "my id is=" << myId();
             askForServerState();
+
+            //----------------udp voice. register
+            UdpRegisterPacket reg;
+
+            reg.userId = static_cast<quint64>(myId());
+
+            QByteArray data;
+
+            QDataStream out(
+                &data,
+                QIODevice::WriteOnly);
+
+            out << quint16(100);
+            out << reg;
+
+            m_udpSocket.writeDatagram(
+                data,
+                QHostAddress("127.0.0.1"),
+                9988);
+            qDebug() << " just sent a register udp message to server.";
         }
 
         qDebug() << "LOGIN MESSAGE= " << resp.message;
@@ -217,6 +361,8 @@ void User::onReadyRead()
                 u.muted,
                 u.deafened);
         }
+
+        qInfo() << "voice: connected to server.";
 
         // qDebug()
         //     << "Channels:"

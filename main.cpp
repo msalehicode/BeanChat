@@ -33,21 +33,7 @@ int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
     //list devices
-    qDebug() << "=== INPUT DEVICES ===";
-    auto inputs = QMediaDevices::audioInputs();
-    for (int i = 0; i < inputs.size(); i++)
-    {
-        qDebug() << i
-                 << inputs[i].description();
-    }
 
-    qDebug() << "\n=== OUTPUT DEVICES ===";
-    auto outputs = QMediaDevices::audioOutputs();
-    for (int i = 0; i < outputs.size(); i++)
-    {
-        qDebug() << i
-                 << outputs[i].description();
-    }
 
     qDebug() << "\n=== CAMERAS ===";
     auto cameras = QMediaDevices::videoInputs();
@@ -75,87 +61,65 @@ int main(int argc, char *argv[])
 
 
 
-    //voice
-    static QByteArray buffer;
 
+
+    ChannelModel channelModel;
+    User usr(&channelModel);
+
+
+    // ---------- MICROHPONE ----------
     AudioCapture audio;
     audio.start();
 
-    QObject::connect(&audio, &AudioCapture::levelChanged,
-                     [](double level)
-                     {
-                         // qDebug() << "Voice Level:" << level;
-                     });
+    //print volume level.
+    // QObject::connect(&audio, &AudioCapture::levelChanged, [](double level) { qDebug() << "Voice Level:" << level; });
 
-    QObject::connect(&audio, &AudioCapture::pcmReady,
-                     [](QByteArray pcm)
-                     {
-                         // qDebug() << "PCM frame size:" << pcm.size();
-                     });
-
-
-    // OpusEncoderWrapper opus;
-    // QObject::connect(&audio, &AudioCapture::pcmReady,
-    //                  [&](QByteArray pcm)
-    //                  {
-    //                      buffer.append(pcm);
-
-    //                      const int frameSizeBytes = 960 * sizeof(short); // 1920 bytes
-
-    //                      while (buffer.size() >= frameSizeBytes)
-    //                      {
-    //                          const short *samples =
-    //                              reinterpret_cast<const short*>(buffer.constData());
-
-    //                          QByteArray opusData =
-    //                              opus.encode(samples, 960);
-
-    //                          qDebug() << "Opus size:" << opusData.size();
-
-    //                          buffer.remove(0, frameSizeBytes);
-    //                      }
-    //                  });
+    //send mic voice over udp
+    QObject::connect(
+        &audio,
+        &AudioCapture::pcmReady,
+        &usr,
+        &User::sendVoicePcm);
 
 
 
-    // camera
-    CameraCapture cam;
-    cam.start();
-
-    // FFmpegEncoder encoder;
-    // encoder.init(640, 480);
-
-    // connect(&cam, &CameraCapture::frameReady,
-    //         &encoder, &FFmpegEncoder::encodeFrame);
-
-    QObject::connect(&cam, &CameraCapture::frameReady,
-                     [](const QVideoFrame &frame)
-                     {
-                         // qDebug() << "Frame received:" << frame.size();
-                     });
-
-    // connect(&cam, &CameraCapture::frameReady,
-    //         &encoder, &VideoEncoder::encodeFrame);
-
-
-
-
-    //speaker
+    // ---------- SPEAKER ----------
     AudioSpeaker speaker;
     speaker.start();
-    QObject::connect(&audio, &AudioCapture::pcmReady,
-            &speaker, &AudioSpeaker::playPcm);
+
+    //playback microhpone..
+    // QObject::connect(&audio, &AudioCapture::pcmReady,
+    //         &speaker, &AudioSpeaker::playPcm);
+
+    //play received voice from udp
+    QObject::connect(
+        &usr,
+        &User::voiceReceived,
+        &speaker,
+        &AudioSpeaker::playPcm);
 
 
 
+
+    // ---------- CAMERA ----------
+    CameraCapture cam;
+    // cam.start();
+
+    // QObject::connect(&cam, &CameraCapture::frameReady,
+    //                  [](const QVideoFrame &frame)
+    //                  {
+                         // qDebug() << "Frame received:" << frame.size();
+                     // });
+
+    // ---------- SCREEN ----------
     //monitor
-    MonitorCapture *capture = new MonitorCapture();
-    QStringList monitors = capture->monitors();
-    for (int i = 0; i < monitors.size(); ++i)
-    {
-        qDebug() << i << monitors[i];
-    }
-    capture->selectMonitor(0);
+    // MonitorCapture *capture = new MonitorCapture();
+    // QStringList monitors = capture->monitors();
+    // for (int i = 0; i < monitors.size(); ++i)
+    // {
+    //     qDebug() << i << monitors[i];
+    // }
+    // capture->selectMonitor(0);
 
     // QObject::connect(capture,
     //         &MonitorCapture::frameReady,
@@ -173,56 +137,44 @@ int main(int argc, char *argv[])
 
     //             copy.unmap();
     //         });
-
-    capture->start();
-
+    // capture->start();
 
 
 
 
-    ChannelModel channelModel;
-    User usr(&channelModel);
 
 
 
 
     ParticipantModel participants;
 
-    //test
-    // ParticipantModel participants;
-    const int userCount = 7;
+    //add test users.. with camera
+    // const int userCount = 7;
 
-    for (int i = 0; i < userCount; ++i)
-    {
-        participants.addUser(
-            QString("User %1").arg(i + 1),
-            (i%2==0?false:true),   // microphone
-            (i%2==0?true:false));  // camera
-    }
+    // for (int i = 0; i < userCount; ++i)
+    // {
+    //     participants.addUser(
+    //         QString("User %1").arg(i + 1),
+    //         (i%2==0?false:true),   // microphone
+    //         (i%2==0?true:false));  // camera
+    // }
 
-    for (int i = 0; i < userCount; ++i)
-    {
-        Participant *p =
-            participants.findUser(
-                QString("User %1").arg(i + 1));
+    // for (int i = 0; i < userCount; ++i)
+    // {
+    //     Participant *p =
+    //         participants.findUser(
+    //             QString("User %1").arg(i + 1));
 
-        if (!p)
-            continue;
+    //     if (!p)
+    //         continue;
 
-        QObject::connect(
-            &cam,
-            &CameraCapture::imageReady,
-            p->videoSink(),
-            &VideoSink::setImage,
-            Qt::QueuedConnection);
-    }
-
-    // qDebug() << "Mike =" << mike;
-    // qDebug() << "Sarah =" << sarah;
-
-    // qDebug() << "Mike sink =" << mike->videoSink();
-    // qDebug() << "Sarah sink =" << sarah->videoSink();
-
+    //     QObject::connect(
+    //         &cam,
+    //         &CameraCapture::imageReady,
+    //         p->videoSink(),
+    //         &VideoSink::setImage,
+    //         Qt::QueuedConnection);
+    // }
 
 
     //register to QML
@@ -232,8 +184,6 @@ int main(int argc, char *argv[])
 
     //qml
     QQmlApplicationEngine engine;
-
-    engine.rootContext()->setContextProperty("camera", &cam);
     engine.rootContext()->setContextProperty("microphone", &audio);
     engine.rootContext()->setContextProperty("speaker", &speaker);
     engine.rootContext()->setContextProperty("participantModel", &participants);
@@ -256,18 +206,6 @@ int main(int argc, char *argv[])
         qobject_cast<QQuickWindow*>(
             engine.rootObjects().first());
     qDebug() << "render" << window->rendererInterface()->graphicsApi();
-
-    //monitor preview
-    // auto monitorItem =
-    //     root->findChild<MyVideoItem*>("monitorItem");
-    // if (monitorItem)
-    // {
-    //     QObject::connect(capture,
-    //                      &MonitorCapture::frameReady,
-    //                      monitorItem,
-    //                      &MyVideoItem::setFrame,
-    //                      Qt::DirectConnection);
-    // }
 
 
     return app.exec();
