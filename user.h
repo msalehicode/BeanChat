@@ -26,17 +26,30 @@ public:
     QString getMessages() const;
     void setMessages(const QString &newMessages);
 
+    int myId() const;
+    void setMyId(int newMyId);
+
+    QString myUsername() const;
+    void setMyUsername(const QString &newMyUsername);
+
 signals:
 
     void messagesChanged();
+
+    void myIdChanged();
+
+    void myUsernameChanged();
 
 public slots:
     void onReadyRead();
 private:
     QTcpSocket socket;
-    QString m_username = "max";
+    QString m_myUsername = "";
+    int m_myId =-1;
     QString m_messages;
     ChannelModel* m_channelModel=nullptr;
+    Q_PROPERTY(int myId READ myId WRITE setMyId NOTIFY myIdChanged FINAL)
+    Q_PROPERTY(QString myUsername READ myUsername WRITE setMyUsername NOTIFY myUsernameChanged FINAL)
 };
 
 #endif // USER_H

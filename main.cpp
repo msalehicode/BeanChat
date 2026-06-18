@@ -187,9 +187,9 @@ int main(int argc, char *argv[])
 
 
     ParticipantModel participants;
-/*
+
     //test
-    ParticipantModel participants;
+    // ParticipantModel participants;
     const int userCount = 7;
 
     for (int i = 0; i < userCount; ++i)
@@ -222,7 +222,7 @@ int main(int argc, char *argv[])
 
     // qDebug() << "Mike sink =" << mike->videoSink();
     // qDebug() << "Sarah sink =" << sarah->videoSink();
-*/
+
 
 
     //register to QML

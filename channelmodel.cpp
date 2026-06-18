@@ -40,7 +40,7 @@ QVariant ChannelModel::data(
         {
             QVariantMap map;
 
-            map["id"] =
+            map["userid"] =
                 user.id;
 
             map["username"] =

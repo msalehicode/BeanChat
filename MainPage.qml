@@ -231,11 +231,11 @@ Item {
                                     {
                                         width: parent.width
                                         height: 20
-                                        color: "purple"
+                                        color: modelData.userid === user.myId ? "green" : "purple"
                                         Text
                                         {
                                             anchors.centerIn: parent
-                                            text: modelData.username
+                                            text: "("+modelData.userid + ") " + modelData.username
                                             font.pixelSize: 20
                                             color:"white"
                                         }

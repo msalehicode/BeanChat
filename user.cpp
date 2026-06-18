@@ -35,7 +35,8 @@ void User::login(QString username, QString tokenlike)
 
     LoginRequestPacket login;
 
-    login.username = username;
+    setMyUsername(username);
+    login.username = myUsername();
     login.identity = "ABC123";
 
     Packet p;
@@ -128,6 +129,18 @@ void User::onReadyRead()
             << "-------------------------- Login:"
             << resp.accepted
             << resp.message;
+
+
+        if(!resp.accepted)
+            qInfo() << "login.. failed" ;
+        else
+        {
+            setMyId(resp.id);
+            qDebug() << "my id is=" << myId();
+            askForServerState();
+        }
+
+        qDebug() << "LOGIN MESSAGE= " << resp.message;
         break;
     }
 
@@ -237,6 +250,32 @@ void User::onReadyRead()
     default:
         break;
     }
+}
+
+QString User::myUsername() const
+{
+    return m_myUsername;
+}
+
+void User::setMyUsername(const QString &newMyUsername)
+{
+    if (m_myUsername == newMyUsername)
+        return;
+    m_myUsername = newMyUsername;
+    emit myUsernameChanged();
+}
+
+int User::myId() const
+{
+    return m_myId;
+}
+
+void User::setMyId(int newMyId)
+{
+    if (m_myId == newMyId)
+        return;
+    m_myId = newMyId;
+    emit myIdChanged();
 }
 
 void User::setMessages(const QString &newMessages)
