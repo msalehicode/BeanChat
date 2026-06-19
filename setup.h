@@ -6,4 +6,18 @@
    ./configure
    make
    sudo make install
+
+
+git clone https://github.com/Skycoder42/QHotkey.git
+
+cd QHotkey
+
+mkdir build
+cd build
+
+cmake ..
+make -j$(nproc)
+
+sudo make install
+
  */

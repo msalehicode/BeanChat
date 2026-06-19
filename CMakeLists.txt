@@ -6,6 +6,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Quick Multimedia Network)
 
+# hotkey
+find_package(QHotkey REQUIRED)
+
 # opus
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(OPUS REQUIRED opus)
@@ -21,6 +24,7 @@ pkg_check_modules(FFMPEG REQUIRED
     libavutil
     libswscale
 )
+
 
 
 
@@ -102,6 +106,10 @@ target_link_libraries(appBeanChat PRIVATE ${FFMPEG_LIBRARIES})
 # rnnoise
 target_link_libraries(appBeanChat PRIVATE PkgConfig::RNNOISE)
 
+# hotkey
+target_link_libraries(appBeanChat PRIVATE
+    qhotkey
+)
 
 # debug tool to get sigfault infos.
 target_compile_options(appBeanChat PRIVATE

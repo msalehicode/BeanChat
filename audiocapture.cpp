@@ -6,6 +6,8 @@
 AudioCapture::AudioCapture(QObject *parent)
     : QObject(parent)
 {
+    initialPushToTalkHotkey();
+
     // Initialize RNNoise
     m_rnnoiseState = rnnoise_create(nullptr);
     if (!m_rnnoiseState) {
@@ -75,6 +77,9 @@ void AudioCapture::start()
                 if (newData.isEmpty())
                     return;
 
+                if(pushToTalkStatus() && pushToTalkPressed()==false)
+                    return;
+
 
                 //for visual speaking value
                 const qint16* samples = reinterpret_cast<const qint16*>(newData.constData());
@@ -86,8 +91,14 @@ void AudioCapture::start()
                     sumSquare += normalized * normalized;
                 }
                 float rms = std::sqrt(sumSquare / sampleCount);
+
                 if(rms<=0.0)
-                    return; //dont proceed because we cant hear anything.
+                {
+                    if(pushToTalkStatus()) //we want when user pressed button PTT even if no voice send empty to server.
+                        emit pcmReady(newData);
+                    else
+                        return; //dont proceed because we cant hear anything. and PTT is off.
+                }
 
                 setCurrentVolume(rms); //qml is listening on this
 
@@ -123,7 +134,8 @@ void AudioCapture::start()
                     {
                         // QByteArray silence(newData.size(),0);
                         // emit pcmReady(silence);
-                        return; //volume is under gate so dont go any further..
+                        if(!pushToTalkStatus()) //we want when user pressed button PTT even if no voice send empty to server.
+                            return; //volume is under gate so dont go any further..
                     }
                     // else let other filters check data..
                 }
@@ -185,6 +197,9 @@ void AudioCapture::start()
                         {
                             //dont emit anything we cant hear anything..
                             processedData.fill(0);
+
+                            if(pushToTalkStatus()) //we want when user pressed button PTT even if no voice send empty to server.
+                                emit pcmReady(processedData);
                         }
                         else
                             emit pcmReady(processedData);
@@ -332,6 +347,72 @@ void AudioCapture::setRnnoiseValue(float newRnnoiseValue)
     emit rnnoiseValueChanged();
 }
 
+bool AudioCapture::pushToTalkStatus() const
+{
+    return m_pushToTalkStatus;
+}
+
+void AudioCapture::setPushToTalkStatus(bool newPushToTalkStatus)
+{
+    if (m_pushToTalkStatus == newPushToTalkStatus)
+        return;
+    m_pushToTalkStatus = newPushToTalkStatus;
+    emit pushToTalkStatusChanged();
+}
+
+int AudioCapture::pushToTalkKey() const
+{
+    return m_pushToTalkKey;
+}
+
+int AudioCapture::pushToTalkModifiers() const
+{
+    return m_pushToTalkModifiers;
+}
+
+void AudioCapture::setPushToTalkModifiers(int newModifiers)
+{
+    if (m_pushToTalkModifiers == newModifiers)
+        return;
+
+    m_pushToTalkModifiers = newModifiers;
+
+    emit pushToTalkModifiersChanged();
+    emit pushToTalkKeyStringChanged();
+}
+
+void AudioCapture::setPushToTalkKey(int newPushToTalkKey)
+{
+    if (m_pushToTalkKey == newPushToTalkKey)
+        return;
+
+    m_pushToTalkKey = newPushToTalkKey;
+
+    emit pushToTalkKeyChanged();
+    emit pushToTalkKeyStringChanged();
+}
+
+bool AudioCapture::pushToTalkPressed() const
+{
+    return m_pushToTalkPressed;
+}
+
+void AudioCapture::setPushToTalkPressed(bool newPushToTalkPressed)
+{
+    if (m_pushToTalkPressed == newPushToTalkPressed)
+        return;
+    m_pushToTalkPressed = newPushToTalkPressed;
+    emit pushToTalkPressedChanged();
+}
+
+QString AudioCapture::pushToTalkKeyString() const
+{
+    return QKeySequence(
+               m_pushToTalkModifiers |
+               m_pushToTalkKey
+               ).toString(QKeySequence::NativeText);
+}
+
 void AudioCapture::refreshAudioInputs()
 {
     qDebug() << "=== INPUT DEVICES ===";
@@ -343,4 +424,56 @@ void AudioCapture::refreshAudioInputs()
     }
 
     setAudioInputs(inputs);
+}
+
+bool AudioCapture::initialPushToTalkHotkey()
+{
+    if(m_pushToTalkHotkey) //remove old one if exists
+        delete m_pushToTalkHotkey;
+
+    //initial push to talk hotkey
+    m_pushToTalkHotkey = new QHotkey(
+        QKeySequence(
+            m_pushToTalkModifiers |
+            m_pushToTalkKey),
+        true, // register immediately
+        this);
+
+    connect(
+        m_pushToTalkHotkey,
+        &QHotkey::activated,
+        this,
+        [this]()
+        {
+            // qDebug() << "PTT pressed";
+            setPushToTalkPressed(true);
+        });
+
+    connect(
+        m_pushToTalkHotkey,
+        &QHotkey::released,
+        this,
+        [this]()
+        {
+            // qDebug() << "PTT released";
+            setPushToTalkPressed(false);
+        });
+
+    // connect(
+    //     m_pushToTalkHotkey,
+    //     &QHotkey::activated,
+    //     this,
+    //     [this]()
+    //     {
+    //         qDebug() << "Active";
+    //     });
+
+
+    if(m_pushToTalkHotkey->isRegistered())
+    {
+        qDebug() << "push to talk Hotkey Registered fine.";
+        return true;
+    }
+    qDebug() << "push to talk Hotkey failed to register.";
+    return false;
 }

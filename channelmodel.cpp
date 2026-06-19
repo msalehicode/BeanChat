@@ -318,6 +318,7 @@ UserItem *ChannelModel::findUserInChannel(ChannelItem* channel, quint64 userId)
         if(usr.id == userId)
             return &usr;
     }
+    return nullptr;
 }
 
 void ChannelModel::setCurrentChannelId(quint64 channelId)
