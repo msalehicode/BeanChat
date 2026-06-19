@@ -2,13 +2,24 @@
 
 #include <QAbstractListModel>
 
+#include <QElapsedTimer>
+#include <QTimer>
+
 struct UserItem
 {
     quint64 id;
     QString username;
 
+    bool isTalking = false;
     bool muted = false;
     bool deafened = false;
+
+    QElapsedTimer lastVoicePacket;
+
+    UserItem()
+    {
+        lastVoicePacket.start();
+    }
 };
 
 struct ChannelItem
@@ -43,6 +54,7 @@ public:
 
     QHash<int,QByteArray> roleNames() const override;
 
+
 public:
 
     Q_INVOKABLE void clear();
@@ -58,6 +70,10 @@ public:
         bool muted = false,
         bool deafened = false);
 
+    void updateUserStatus(quint64 userId, bool isTalking, bool isMuted, bool isDefened);
+
+    UserItem* getUser(quint64 channelId, quint64 userId);
+
     void removeUser(
         quint64 userId);
 
@@ -65,6 +81,12 @@ public:
         quint64 userId,
         quint64 newChannelId);
 
+
+
+    void setCurrentChannelId(quint64 channelId);
+
+private slots:
+    void updateTalkingUsers();
 private:
 
     ChannelItem* findChannel(
@@ -73,7 +95,13 @@ private:
     ChannelItem* findChannelOfUser(
         quint64 userId);
 
+    UserItem* findUserInChannel(ChannelItem *channel, quint64 userId);
+
 private:
+    quint64 m_currentChannelId=0;
+
+    QTimer m_talkingTimer;
 
     QList<ChannelItem> m_channels;
+    friend class User;
 };

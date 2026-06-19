@@ -27,6 +27,7 @@
 #include "audiospeaker.h"
 
 #include "channelmodel.h"
+#include "chatmodel.h"
 
 #include "user.h"
 int main(int argc, char *argv[])
@@ -64,7 +65,8 @@ int main(int argc, char *argv[])
 
 
     ChannelModel channelModel;
-    User usr(&channelModel);
+    ChatModel chatModel;
+    User usr(&channelModel,&chatModel);
 
 
     // ---------- MICROHPONE ----------
@@ -189,6 +191,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("participantModel", &participants);
     engine.rootContext()->setContextProperty("user", &usr);
     engine.rootContext()->setContextProperty("channelModel",&channelModel);
+    engine.rootContext()->setContextProperty("chatModel",&chatModel);
 
 
     QObject::connect(

@@ -1,7 +1,8 @@
 #include "user.h"
+#include <QTimer>
 
-User::User(ChannelModel *channelModel, QObject *parent)
-    : QObject{parent}, m_channelModel(channelModel)
+User::User(ChannelModel *channelModel, ChatModel *chatModel, QObject *parent)
+    : QObject{parent}, m_channelModel(channelModel), m_chatModel(chatModel)
 {
     qDebug() << "user starting..";
 
@@ -13,14 +14,6 @@ User::User(ChannelModel *channelModel, QObject *parent)
 
     m_udpSocket.bind();
 
-    //for test send fake voice data..
-    // connect(
-    //     &m_voiceTimer,
-    //     &QTimer::timeout,
-    //     this,
-    //     &User::sendFakeVoice);
-
-    // m_voiceTimer.start(20);
 
     connect(
         &m_udpSocket,
@@ -49,8 +42,24 @@ User::User(ChannelModel *channelModel, QObject *parent)
 
                 in >> packet;
 
-                emit voiceReceived(
-                    packet.audioData);
+
+
+                if(!muteHeadphone())
+                {
+                    UserItem* senderUser = m_channelModel->getUser(m_myChannelId, packet.senderId);
+                    if(!senderUser)
+                        return;
+
+                    if(!senderUser->isTalking)
+                    {
+                        m_channelModel->updateUserStatus(packet.senderId, true, senderUser->muted,senderUser->deafened);
+                        qDebug() << "user is not talking update status..";
+                    }
+
+                    senderUser->lastVoicePacket.restart();
+                    emit voiceReceived(packet.audioData);
+                }
+                    // emit voiceReceived(packet.audioData);
 
                 // qDebug()
                 //     << "Voice received from"
@@ -64,34 +73,6 @@ User::User(ChannelModel *channelModel, QObject *parent)
 
 }
 
-// void User::sendFakeVoice()
-// {
-//     VoicePacket voice;
-
-//     voice.senderId = myId();
-
-//     voice.sequence = ++m_sequence;
-
-//     voice.audioData = QByteArray(320,'A');
-
-//     QByteArray data;
-
-//     QDataStream out(
-//         &data,
-//         QIODevice::WriteOnly);
-
-//     out << quint16(101);
-//     out << voice;
-
-//     m_udpSocket.writeDatagram(
-//         data,
-//         QHostAddress("127.0.0.1"),
-//         9988);
-
-//     qDebug()
-//         << "Voice packet sent"
-//         << voice.sequence;
-// }
 
 void User::joinChannel(int channelId)
 {
@@ -145,6 +126,9 @@ void User::createChannel(QString channelName, QString password)
 void User::sendVoicePcm(
     const QByteArray& pcm)
 {
+    if(muteMicrophone())
+        return;
+
     if(m_myId < 0)
         return;
 
@@ -178,6 +162,8 @@ void User::sendMessage(QString message)
 {
     SendMessagePacket sm;
     sm.text = message;
+    sm.type = SendMessagePacket::Type::Text;
+    sm.mediaPath = "";
 
     Packet p;
     p.type = PacketType::ChatMessage;
@@ -231,6 +217,7 @@ void User::onReadyRead()
         {
             qDebug() << "voice: channel switched.";
             m_myChannelId = resp.channelId;
+            m_channelModel->setCurrentChannelId(m_myChannelId);
         }
         else if(resp.channelId == m_myChannelId)
             qDebug() << "voice: user joined to your channel.";
@@ -321,15 +308,9 @@ void User::onReadyRead()
     case PacketType::ChatMessage:
     {
         qInfo() << "chat message:";
-        auto msg =
-            PacketHelpers::unpack<ChatMessagePacket>(
-                packet.payload);
+        auto msg = PacketHelpers::unpack<ChatMessagePacket>(packet.payload);
 
-        qDebug()
-            << "Channel"
-            << msg.channelId
-            << "Message:"
-            << msg.text;
+        m_chatModel->addMessage(msg);
     }
     break;
 
@@ -363,39 +344,40 @@ void User::onReadyRead()
         }
 
         qInfo() << "voice: connected to server.";
+        m_channelModel->setCurrentChannelId(m_myChannelId);
 
-        // qDebug()
-        //     << "Channels:"
-        //     << state.channels.size();
-
-        // qDebug()
-        //     << "Users:"
-        //     << state.users.size();
-
-        // for(auto channel :
-        //      state.channels)
-        // {
-        //     qDebug()
-        //     << "Channel"
-        //     << channel.id
-        //     << channel.name;
-        // }
-
-        // for(auto user :
-        //      state.users)
-        // {
-        //     qDebug()
-        //     << "User"
-        //     << user.username
-        //     << "Channel"
-        //     << user.channelId;
-        // }
     }
     break;
 
     default:
         break;
     }
+}
+
+bool User::muteMicrophone() const
+{
+    return m_muteMicrophone;
+}
+
+void User::setMuteMicrophone(bool newMuteMicrophone)
+{
+    if (m_muteMicrophone == newMuteMicrophone)
+        return;
+    m_muteMicrophone = newMuteMicrophone;
+    emit muteMicrophoneChanged();
+}
+
+bool User::muteHeadphone() const
+{
+    return m_muteHeadphone;
+}
+
+void User::setMuteHeadphone(bool newMuteHeadphone)
+{
+    if (m_muteHeadphone == newMuteHeadphone)
+        return;
+    m_muteHeadphone = newMuteHeadphone;
+    emit muteHeadphoneChanged();
 }
 
 QString User::myUsername() const

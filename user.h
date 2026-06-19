@@ -10,7 +10,7 @@
 
 #include <QUdpSocket>
 #include "channelmodel.h"
-#include <QTimer>
+#include "chatmodel.h"
 #include <QDataStream>
 
 #include <QNetworkDatagram>
@@ -21,7 +21,7 @@ class User : public QObject
     Q_PROPERTY(QString messages READ getMessages WRITE setMessages NOTIFY messagesChanged FINAL)
 
 public:
-    explicit User(ChannelModel *channelModel, QObject *parent = nullptr);
+    explicit User(ChannelModel *channelModel,ChatModel* chatModel, QObject *parent = nullptr);
 
     Q_INVOKABLE void joinChannel(int channelId);
     Q_INVOKABLE void login(QString username, QString tokenlike);
@@ -39,6 +39,12 @@ public:
     void setMyUsername(const QString &newMyUsername);
 
     void sendVoicePcm(const QByteArray& pcm);
+    bool muteHeadphone() const;
+    void setMuteHeadphone(bool newMuteHeadphone);
+
+    bool muteMicrophone() const;
+    void setMuteMicrophone(bool newMuteMicrophone);
+
 signals:
 
     void messagesChanged();
@@ -49,28 +55,35 @@ signals:
 
     void voiceReceived(QByteArray pcm);
 
+    void muteHeadphoneChanged();
+
+    void muteMicrophoneChanged();
+
 public slots:
     void onReadyRead();
 
-private slots:
-    // void sendFakeVoice();
-
 private:
+    bool m_muteMicrophone=false;
+    bool m_muteHeadphone=false;
+
+
     QTcpSocket socket;
     QUdpSocket m_udpSocket;
     QString m_myUsername = "";
     int m_myId =-1;
-    quint64 m_myChannelId=1; //default is lobby id 1
+    quint64 m_myChannelId=1;
 
     //voice
-    QTimer m_voiceTimer;
     quint32 m_sequence = 0;
 
     QString m_messages;
 
     ChannelModel* m_channelModel=nullptr;
+    ChatModel* m_chatModel=nullptr;
     Q_PROPERTY(int myId READ myId WRITE setMyId NOTIFY myIdChanged FINAL)
     Q_PROPERTY(QString myUsername READ myUsername WRITE setMyUsername NOTIFY myUsernameChanged FINAL)
+    Q_PROPERTY(bool muteHeadphone READ muteHeadphone WRITE setMuteHeadphone NOTIFY muteHeadphoneChanged FINAL)
+    Q_PROPERTY(bool muteMicrophone READ muteMicrophone WRITE setMuteMicrophone NOTIFY muteMicrophoneChanged FINAL)
 };
 
 #endif // USER_H

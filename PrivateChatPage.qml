@@ -62,6 +62,19 @@ Item {
                 checked: microphone.rnnoiseStatus
                 onCheckedChanged: microphone.rnnoiseStatus = checked
             }
+            Slider
+            {
+                width: meter.width
+                visible: microphone.rnnoiseStatus
+
+                from: 0.0
+                to: 1.0
+
+                value: microphone.rnnoiseValue
+
+                onMoved:
+                    microphone.rnnoiseValue = value
+            }
 
             Label
             {
@@ -166,11 +179,6 @@ Item {
                 onClicked: user.createChannel("dota2","123456")
             }
 
-            Button
-            {
-                text:"send message"
-                onClicked: user.sendMessage("hellooooo")
-            }
             Button
             {
                 text:"login"

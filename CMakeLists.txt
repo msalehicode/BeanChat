@@ -73,6 +73,7 @@ qt_add_qml_module(appBeanChat
         ../BeanChatServer/src/network/packets.h
         ../BeanChatServer/src/network/packethelpers.h
         SOURCES channelmodel.h channelmodel.cpp
+        SOURCES chatmodel.h chatmodel.cpp
 
 
 )
@@ -101,6 +102,13 @@ target_link_libraries(appBeanChat PRIVATE ${FFMPEG_LIBRARIES})
 # rnnoise
 target_link_libraries(appBeanChat PRIVATE PkgConfig::RNNOISE)
 
+
+# debug tool to get sigfault infos.
+target_compile_options(appBeanChat PRIVATE
+    -fsanitize=address
+    -g)
+target_link_options(appBeanChat PRIVATE
+    -fsanitize=address)
 
 
 target_link_libraries(appBeanChat

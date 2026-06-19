@@ -36,6 +36,9 @@ public:
     float currentVolume() const;
     void setCurrentVolume(float newCurrentVolume);
 
+    float rnnoiseValue() const;
+    void setRnnoiseValue(float newRnnoiseValue);
+
 signals:
     void pcmReady(QByteArray pcm);
     void levelChanged(double level);
@@ -52,8 +55,11 @@ signals:
 
     void currentVolumeChanged();
 
+    void rnnoiseValueChanged();
+
 private:
     bool m_rnnoiseStatus;
+    float m_rnnoiseValue= 0.15f;
     DenoiseState *m_rnnoiseState = nullptr; // The RNNoise engine state
     QByteArray m_rnnoiseBuffer; // This will hold "leftover" samples
 
@@ -63,8 +69,6 @@ private:
     float m_volumeGateThreshold=0.01f;
 
     void refreshAudioInputs();
-    void volumeGateCheck(QByteArray& newData);
-
 
     QAudioSource *m_audioSource = nullptr;
     QIODevice *m_device = nullptr;
@@ -80,4 +84,5 @@ private:
     Q_PROPERTY(bool volumeGateStatus READ volumeGateStatus WRITE setVolumeGateStatus NOTIFY volumeGateStatusChanged FINAL)
     Q_PROPERTY(float volumeGateThreshold READ volumeGateThreshold WRITE setVolumeGateThreshold NOTIFY volumeGateThresholdChanged FINAL)
     Q_PROPERTY(float currentVolume READ currentVolume WRITE setCurrentVolume NOTIFY currentVolumeChanged FINAL)
+    Q_PROPERTY(float rnnoiseValue READ rnnoiseValue WRITE setRnnoiseValue NOTIFY rnnoiseValueChanged FINAL)
 };

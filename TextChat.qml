@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Controls.Material
 
 Item {
     id:root
@@ -11,51 +12,6 @@ Item {
         color:"black"
         anchors.fill: parent
     }
-
-    ListModel {
-        id: chatModel
-
-        ListElement {
-            text: "Hello!"
-            mine: false
-        }
-
-        ListElement {
-            text: "Hi, how are you?"
-            mine: true
-        }
-
-        ListElement {
-            text: "This is a scrollable Qt Quick chat example."
-            mine: false
-        }
-
-
-        ListElement {
-            text: "This is a scrollable Qt Quick chat example."
-            mine: false
-        }
-
-
-        ListElement {
-            text: "This is a scrollable Qt Quick chat example."
-            mine: true
-        }
-
-
-        ListElement {
-            text: "This is a scrollable Qt Quick chat example."
-            mine: false
-        }
-
-
-        ListElement {
-            text: "This is a scrollable Qt Quick chat example. This is a scrollable Qt Quick chat example.This is a scrollable Qt Quick chat example.This is a scrollable Qt Quick chat example.This is a scrollable Qt Quick chat example."
-            mine: false
-        }
-    }
-
-
 
     Column
     {
@@ -76,16 +32,20 @@ Item {
                 color:"white"
             }
         }
-
-        ListView {
+        ListView
+        {
             id: chatView
             width: parent.width
-            height: parent.height-(title.height+enterText.height)
+            height: parent.height-(title.height+enterTextBase.height)
             model: chatModel
             spacing: 8
             clip: true
+            anchors.left: parent.left
+            anchors.leftMargin: handle.width
 
-            delegate: Item {
+
+            delegate: Item
+            {
                 width: chatView.width
                 height: bubble.height + 8
 
@@ -98,11 +58,11 @@ Item {
                     height: textItem.paintedHeight + 20
 
                     radius: 12
-                    color: mine ? "#3b82f6" : "#404040"
+                    color: model.senderId===user.myId  ? "#3b82f6" : "#404040"
 
                     anchors {
-                        right: mine ? parent.right : undefined
-                        left: mine ? undefined : parent.left
+                        right: model.senderId===user.myId ? parent.right : undefined
+                        left: model.senderId===user.myId  ? undefined : parent.left
                         leftMargin: 20
                         rightMargin: 20
                     }
@@ -112,30 +72,67 @@ Item {
                         anchors.fill: parent
                         anchors.margins: 10
 
-                        text: model.text
+                        text: model.senderId + " : " +model.textMessage
                         wrapMode: Text.Wrap
                         color: "white"
                     }
+
+                    Text
+                    {
+                        id:textTime
+                        text: model.timestamp
+                        color:"red"
+                        anchors.bottom: parent.bottom
+                        anchors.right: parent.right
+                    }
                 }
             }
+
+
         }
 
 
+    }
+    Rectangle
+    {
+        id:enterTextBase
+        width: parent.width
+        height: 60
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.leftMargin: handle.width/2
+        color:"transparent"
         Rectangle
         {
-            id:enterText
-            width: parent.width
-            height: 60
-            // anchors.bottom: parent.bottom
-            color:"grey"
-            Text
+            id:bgEnterMessage
+            width: parent.width-buttonSendMessage.width
+            height: parent.height
+            color: "grey"
+            TextInput
             {
-                text:"enter text to send"
-                anchors.centerIn: parent
-                color:"white"
+                id:enteredMessage
+                anchors.fill: parent
+                text: ""
+                color: "black"
+                font.pixelSize: 20
+                onAccepted: buttonSendMessage.clicked()
+            }
+        }
+        Button
+        {
+            id:buttonSendMessage
+            height: parent.height
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            text: "Send"
+            onClicked:
+            {
+                user.sendMessage(enteredMessage.text)
+                enteredMessage.clear()
             }
         }
     }
+
 
     Rectangle
     {

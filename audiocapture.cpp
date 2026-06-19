@@ -76,86 +76,126 @@ void AudioCapture::start()
                     return;
 
 
+                //for visual speaking value
+                const qint16* samples = reinterpret_cast<const qint16*>(newData.constData());
+                int sampleCount = newData.size() / sizeof(qint16);
+                float sumSquare = 0.0f;
+                for (int i = 0; i < sampleCount; ++i)
+                {
+                    float normalized = samples[i] / 32768.0f;
+                    sumSquare += normalized * normalized;
+                }
+                float rms = std::sqrt(sumSquare / sampleCount);
+                if(rms<=0.0)
+                    return; //dont proceed because we cant hear anything.
+
+                setCurrentVolume(rms); //qml is listening on this
+
+
+
                 // --- FEATURE 1: VOLUME GATE (Standalone) ---
                 if (volumeGateStatus())
                 {
-                    volumeGateCheck(newData);
-                    return;
+                    // Open threshold
+                    const float openThreshold =
+                        m_volumeGateThreshold;
+
+                    // Close threshold (30% lower)
+                    const float closeThreshold =
+                        m_volumeGateThreshold * 0.7f;
+
+                    if (!m_gateOpen)
+                    {
+                        if (rms > openThreshold)
+                        {
+                            m_gateOpen = true;
+                        }
+                    }
+                    else
+                    {
+                        if (rms < closeThreshold)
+                        {
+                            m_gateOpen = false;
+                        }
+                    }
+
+                    if (!m_gateOpen)
+                    {
+                        // QByteArray silence(newData.size(),0);
+                        // emit pcmReady(silence);
+                        return; //volume is under gate so dont go any further..
+                    }
+                    // else let other filters check data..
                 }
 
+                if(rnnoiseStatus())
+                {
+                    // Store incoming microphone bytes
+                    m_rnnoiseBuffer.append(newData);
 
+                    constexpr int FRAME_SIZE = 480;
+                    constexpr int BYTES_PER_FRAME = FRAME_SIZE * sizeof(qint16);
 
-                if(!rnnoiseStatus())
+                    while (m_rnnoiseBuffer.size() >= BYTES_PER_FRAME)
+                    {
+                        // Get one RNNoise frame (10ms @ 48kHz)
+                        QByteArray frameData = m_rnnoiseBuffer.left(BYTES_PER_FRAME);
+
+                        m_rnnoiseBuffer.remove(0, BYTES_PER_FRAME);
+
+                        const qint16* inSamples = reinterpret_cast<const qint16*>(frameData.constData());
+
+                        float rnnoiseFrame[FRAME_SIZE];
+
+                        // RNNoise expects float PCM values in int16 range
+                        for (int i = 0; i < FRAME_SIZE; ++i)
+                            rnnoiseFrame[i] = static_cast<float>(inSamples[i]);
+
+                        // Denoise
+                        float vadProbability =
+                            rnnoise_process_frame(
+                                m_rnnoiseState,
+                                rnnoiseFrame,
+                                rnnoiseFrame);
+
+                        // Debug
+                        // qDebug() << "RNNoise VAD:" << vadProbability;
+
+                        QByteArray processedData;
+                        processedData.resize(BYTES_PER_FRAME);
+
+                        qint16* outSamples =
+                            reinterpret_cast<qint16*>(processedData.data());
+
+                        for (int i = 0; i < FRAME_SIZE; ++i)
+                        {
+                            float sample = rnnoiseFrame[i];
+
+                            if (sample > 32767.0f)
+                                sample = 32767.0f;
+
+                            if (sample < -32768.0f)
+                                sample = -32768.0f;
+
+                            outSamples[i] = static_cast<qint16>(sample);
+                        }
+
+                        // Optional hard mute when RNNoise thinks nobody is talking
+                        if (vadProbability < rnnoiseValue())
+                        {
+                            //dont emit anything we cant hear anything..
+                            processedData.fill(0);
+                        }
+                        else
+                            emit pcmReady(processedData);
+                    }
+
+                }
+                else
                 {
                     emit pcmReady(newData);
-                    return;
                 }
-
-                // Store incoming microphone bytes
-                m_rnnoiseBuffer.append(newData);
-
-                constexpr int FRAME_SIZE = 480;
-                constexpr int BYTES_PER_FRAME = FRAME_SIZE * sizeof(qint16);
-
-                while (m_rnnoiseBuffer.size() >= BYTES_PER_FRAME)
-                {
-                    // Get one RNNoise frame (10ms @ 48kHz)
-                    QByteArray frameData =
-                        m_rnnoiseBuffer.left(BYTES_PER_FRAME);
-
-                    m_rnnoiseBuffer.remove(0, BYTES_PER_FRAME);
-
-                    const qint16* inSamples =
-                        reinterpret_cast<const qint16*>(frameData.constData());
-
-                    float rnnoiseFrame[FRAME_SIZE];
-
-                    // RNNoise expects float PCM values in int16 range
-                    for (int i = 0; i < FRAME_SIZE; ++i)
-                    {
-                        rnnoiseFrame[i] =
-                            static_cast<float>(inSamples[i]);
-                    }
-
-                    // Denoise
-                    float vadProbability =
-                        rnnoise_process_frame(
-                            m_rnnoiseState,
-                            rnnoiseFrame,
-                            rnnoiseFrame);
-
-                    // Debug
-                    // qDebug() << "RNNoise VAD:" << vadProbability;
-
-                    QByteArray processedData;
-                    processedData.resize(BYTES_PER_FRAME);
-
-                    qint16* outSamples =
-                        reinterpret_cast<qint16*>(processedData.data());
-
-                    for (int i = 0; i < FRAME_SIZE; ++i)
-                    {
-                        float sample = rnnoiseFrame[i];
-
-                        if (sample > 32767.0f)
-                            sample = 32767.0f;
-
-                        if (sample < -32768.0f)
-                            sample = -32768.0f;
-
-                        outSamples[i] =
-                            static_cast<qint16>(sample);
-                    }
-
-                    // Optional hard mute when RNNoise thinks nobody is talking
-                    if (vadProbability < 0.15f)
-                    {
-                        processedData.fill(0);
-                    }
-
-                    emit pcmReady(processedData);
-                }
-            });
+    });
 }
 
 
@@ -279,6 +319,19 @@ void AudioCapture::setCurrentVolume(float newCurrentVolume)
     emit currentVolumeChanged();
 }
 
+float AudioCapture::rnnoiseValue() const
+{
+    return m_rnnoiseValue;
+}
+
+void AudioCapture::setRnnoiseValue(float newRnnoiseValue)
+{
+    if (qFuzzyCompare(m_rnnoiseValue, newRnnoiseValue))
+        return;
+    m_rnnoiseValue = newRnnoiseValue;
+    emit rnnoiseValueChanged();
+}
+
 void AudioCapture::refreshAudioInputs()
 {
     qDebug() << "=== INPUT DEVICES ===";
@@ -290,66 +343,4 @@ void AudioCapture::refreshAudioInputs()
     }
 
     setAudioInputs(inputs);
-}
-
-void AudioCapture::volumeGateCheck(QByteArray& newData)
-{
-    const qint16* samples =
-        reinterpret_cast<const qint16*>(newData.constData());
-
-    int sampleCount =
-        newData.size() / sizeof(qint16);
-
-    float sumSquare = 0.0f;
-
-    for (int i = 0; i < sampleCount; ++i)
-    {
-        float normalized =
-            samples[i] / 32768.0f;
-
-        sumSquare += normalized * normalized;
-    }
-
-    float rms =
-        std::sqrt(sumSquare / sampleCount);
-
-    //scale up for qml
-    // setCurrentVolume(std::min(rms * 20.0f, 1.0f));
-    setCurrentVolume(rms);
-
-    // Open threshold
-    const float openThreshold =
-        m_volumeGateThreshold;
-
-    // Close threshold (30% lower)
-    const float closeThreshold =
-        m_volumeGateThreshold * 0.7f;
-
-    if (!m_gateOpen)
-    {
-        if (rms > openThreshold)
-        {
-            m_gateOpen = true;
-        }
-    }
-    else
-    {
-        if (rms < closeThreshold)
-        {
-            m_gateOpen = false;
-        }
-    }
-
-    if (!m_gateOpen)
-    {
-        QByteArray silence(
-            newData.size(),
-            0);
-
-        emit pcmReady(silence);
-    }
-    else
-    {
-        emit pcmReady(newData);
-    }
 }

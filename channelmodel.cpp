@@ -5,6 +5,13 @@ ChannelModel::ChannelModel(
     :
     QAbstractListModel(parent)
 {
+    //check and update talking status for current channel users.
+    connect(
+        &m_talkingTimer,
+        &QTimer::timeout,
+        this,
+        &ChannelModel::updateTalkingUsers);
+    m_talkingTimer.start(100);
 }
 
 int ChannelModel::rowCount(
@@ -48,6 +55,9 @@ QVariant ChannelModel::data(
 
             map["muted"] =
                 user.muted;
+
+            map["isTalking"] =
+                user.isTalking;
 
             map["deafened"] =
                 user.deafened;
@@ -134,6 +144,38 @@ void ChannelModel::addUser(
         index(row));
 }
 
+void ChannelModel::updateUserStatus(quint64 userId, bool isTalking, bool isMuted, bool isDefened)
+{
+    auto channel = findChannelOfUser(userId);
+
+    if(!channel)
+        return;
+
+
+    UserItem* user = findUserInChannel(channel,userId);
+    if(!user)
+        return;
+
+    user->isTalking = isTalking;
+    user->muted = isMuted;
+    user->deafened = isDefened;
+
+
+    int row =
+        &(*channel) - m_channels.data();
+
+    emit dataChanged(
+        index(row),
+        index(row));
+}
+
+
+UserItem *ChannelModel::getUser(quint64 channelId, quint64 userId)
+{
+    ChannelItem* channel = findChannel(channelId);
+    return findUserInChannel(channel,userId);
+}
+
 void ChannelModel::removeUser(
     quint64 userId)
 {
@@ -215,6 +257,28 @@ void ChannelModel::moveUser(
         index(m_channels.size()-1));
 }
 
+void ChannelModel::updateTalkingUsers()
+{
+    //update that channel users' talking status on that currentChannel*
+    ChannelItem* channel = findChannel(m_currentChannelId);
+
+    if(!channel)
+        return;
+
+    for(auto& user : channel->users)
+    {
+        if(user.isTalking && user.lastVoicePacket.elapsed() > 100)
+        {
+            updateUserStatus(
+                user.id,
+                false,
+                user.muted,
+                user.deafened);
+        }
+    }
+
+}
+
 ChannelItem*
 ChannelModel::findChannel(
     quint64 id)
@@ -245,4 +309,18 @@ ChannelModel::findChannelOfUser(
     }
 
     return nullptr;
+}
+
+UserItem *ChannelModel::findUserInChannel(ChannelItem* channel, quint64 userId)
+{
+    for(UserItem& usr : channel->users)
+    {
+        if(usr.id == userId)
+            return &usr;
+    }
+}
+
+void ChannelModel::setCurrentChannelId(quint64 channelId)
+{
+    m_currentChannelId = channelId;
 }

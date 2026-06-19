@@ -3,9 +3,12 @@ import QtQuick.Controls
 
 import CustomVideo 1.0
 import QtQuick.Controls.Material
+
+import QtQuick.Layouts
+
 Item {
     anchors.fill: parent
-    property int widthBase: 200 //uses for userlist and chanenlist
+    property int widthBase: 250 //uses for userlist and chanenlist
 
 
     property color bg1 : "#4a4c51"
@@ -194,18 +197,40 @@ Item {
                         delegate: Column
                         {
                             width: ListView.view.width
+                            spacing:10
+
 
                             Rectangle
                             {
-                                width: parent.width
-                                height: 35
-                                color:"black"
-                                Text
+                                id:theChannel
+                                width: parent.width/1.05
+                                height: 45
+                                radius: height
+                                color:"#2f3136"
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                Row
                                 {
-                                    anchors.centerIn: parent
-                                    text: channelName
-                                    color:"white"
+                                    anchors.fill: parent
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: 10
+                                    spacing: 5
+                                    Image {
+                                        id:theChannelTypeIcon
+                                        width: 20
+                                        height: width
+                                        source: "icons/voice.png"
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                    Text
+                                    {
+                                        id:theChannelName
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        text: channelName
+                                        font.pixelSize: 15
+                                        color:"white"
+                                    }
                                 }
+
                                 MouseArea
                                 {
                                     anchors.fill: parent
@@ -223,93 +248,97 @@ Item {
 
                                 delegate: Rectangle
                                 {
-                                    width: parent.width/2
-                                    anchors.horizontalCenter:parent.horizontalCenter
-                                    height: 25
+                                    id:userBase
+                                    width: parent.width
+                                    anchors.left:parent.left
+                                    anchors.leftMargin: 25
+                                    height: 40
                                     color:"transparent"
                                     Rectangle
                                     {
-                                        width: parent.width
-                                        height: 20
-                                        color: modelData.userid === user.myId ? "green" : "purple"
-                                        Text
+                                        width: parent.width/1.20
+                                        height: 40
+                                        radius: height
+                                        color: "#808185"
+                                        RowLayout
                                         {
-                                            anchors.centerIn: parent
-                                            text: "("+modelData.userid + ") " + modelData.username
-                                            font.pixelSize: 20
-                                            color:"white"
+                                            anchors.fill: parent
+                                            anchors.leftMargin: 10
+                                            anchors.rightMargin: 10
+                                            spacing: 5
+
+                                            Rectangle
+                                            {
+                                                id: userAvatar
+                                                Layout.preferredWidth: 20
+                                                Layout.preferredHeight: 20
+                                                Layout.alignment: Qt.AlignVCenter
+                                                radius: width / 2
+                                                color:  modelData.isTalking ? "yellow" : "white"
+                                                border.width: modelData.isTalking ? 3 : 0
+                                                border.color: "yellow"
+                                                clip: true
+                                            }
+
+                                            Text
+                                            {
+                                                id: userName
+                                                text: "(" + modelData.userid + ") " + modelData.username
+                                                font.pixelSize: 15
+                                                color: "white"
+                                                font.bold:modelData.userid === user.myId
+                                                Layout.alignment: Qt.AlignVCenter
+                                            }
+
+                                            Item
+                                            {
+                                                Layout.fillWidth: true
+                                            }
+
+                                            RowLayout
+                                            {
+                                                id: baseUserIcons
+                                                spacing: 2
+                                                Layout.alignment: Qt.AlignVCenter
+
+                                                Image
+                                                {
+                                                    visible: true // modelData.isCameraOpen
+                                                    Layout.preferredWidth: 20
+                                                    Layout.preferredHeight: 20
+                                                    fillMode: Image.PreserveAspectFit
+                                                    source: "icons/videocall.png"
+                                                }
+
+                                                Image
+                                                {
+                                                    visible: modelData.muted
+                                                    Layout.preferredWidth: 20
+                                                    Layout.preferredHeight: 20
+                                                    fillMode: Image.PreserveAspectFit
+                                                    source: "icons/microphone-red.png"
+                                                }
+
+
+                                                Image
+                                                {
+                                                    visible: modelData.deafened
+                                                    Layout.preferredWidth: 20
+                                                    Layout.preferredHeight: 20
+                                                    fillMode: Image.PreserveAspectFit
+                                                    source: "icons/headphone-red.png"
+                                                }
+                                            }
                                         }
                                     }
 
 
                                 }
                             }
+
                         }
                     }
 
-                    // ListView {
-                    //     width: parent.width
-                    //     height: parent.height-(serverTitle.height+userStuff.height)
-                    //     model: channelsModel
-                    //     clip: true
-                    //     spacing: 5
-
-                    //     delegate: Rectangle {
-                    //         width: parent.width/1.20
-                    //         height: 40
-                    //         radius: height
-                    //         // anchors.horizontalCenter: parent.horizontalCenter
-                    //         color:type!=="user"? "#2f3136" :"#808185"
-                    //         anchors.left: parent.left
-                    //         anchors.leftMargin: indent ? indent * parent.width/10 : 5
-
-
-                    //         Row {
-                    //             anchors.verticalCenter: parent.verticalCenter
-                    //             spacing: 5
-
-                    //             Rectangle
-                    //             {
-                    //                 visible: type==="user" ? true : false
-                    //                 width: 30
-                    //                 height: width
-                    //                 radius: width
-                    //                 color: talking ? "#e5c35b" : "#b29747"
-                    //             }
-
-                    //             Image
-                    //             {
-                    //                 visible: type!=="user"?true:false
-                    //                 width: 30
-                    //                 height: width
-                    //                 source: (function(status) {
-                    //                     switch(status) {
-                    //                     case "voice": return "icons/voice.png";
-                    //                     case "text":  return "icons/chat.png";
-                    //                     case "file": return "icons/folder.png";
-                    //                     default:  return "";
-                    //                     }
-                    //                 })(type)
-                    //             }
-
-                    //             Text {
-                    //                 text: name
-                    //                 color:"white"
-                    //                 anchors.verticalCenter: parent.verticalCenter
-                    //             }
-                    //         }
-                    //         Image
-                    //         {
-                    //             visible: type==="user"? (videoCall?true:false) : false
-                    //             width: 25
-                    //             height: width
-                    //             anchors.right: parent.right
-                    //             anchors.rightMargin: 5
-                    //             anchors.verticalCenter: parent.verticalCenter
-                    //             source: "icons/videocall.png"
-                    //         }
-                    //     }
-                    // }
 
                     Rectangle
                     {
@@ -345,13 +374,13 @@ Item {
                                 Image {
                                     width: iconW
                                     height: iconH
-                                    source: "icons/microphone.png"
+                                    source: !user.muteMicrophone ? "icons/microphone.png" : "icons/microphone-red.png"
                                     anchors.centerIn: parent
                                 }
                                 MouseArea
                                 {
                                     anchors.fill: parent
-                                    onClicked: console.log("mic")
+                                    onClicked: user.muteMicrophone=!user.muteMicrophone
                                 }
                             }
                             Rectangle{
@@ -361,13 +390,13 @@ Item {
                                 Image {
                                     width: iconW
                                     height: iconH
-                                    source: "icons/headphone.png"
+                                    source: !user.muteHeadphone? "icons/headphone.png" : "icons/headphone-red.png"
                                     anchors.centerIn: parent
                                 }
                                 MouseArea
                                 {
                                     anchors.fill: parent
-                                    onClicked: console.log("spkr")
+                                    onClicked: user.muteHeadphone=!user.muteHeadphone
                                 }
                             }
 
@@ -509,7 +538,7 @@ Item {
                                 color:"purple"
                                 radius: parent.radius
                                 border.width: model.isTalking ? 4 : 0
-                                border.color: "yellow"
+                                border.color: "red"
                                 Rectangle {
                                     id: userPicture
                                     width: 50
