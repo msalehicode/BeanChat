@@ -83,7 +83,7 @@ Item {
                         MouseArea
                         {
                             anchors.fill: parent
-                            onClicked: changePage("pv")
+                            onClicked: changePage("settings")
                         }
                         Rectangle
                         {

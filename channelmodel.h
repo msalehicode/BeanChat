@@ -73,6 +73,7 @@ public:
     void updateUserStatus(quint64 userId, bool isTalking, bool isMuted, bool isDefened);
 
     UserItem* getUser(quint64 channelId, quint64 userId);
+    QString getChannelName(quint64 channelId);
 
     void removeUser(
         quint64 userId);

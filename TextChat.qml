@@ -27,7 +27,7 @@ Item {
             color:"grey"
             Text
             {
-                text:"text Chat title"
+                text: user.myChannelName
                 anchors.centerIn: parent
                 color:"white"
             }

@@ -66,6 +66,7 @@ bool AudioSpeaker::start()
         return false;
     }
 
+    emit currentAudioOutputChanged(&m_audioOutputs[m_currentAudioOutput]);
     return true;
 }
 

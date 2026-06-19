@@ -34,6 +34,14 @@ qt_add_executable(appBeanChat
     main.cpp
 )
 
+qt_add_resources(appBeanChat resources
+    PREFIX "/"
+    FILES
+        soundeffects/message.wav
+        soundeffects/user-join.wav
+        soundeffects/user-left.wav
+)
+
 qt_add_qml_module(appBeanChat
     URI BeanChat
     VERSION 1.0
@@ -52,7 +60,8 @@ qt_add_qml_module(appBeanChat
         # general
         videosink.h
         participant.h
-        participantmodel.h
+        user.h user.cpp
+        soundmanager.h soundmanager.cpp
 
         # capture
         audiocapture.h audiocapture.cpp
@@ -60,26 +69,28 @@ qt_add_qml_module(appBeanChat
         audiospeaker.h audiospeaker.cpp
         monitorcapture.h monitorcapture.cpp
 
+        # C++ models for qml
+        channelmodel.h channelmodel.cpp
+        chatmodel.h chatmodel.cpp
+        participantmodel.h
 
-        # qml components
+        # C++ qml components
         myvideoitem.h myvideoitem.cpp
 
         # encode decode
-        opusencoder.h opusencoder.cpp
-        videoencoder.h videoencoder.cpp
-        ffmpegencoder.h ffmpegencoder.cpp
+        # opusencoder.h opusencoder.cpp
+        # videoencoder.h videoencoder.cpp
+        # ffmpegencoder.h ffmpegencoder.cpp
 
     # icons
     RESOURCES icons/headphone.png icons/headphone-red.png icons/microphone.png icons/microphone-red.png icons/videocall.png icons/videocall-red.png icons/voice.png icons/folder.png icons/chat.png icons/beanChatIcon.png
-    SOURCES user.h user.cpp
+
+
+    # from Server. later move these into a library
     SOURCES
         ../BeanChatServer/src/network/packet.h ../BeanChatServer/src/network/packet.cpp
         ../BeanChatServer/src/network/packets.h
         ../BeanChatServer/src/network/packethelpers.h
-        SOURCES channelmodel.h channelmodel.cpp
-        SOURCES chatmodel.h chatmodel.cpp
-
-
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

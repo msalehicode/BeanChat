@@ -176,6 +176,14 @@ UserItem *ChannelModel::getUser(quint64 channelId, quint64 userId)
     return findUserInChannel(channel,userId);
 }
 
+QString ChannelModel::getChannelName(quint64 channelId)
+{
+    ChannelItem* channel = findChannel(channelId);
+    if(channel)
+        return channel->name;
+    return "";
+}
+
 void ChannelModel::removeUser(
     quint64 userId)
 {

@@ -27,6 +27,8 @@ signals:
 
     void currentAudioOutputChanged();
 
+    void currentAudioOutputChanged(QAudioDevice* output);
+
 public slots:
     void playPcm(const QByteArray &pcm);
 

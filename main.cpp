@@ -11,7 +11,6 @@
 #include <QDebug>
 
 #include "audiocapture.h"
-#include "opusencoder.h"
 
 #include "cameracapture.h"
 
@@ -22,6 +21,7 @@
 #include "participantmodel.h"
 
 #include <QSGRendererInterface>
+// #include "opusencoder.h"
 // #include "videoencoder.h"
 // #include "ffmpegencoder.h"
 #include "audiospeaker.h"
@@ -30,6 +30,9 @@
 #include "chatmodel.h"
 
 #include "user.h"
+
+#include "soundmanager.h"
+
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
@@ -62,11 +65,31 @@ int main(int argc, char *argv[])
 
 
 
+    SoundManager soundManager;
 
 
     ChannelModel channelModel;
     ChatModel chatModel;
     User usr(&channelModel,&chatModel);
+
+
+    QObject::connect(
+        &usr,
+        &User::userJoined,
+        &soundManager,
+        &SoundManager::playUserJoin);
+
+    QObject::connect(
+        &usr,
+        &User::userLeft,
+        &soundManager,
+        &SoundManager::playUserLeave);
+
+    QObject::connect(
+        &usr,
+        &User::newMessage,
+        &soundManager,
+        &SoundManager::playMessage);
 
 
     // ---------- MICROHPONE ----------
@@ -100,7 +123,12 @@ int main(int argc, char *argv[])
         &speaker,
         &AudioSpeaker::playPcm);
 
-
+    //make soundmanager output change when speakre output changed.
+    QObject::connect(
+        &speaker,
+        QOverload<QAudioDevice*>::of(&AudioSpeaker::currentAudioOutputChanged),
+        &soundManager,
+        &SoundManager::changeAudioOutput);
 
 
     // ---------- CAMERA ----------
@@ -192,7 +220,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("user", &usr);
     engine.rootContext()->setContextProperty("channelModel",&channelModel);
     engine.rootContext()->setContextProperty("chatModel",&chatModel);
-
+    engine.rootContext()->setContextProperty("soundManager",&soundManager);
 
     QObject::connect(
         &engine,

@@ -35,6 +35,9 @@ public:
     int myId() const;
     void setMyId(int newMyId);
 
+    QString myChannelName() const;
+    void setMyChannelName(const QString& name);
+
     QString myUsername() const;
     void setMyUsername(const QString &newMyUsername);
 
@@ -59,6 +62,13 @@ signals:
 
     void muteMicrophoneChanged();
 
+    void myChannelNameChanged();
+
+
+    void userJoined();
+    void userLeft();
+    void newMessage();
+
 public slots:
     void onReadyRead();
 
@@ -72,6 +82,7 @@ private:
     QString m_myUsername = "";
     int m_myId =-1;
     quint64 m_myChannelId=1;
+    QString m_myChannelName = "Chat";
 
     //voice
     quint32 m_sequence = 0;
@@ -82,6 +93,7 @@ private:
     ChatModel* m_chatModel=nullptr;
     Q_PROPERTY(int myId READ myId WRITE setMyId NOTIFY myIdChanged FINAL)
     Q_PROPERTY(QString myUsername READ myUsername WRITE setMyUsername NOTIFY myUsernameChanged FINAL)
+    Q_PROPERTY(QString myChannelName READ myChannelName NOTIFY myChannelNameChanged FINAL)
     Q_PROPERTY(bool muteHeadphone READ muteHeadphone WRITE setMuteHeadphone NOTIFY muteHeadphoneChanged FINAL)
     Q_PROPERTY(bool muteMicrophone READ muteMicrophone WRITE setMuteMicrophone NOTIFY muteMicrophoneChanged FINAL)
 };

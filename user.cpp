@@ -226,11 +226,21 @@ void User::onReadyRead()
             qDebug() << "voice: channel switched.";
             m_myChannelId = resp.channelId;
             m_channelModel->setCurrentChannelId(m_myChannelId);
+
+            //set channel name for Chat
+            setMyChannelName(m_channelModel->getChannelName(m_myChannelId));
         }
         else if(resp.channelId == m_myChannelId)
+        {
             qDebug() << "voice: user joined to your channel.";
+            emit userJoined();
+        }
+
         else if(resp.oldChannelId ==m_myChannelId)
+        {
             qDebug() << "voice: user left your channel.";
+            emit userLeft();
+        }
         else
             qInfo () << "user (" << resp.userId << ") has left " << resp.oldChannelId << " and joined to " << resp.channelId ;
 
@@ -295,6 +305,7 @@ void User::onReadyRead()
             << user.username;
 
         m_channelModel->addUser(1,user.id,user.username,false,false);
+
         break;
     }
 
@@ -319,6 +330,7 @@ void User::onReadyRead()
         auto msg = PacketHelpers::unpack<ChatMessagePacket>(packet.payload);
 
         m_chatModel->addMessage(msg);
+        emit newMessage();
     }
     break;
 
@@ -412,6 +424,20 @@ void User::setMyId(int newMyId)
         return;
     m_myId = newMyId;
     emit myIdChanged();
+}
+
+QString User::myChannelName() const
+{
+    return m_myChannelName;
+}
+
+void User::setMyChannelName(const QString& name)
+{
+    if(m_myChannelName == name)
+        return;
+
+    m_myChannelName = name;
+    emit myChannelNameChanged();
 }
 
 void User::setMessages(const QString &newMessages)
