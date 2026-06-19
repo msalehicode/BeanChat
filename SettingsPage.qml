@@ -43,7 +43,7 @@ Page {
             {
                 Label
                 {
-                    text:"soundManager volume:"
+                    text:"effects volume:"
                     color:"white"
                 }
                 Slider
@@ -375,18 +375,13 @@ Page {
                 font.pixelSize: 20
                 width: 60
                 height: implicitHeight
+                // onAccepted: user.s
             }
 
             Button
             {
                 text:"create channel"
                 onClicked: user.createChannel("dota2","123456")
-            }
-
-            Button
-            {
-                text:"login"
-                onClicked: user.login(usernameText.text,"ABC123")
             }
         }
     }

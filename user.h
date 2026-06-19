@@ -24,7 +24,7 @@ public:
     explicit User(ChannelModel *channelModel,ChatModel* chatModel, QObject *parent = nullptr);
 
     Q_INVOKABLE void joinChannel(int channelId);
-    Q_INVOKABLE void login(QString username, QString tokenlike);
+    Q_INVOKABLE void login(QString username="BeanChatUser", QString tokenlike="defaultBeanChatIdentity");
     Q_INVOKABLE void createChannel(QString channelName, QString password);
     Q_INVOKABLE void sendMessage(QString message);
     Q_INVOKABLE void askForServerState();

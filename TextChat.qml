@@ -35,14 +35,32 @@ Item {
         ListView
         {
             id: chatView
-            width: parent.width
+            width: parent.width//-handle.width
             height: parent.height-(title.height+enterTextBase.height)
             model: chatModel
             spacing: 8
             clip: true
-            anchors.left: parent.left
-            anchors.leftMargin: handle.width
+            // anchors.left: parent.left
+            // anchors.leftMargin: handle.width
+            ScrollBar.vertical: ScrollBar
+            {
+                policy: ScrollBar.AsNeeded
+                opacity:0.8
+                width: 12
+                visible: chatView.contentHeight > chatView.height
 
+                contentItem: Rectangle
+                {
+                    implicitWidth: 8
+                    radius: width / 2
+                    color: "#72767d"
+                }
+
+                background: Rectangle
+                {
+                    color: "#202225"
+                }
+            }
 
             delegate: Item
             {

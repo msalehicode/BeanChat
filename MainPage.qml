@@ -14,8 +14,8 @@ Item {
     property color bg1 : "#4a4c51"
     property color bg2: "#121315"
 
-    property int iconH: 30
-    property int iconW: 30
+    property int iconH: 20
+    property int iconW: 20
 
     Rectangle
     {
@@ -83,7 +83,7 @@ Item {
                         MouseArea
                         {
                             anchors.fill: parent
-                            onClicked: changePage("settings")
+                            onClicked: user.login()
                         }
                         Rectangle
                         {
@@ -163,7 +163,7 @@ Item {
                 id:channelList
                 width: widthBase
                 height: parent.height
-                property int handleWidth: 10 //to tell others i've handle with this width
+                property int handleWidth: 3 //to tell others i've handle with this width
 
                 Rectangle
                 {
@@ -189,11 +189,31 @@ Item {
 
                     ListView
                     {
+                        id:channelView
                         width: parent.width
-                        height: parent.height-(serverTitle.height+userStuff.height)
+                        height: parent.height-(serverTitle.height+userStuff.height+userStuffOnServer.height)
                         clip: true
                         model: channelModel
                         spacing: 10
+                        ScrollBar.vertical: ScrollBar
+                        {
+                            policy: ScrollBar.AsNeeded
+                            opacity:0.8
+                            width: 12
+                            visible: channelView.contentHeight > channelView.height
+
+                            contentItem: Rectangle
+                            {
+                                implicitWidth: 8
+                                radius: width / 2
+                                color: "#72767d"
+                            }
+
+                            background: Rectangle
+                            {
+                                color: "#202225"
+                            }
+                        }
                         delegate: Column
                         {
                             width: ListView.view.width
@@ -339,86 +359,392 @@ Item {
                         }
                     }
 
-
                     Rectangle
                     {
-                        id:userStuff
-                        color:bg2
-                        width:parent.width
-                        height: 60
+                        id: userStuffOnServer
+                        color: "#1e1f23"
+                        width: parent.width
+                        height: 50
+
+                        // Left side
                         Row
                         {
+                            id: serverInfoRow
+
+                            anchors.left: parent.left
+                            anchors.leftMargin: 10
                             anchors.verticalCenter: parent.verticalCenter
                             spacing: 5
-                            Rectangle{
-                                width:40
-                                height:40
-                                radius: 40
-                                color:"white"
-                                Text
+
+                            // Rectangle
+                            // {
+                            //     width: iconW
+                            //     height: iconW
+                            //     color: "transparent"
+
+                            //     Image
+                            //     {
+                            //         anchors.fill: parent
+                            //         source: "icons/signal.png"
+                            //     }
+
+                            //     MouseArea
+                            //     {
+                            //         anchors.fill: parent
+                            //         onClicked: console.log("signal status")
+                            //     }
+                            // }
+                            Rectangle
+                            {
+                                id:signalBase
+                                width: iconW
+                                height: iconW
+                                color: "transparent"
+
+                                property bool infoVisible: false
+
+                                Image
                                 {
-                                    text:"prof"
-                                    anchors.centerIn: parent
-                                    color:"white"
+                                    anchors.fill: parent
+                                    source: "icons/signal.png"
                                 }
+
                                 MouseArea
                                 {
                                     anchors.fill: parent
-                                    onClicked: console.log("prof")
+
+                                    onClicked:
+                                    {
+                                        parent.infoVisible = !parent.infoVisible
+                                    }
                                 }
-                            }
-                            Rectangle{
-                                width:40
-                                height:40
-                                color:"transparent"
-                                Image {
-                                    width: iconW
-                                    height: iconH
-                                    source: !user.muteMicrophone ? "icons/microphone.png" : "icons/microphone-red.png"
-                                    anchors.centerIn: parent
-                                }
-                                MouseArea
+
+                                Rectangle
                                 {
-                                    anchors.fill: parent
-                                    onClicked: user.muteMicrophone=!user.muteMicrophone
-                                }
-                            }
-                            Rectangle{
-                                width:40
-                                height:40
-                                color:"transparent"
-                                Image {
-                                    width: iconW
-                                    height: iconH
-                                    source: !user.muteHeadphone? "icons/headphone.png" : "icons/headphone-red.png"
-                                    anchors.centerIn: parent
-                                }
-                                MouseArea
-                                {
-                                    anchors.fill: parent
-                                    onClicked: user.muteHeadphone=!user.muteHeadphone
+                                    visible: parent.infoVisible
+
+                                    width: 160
+                                    height: 70
+
+                                    radius: 8
+
+                                    color: "#111214"
+                                    border.color: "#333333"
+
+                                    anchors.bottom: parent.top
+                                    anchors.bottomMargin: 8
+
+                                    anchors.left: parent.left
+
+                                    z: 999
+
+                                    Rectangle
+                                    {
+                                        id:closeUserConnectionInfo
+                                        width:10
+                                        height:10
+                                        color:"red"
+                                        anchors
+                                        {
+                                            top:parent.top
+                                            topMargin:10
+                                            right:parent.right
+                                            rightMargin:10
+                                        }
+
+                                        MouseArea
+                                        {
+                                            anchors.fill: parent
+                                            onClicked: signalBase.infoVisible=false
+                                        }
+
+                                    }
+
+                                    Column
+                                    {
+                                        anchors.fill: parent
+                                        anchors.margins: 8
+
+                                        spacing: 4
+
+                                        Text
+                                        {
+                                            id:connnectionInfoLabel
+                                            text: "Connection Info"
+                                            color: "white"
+                                            font.bold: true
+                                        }
+
+                                        Text
+                                        {
+                                            text: "Ping: 32 ms"
+                                            color: "#b5bac1"
+                                        }
+
+                                        Text
+                                        {
+                                            text: "Packet Loss: 0.2%"
+                                            color: "#b5bac1"
+                                        }
+                                    }
                                 }
                             }
 
-                            Rectangle{
-                                width:40
-                                height:40
-                                color:"transparent"
-                                Image {
-                                    width: iconW
-                                    height: iconH
-                                    source: "icons/videocall.png"
-                                    anchors.centerIn: parent
+
+                            Column
+                            {
+                                spacing:0
+
+                                Text
+                                {
+                                    text: "currentServer"//user.myServerName
+                                    color: "white"
+                                    font.bold: true
+                                    font.pixelSize: 14
                                 }
+
+                                Item
+                                {
+                                    width: parent.width
+                                    height: 15
+                                    Row
+                                    {
+                                        spacing: 5
+                                        Item
+                                        {
+                                            //spacer
+                                            width: 5
+                                            height: parent.height
+                                        }
+                                        Image {
+                                            width: 15
+                                            height: width
+                                            source: "icons/voice.png"
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+
+                                        Text
+                                        {
+                                            text: user.myChannelName
+                                            color: "#dadce0"
+                                            font.pixelSize: 12
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+                                    }
+                                }
+
+
+                            }
+                        }
+
+                        // Right side buttons
+                        Row
+                        {
+                            id: serverActionButtonsRow
+
+                            anchors.right: parent.right
+                            anchors.rightMargin: 10
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 10
+
+
+                            Rectangle
+                            {
+                                width: iconW
+                                height: iconW
+                                color: "transparent"
+
+                                Image
+                                {
+                                    anchors.fill: parent
+                                    source: "icons/videocall.png"
+                                }
+
                                 MouseArea
                                 {
                                     anchors.fill: parent
                                     onClicked: console.log("camera")
                                 }
                             }
+
+                            Rectangle
+                            {
+                                width: iconW
+                                height: iconW
+                                color: "transparent"
+
+                                Image
+                                {
+                                    anchors.fill: parent
+                                    source: "icons/screen.png"
+                                }
+
+                                MouseArea
+                                {
+                                    anchors.fill: parent
+                                    onClicked: console.log("share screen")
+                                }
+                            }
+
+                            Rectangle
+                            {
+                                width: iconW
+                                height: iconW
+                                color: "transparent"
+
+                                Image
+                                {
+                                    anchors.fill: parent
+                                    source: "icons/disconnect.png"
+                                }
+
+                                MouseArea
+                                {
+                                    anchors.fill: parent
+                                    onClicked: console.log("disconnect")
+                                }
+                            }
+
+                        }
+                    }
+
+                    Rectangle
+                    {
+                        id: userStuff
+                        color: bg2
+                        width: parent.width
+                        height: 65
+
+                        // Left side
+                        Row
+                        {
+                            id: userInfoRow
+                            anchors.left: parent.left
+                            anchors.leftMargin: 10
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            spacing: 5
+
+                            Rectangle
+                            {
+                                id: avatar
+
+                                width: 35
+                                height: width
+                                radius: width / 2
+
+                                color: "grey"
+
+                                MouseArea
+                                {
+                                    anchors.fill: parent
+                                    onClicked: console.log("prof")
+                                }
+
+                                // Status indicator
+                                Rectangle
+                                {
+                                    id: userStatus
+
+                                    width: 14
+                                    height: 14
+                                    radius: width / 2
+
+                                    anchors.right: parent.right
+                                    anchors.bottom: parent.bottom
+
+                                    anchors.rightMargin: -1
+                                    anchors.bottomMargin: -1
+
+                                    border.width: 2
+                                    border.color: bg2   // same as panel background
+
+                                    color: "lime"      // Online
+                                }
+                            }
+
+                            Text
+                            {
+                                id: usernameOnUserStuff
+                                text: user.myUsername
+                                color: "white"
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
                         }
 
+                        // Right side buttons
+                        Row
+                        {
+                            id: actionButtonsRow
 
+                            anchors.right: parent.right
+                            anchors.rightMargin: 10
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            spacing: 10
+
+                            Rectangle
+                            {
+                                width: iconW
+                                height: iconW
+                                color: "transparent"
+
+                                Image
+                                {
+                                    anchors.fill: parent
+                                    source: !user.muteMicrophone
+                                            ? "icons/microphone.png"
+                                            : "icons/microphone-red.png"
+                                }
+
+                                MouseArea
+                                {
+                                    anchors.fill: parent
+                                    onClicked: user.muteMicrophone = !user.muteMicrophone
+                                }
+                            }
+
+                            Rectangle
+                            {
+                                width: iconW
+                                height: iconW
+                                color: "transparent"
+
+                                Image
+                                {
+                                    anchors.fill: parent
+                                    source: !user.muteHeadphone
+                                            ? "icons/headphone.png"
+                                            : "icons/headphone-red.png"
+                                }
+
+                                MouseArea
+                                {
+                                    anchors.fill: parent
+                                    onClicked: user.muteHeadphone = !user.muteHeadphone
+                                }
+                            }
+
+
+                            Rectangle
+                            {
+                                width: iconW
+                                height: iconW
+                                color: "transparent"
+
+                                Image
+                                {
+                                    anchors.fill: parent
+                                    source: "icons/settings50.png"
+                                }
+
+                                MouseArea
+                                {
+                                    anchors.fill: parent
+                                    onClicked: changePage("settings")
+                                }
+                            }
+                        }
                     }
                 }
 

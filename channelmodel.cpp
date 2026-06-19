@@ -173,7 +173,9 @@ void ChannelModel::updateUserStatus(quint64 userId, bool isTalking, bool isMuted
 UserItem *ChannelModel::getUser(quint64 channelId, quint64 userId)
 {
     ChannelItem* channel = findChannel(channelId);
-    return findUserInChannel(channel,userId);
+    if(channel)
+        return findUserInChannel(channel,userId);
+    return nullptr;
 }
 
 QString ChannelModel::getChannelName(quint64 channelId)

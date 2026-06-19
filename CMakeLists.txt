@@ -83,7 +83,7 @@ qt_add_qml_module(appBeanChat
         # ffmpegencoder.h ffmpegencoder.cpp
 
     # icons
-    RESOURCES icons/headphone.png icons/headphone-red.png icons/microphone.png icons/microphone-red.png icons/videocall.png icons/videocall-red.png icons/voice.png icons/folder.png icons/chat.png icons/beanChatIcon.png
+    RESOURCES icons/headphone.png icons/headphone-red.png icons/microphone.png icons/microphone-red.png icons/videocall.png icons/videocall-red.png icons/voice.png icons/folder.png icons/chat.png icons/beanChatIcon.png icons/settings50.png icons/disconnect.png icons/screen.png icons/signal.png
 
 
     # from Server. later move these into a library
