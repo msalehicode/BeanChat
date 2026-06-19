@@ -30,6 +30,12 @@ Item {
             spacing: 5
             Row
             {
+                // Label
+                // {
+                //     text:"note: when a button is set as push to talk hotkey, \nOS may don't send that key to other apps/windows. \nalso due to coding stuff some keys are forbidden for now cant be set."
+                //     color:"white"
+                // }
+
                 Label
                 {
                     text:"push to talk:"
@@ -38,7 +44,11 @@ Item {
                 CheckBox
                 {
                     checked: microphone.pushToTalkStatus
-                    onCheckedChanged: microphone.pushToTalkStatus = checked
+                    onCheckedChanged:
+                    {
+                        microphone.pushToTalkStatus = checked
+                        microphone.volumeGateStatus = !checked //when its push to talk doesnt make sense to do volume gate.
+                    }
                 }
             }
 
@@ -232,7 +242,11 @@ Item {
                     CheckBox
                     {
                         checked: microphone.volumeGateStatus
-                        onCheckedChanged: microphone.volumeGateStatus = checked
+                        onCheckedChanged:
+                        {
+                            microphone.volumeGateStatus = checked
+                            microphone.pushToTalkStatus = !checked //when its volumeGate doesnt make sense to do pushToTalk
+                        }
                     }
                     Rectangle
                     {

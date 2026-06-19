@@ -53,7 +53,6 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel, QObject *parent)
                     if(!senderUser->isTalking)
                     {
                         m_channelModel->updateUserStatus(packet.senderId, true, senderUser->muted,senderUser->deafened);
-                        qDebug() << "user is not talking update status..";
                     }
 
                     senderUser->lastVoicePacket.restart();
@@ -156,6 +155,15 @@ void User::sendVoicePcm(
         data,
         QHostAddress("127.0.0.1"),
         9988);
+
+    //update isTalking this user/device
+    UserItem* senderUser = m_channelModel->getUser(m_myChannelId, myId());
+    if(!senderUser)
+        return;
+
+    if(!senderUser->isTalking)
+        m_channelModel->updateUserStatus(myId(), true, senderUser->muted,senderUser->deafened);
+    senderUser->lastVoicePacket.restart();
 }
 
 void User::sendMessage(QString message)
