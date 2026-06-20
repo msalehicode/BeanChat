@@ -13,6 +13,7 @@ struct UserItem
     bool isTalking = false;
     bool muted = false;
     bool deafened = false;
+    bool hasVideo = false;
 
     QElapsedTimer lastVoicePacket;
 
@@ -68,9 +69,10 @@ public:
         quint64 userId,
         const QString& username,
         bool muted = false,
-        bool deafened = false);
+        bool deafened = false,
+        bool hasVideo = false);
 
-    void updateUserStatus(quint64 userId, bool isTalking, bool isMuted, bool isDefened);
+    void updateUserStatus(quint64 userId, bool isTalking, bool isMuted, bool isDefened, bool hasVideo=false);
 
     UserItem* getUser(quint64 channelId, quint64 userId);
     QString getChannelName(quint64 channelId);
@@ -85,6 +87,13 @@ public:
 
 
     void setCurrentChannelId(quint64 channelId);
+
+    void setUserTalking(quint64 userId, bool talking);
+    void setUserMuted(quint64 userId, bool muted);
+    void setUserDeafened(quint64 userId, bool deafened);
+    void setUserHasVideo(quint64 userId, bool hasVideo);
+signals:
+    void userTalkingStatus(quint64 userId,bool status);
 
 private slots:
     void updateTalkingUsers();

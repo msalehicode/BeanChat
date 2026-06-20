@@ -83,7 +83,20 @@ qt_add_qml_module(appBeanChat
         # ffmpegencoder.h ffmpegencoder.cpp
 
     # icons
-    RESOURCES icons/headphone.png icons/headphone-red.png icons/microphone.png icons/microphone-red.png icons/videocall.png icons/videocall-red.png icons/voice.png icons/folder.png icons/chat.png icons/beanChatIcon.png icons/settings50.png icons/disconnect.png icons/screen.png icons/signal.png
+    RESOURCES
+    icons/beanChatIcon.png
+    icons/chat.png
+    icons/folder.png
+    icons/lock.png icons/lock-black.png
+    icons/voice.png icons/voice-black.png
+    icons/settings.png icons/settings-black.png
+    icons/endcall.png icons/endcall-black.png icons/endcall-red.png
+    icons/camera.png icons/camera-black-closed.png icons/camera-closed.png icons/camera-red.png
+    icons/disconnect.png icons/disconnect-black.png icons/disconnect-red.png
+    icons/headphone.png icons/headphone-black-closed.png icons/headphone-closed.png icons/headphone-red.png
+    icons/microhpone-black-closed.png icons/microphone.png icons/microphone-closed.png icons/microphone-red.png
+    icons/screen.png icons/screen-black.png icons/screen-black-closed.png icons/screen-closed.png icons/screen-red.png
+    icons/signal.png icons/signal-black.png icons/signal-green.png icons/signal-orange.png icons/signal-red.png icons/signal-yellow.png
 
 
     # from Server. later move these into a library
@@ -123,11 +136,11 @@ target_link_libraries(appBeanChat PRIVATE
 )
 
 # debug tool to get sigfault infos.
-target_compile_options(appBeanChat PRIVATE
-    -fsanitize=address
-    -g)
-target_link_options(appBeanChat PRIVATE
-    -fsanitize=address)
+# target_compile_options(appBeanChat PRIVATE
+#     -fsanitize=address
+#     -g)
+# target_link_options(appBeanChat PRIVATE
+#     -fsanitize=address)
 
 
 target_link_libraries(appBeanChat

@@ -6,22 +6,31 @@
 #include <QPainter>
 #include <QPainterPath>
 
+
+// #define D_PRINT_MYVIDEOITEM_INFO
+
 MyVideoItem::MyVideoItem()
 {
     setFlag(ItemHasContents, true);
+#ifdef D_PRINT_MYVIDEOITEM_INFO
     qDebug()
         << "MyVideoItem thread"
         << thread();
+#endif
 }
 
 void MyVideoItem::releaseResources()
 {
+#ifdef D_PRINT_MYVIDEOITEM_INFO
     qDebug() << "releaseResources";
+#endif
 }
 
 MyVideoItem::~MyVideoItem()
 {
+#ifdef D_PRINT_MYVIDEOITEM_INFO
     qDebug() << "~MyVideoItem" << this;
+#endif
 }
 
 
@@ -67,6 +76,8 @@ QSGNode *MyVideoItem::updatePaintNode(
     QSGNode *oldNode,
     UpdatePaintNodeData *)
 {
+
+#ifdef D_PRINT_MYVIDEOITEM_INFO
     qDebug()
     << "paint thread"
     << QThread::currentThread();
@@ -75,7 +86,7 @@ QSGNode *MyVideoItem::updatePaintNode(
     << "paint"
     << this
     << m_sink;
-
+#endif
 
     auto *node =
         static_cast<QSGSimpleTextureNode *>(oldNode);
@@ -90,11 +101,13 @@ QSGNode *MyVideoItem::updatePaintNode(
         return node;
 
     QImage img = m_sink->image();
-    qDebug()
+
+#ifdef D_PRINT_MYVIDEOITEM_INFO
+    qDebug() << "videoItem image:"
         << img.size()
         << img.format()
         << img.isDetached();
-
+#endif
 
     //apply radius to image
     QImage rounded(img.size(), QImage::Format_ARGB32_Premultiplied);

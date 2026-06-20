@@ -62,6 +62,9 @@ QVariant ChannelModel::data(
             map["deafened"] =
                 user.deafened;
 
+            map["hasVideo"] =
+                user.hasVideo;
+
             users.push_back(map);
         }
 
@@ -117,7 +120,7 @@ void ChannelModel::addUser(
     quint64 userId,
     const QString& username,
     bool muted,
-    bool deafened)
+    bool deafened, bool hasVideo)
 {
     auto channel =
         findChannel(channelId);
@@ -132,6 +135,7 @@ void ChannelModel::addUser(
 
     user.muted = muted;
     user.deafened = deafened;
+    user.hasVideo = hasVideo;
 
     channel->users.push_back(
         user);
@@ -144,7 +148,7 @@ void ChannelModel::addUser(
         index(row));
 }
 
-void ChannelModel::updateUserStatus(quint64 userId, bool isTalking, bool isMuted, bool isDefened)
+void ChannelModel::updateUserStatus(quint64 userId, bool isTalking, bool isMuted, bool isDefened, bool hasVideo)
 {
     auto channel = findChannelOfUser(userId);
 
@@ -159,6 +163,7 @@ void ChannelModel::updateUserStatus(quint64 userId, bool isTalking, bool isMuted
     user->isTalking = isTalking;
     user->muted = isMuted;
     user->deafened = isDefened;
+    user->hasVideo = hasVideo;
 
 
     int row =
@@ -168,6 +173,79 @@ void ChannelModel::updateUserStatus(quint64 userId, bool isTalking, bool isMuted
         index(row),
         index(row));
 }
+
+
+
+
+
+void ChannelModel::setUserTalking(quint64 userId, bool talking)
+{
+    auto channel = findChannelOfUser(userId);
+    if (!channel)
+        return;
+
+    UserItem* user = findUserInChannel(channel, userId);
+    if (!user || user->isTalking == talking)
+        return;
+
+    user->isTalking = talking;
+
+    int row = &(*channel) - m_channels.data();
+
+    emit dataChanged(index(row), index(row));
+}
+
+void ChannelModel::setUserMuted(quint64 userId, bool muted)
+{
+    auto channel = findChannelOfUser(userId);
+    if (!channel)
+        return;
+
+    UserItem* user = findUserInChannel(channel, userId);
+    if (!user || user->muted == muted)
+        return;
+
+    user->muted = muted;
+
+    int row = &(*channel) - m_channels.data();
+
+    emit dataChanged(index(row), index(row));
+}
+
+void ChannelModel::setUserDeafened(quint64 userId, bool deafened)
+{
+    auto channel = findChannelOfUser(userId);
+    if (!channel)
+        return;
+
+    UserItem* user = findUserInChannel(channel, userId);
+    if (!user || user->deafened == deafened)
+        return;
+
+    user->deafened = deafened;
+
+    int row = &(*channel) - m_channels.data();
+
+    emit dataChanged(index(row), index(row));
+}
+
+void ChannelModel::setUserHasVideo(quint64 userId, bool hasVideo)
+{
+    auto channel = findChannelOfUser(userId);
+    if (!channel)
+        return;
+
+    UserItem* user = findUserInChannel(channel, userId);
+    if (!user || user->hasVideo == hasVideo)
+        return;
+
+    user->hasVideo = hasVideo;
+
+    int row = &(*channel) - m_channels.data();
+
+    emit dataChanged(index(row), index(row));
+}
+
 
 
 UserItem *ChannelModel::getUser(quint64 channelId, quint64 userId)
@@ -273,18 +351,23 @@ void ChannelModel::updateTalkingUsers()
     ChannelItem* channel = findChannel(m_currentChannelId);
 
     if(!channel)
+    {
+        // qDebug() << "could not fincd channel to updateTalking users..";
         return;
+    }
+    // else
+        // qDebug() << "updating talking uspesr for channel id:" << m_currentChannelId;
 
     for(auto& user : channel->users)
     {
         if(user.isTalking && user.lastVoicePacket.elapsed() > 100)
         {
-            updateUserStatus(
-                user.id,
-                false,
-                user.muted,
-                user.deafened);
+            setUserTalking(user.id, false);
+            // qDebug() << "not talking..";
+            emit userTalkingStatus(user.id,false);
         }
+        // else
+            // qDebug() << "talking..";
     }
 
 }

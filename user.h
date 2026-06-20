@@ -11,9 +11,13 @@
 #include <QUdpSocket>
 #include "channelmodel.h"
 #include "chatmodel.h"
+#include "participantmodel.h"
 #include <QDataStream>
 
+#include <QRandomGenerator> //to get a random number for default username
 #include <QNetworkDatagram>
+
+#include "cameracapture.h"
 
 class User : public QObject
 {
@@ -21,10 +25,12 @@ class User : public QObject
     Q_PROPERTY(QString messages READ getMessages WRITE setMessages NOTIFY messagesChanged FINAL)
 
 public:
-    explicit User(ChannelModel *channelModel,ChatModel* chatModel, QObject *parent = nullptr);
+    explicit User(ChannelModel *channelModel,ChatModel* chatModel,
+                  ParticipantModel* currentChannelParticipant,CameraCapture* cam,
+                  QObject *parent = nullptr);
 
     Q_INVOKABLE void joinChannel(int channelId);
-    Q_INVOKABLE void login(QString username="BeanChatUser", QString tokenlike="defaultBeanChatIdentity");
+    Q_INVOKABLE void login(QString username="", QString tokenlike="defaultBeanChatIdentity");
     Q_INVOKABLE void createChannel(QString channelName, QString password);
     Q_INVOKABLE void sendMessage(QString message);
     Q_INVOKABLE void askForServerState();
@@ -43,10 +49,13 @@ public:
 
     void sendVoicePcm(const QByteArray& pcm);
     bool muteHeadphone() const;
-    void setMuteHeadphone(bool newMuteHeadphone);
+    void setMuteHeadphone(bool status);
 
     bool muteMicrophone() const;
-    void setMuteMicrophone(bool newMuteMicrophone);
+    void setMuteMicrophone(bool status);
+
+    bool isCameraOpen() const;
+    void setIsCameraOpen(bool status);
 
 signals:
 
@@ -57,6 +66,7 @@ signals:
     void myUsernameChanged();
 
     void voiceReceived(QByteArray pcm);
+    void videoReceived(QByteArray data);
 
     void muteHeadphoneChanged();
 
@@ -69,12 +79,17 @@ signals:
     void userLeft();
     void newMessage();
 
+    void isCameraOpenChanged();
+
 public slots:
-    void onReadyRead();
+    void onTcpReadyRead();
+    void onUdpReadyRead();
+    void sendVideoFrame(const QByteArray& jpegData);
 
 private:
     bool m_muteMicrophone=false;
     bool m_muteHeadphone=false;
+    bool m_isCameraOpen=false;
 
 
     QTcpSocket socket;
@@ -87,15 +102,21 @@ private:
     //voice
     quint32 m_sequence = 0;
 
+    //video
+    quint32 m_videoSequence = 0;
+
     QString m_messages;
 
     ChannelModel* m_channelModel=nullptr;
     ChatModel* m_chatModel=nullptr;
+    ParticipantModel* m_currentChannelParticipant=nullptr;
+    CameraCapture* m_cam=nullptr;
     Q_PROPERTY(int myId READ myId WRITE setMyId NOTIFY myIdChanged FINAL)
     Q_PROPERTY(QString myUsername READ myUsername WRITE setMyUsername NOTIFY myUsernameChanged FINAL)
     Q_PROPERTY(QString myChannelName READ myChannelName NOTIFY myChannelNameChanged FINAL)
     Q_PROPERTY(bool muteHeadphone READ muteHeadphone WRITE setMuteHeadphone NOTIFY muteHeadphoneChanged FINAL)
     Q_PROPERTY(bool muteMicrophone READ muteMicrophone WRITE setMuteMicrophone NOTIFY muteMicrophoneChanged FINAL)
+    Q_PROPERTY(bool isCameraOpen READ isCameraOpen WRITE setIsCameraOpen NOTIFY isCameraOpenChanged FINAL)
 };
 
 #endif // USER_H

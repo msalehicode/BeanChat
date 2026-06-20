@@ -33,6 +33,9 @@
 
 #include "soundmanager.h"
 
+#include <QBuffer>
+#include <QTimer>
+
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
@@ -63,16 +66,50 @@ int main(int argc, char *argv[])
         qDebug() << "  Refresh Rate:" << screen->refreshRate();
     }
 
-
+    CameraCapture cam;
 
     SoundManager soundManager;
 
 
     ChannelModel channelModel;
     ChatModel chatModel;
-    User usr(&channelModel,&chatModel);
+    ParticipantModel participants;//hold center rectangles for current channel users.
+    User usr(&channelModel,&chatModel,&participants, &cam);
+
+    //CAMERA aconnection:
+    QObject::connect(
+        &cam,
+        &CameraCapture::jpegReady,
+        &usr,
+        &User::sendVideoFrame);
+
+    //just make fake camera feed for test due to camera can use once
+    // QTimer timer;
+    // QObject::connect(
+    //     &timer,
+    //     &QTimer::timeout,
+    //     [&usr]()
+    //     {
+    //         qDebug() << "generating fake camera ..";
+
+    //         QImage img(640, 400, QImage::Format_RGB32);
+    //         img.fill(Qt::red);
+
+    //         QByteArray jpgData;
+
+    //         QBuffer buffer(&jpgData);
+    //         buffer.open(QIODevice::WriteOnly);
+
+    //         img.save(&buffer, "JPG", 60);
+
+    //         usr.sendVideoFrame(jpgData);
+    //     });
+    // timer.start(1000);
 
 
+
+
+    //sound effects connections
     QObject::connect(
         &usr,
         &User::userJoined,
@@ -90,6 +127,9 @@ int main(int argc, char *argv[])
         &User::newMessage,
         &soundManager,
         &SoundManager::playMessage);
+
+
+
 
 
     // ---------- MICROHPONE ----------
@@ -111,19 +151,18 @@ int main(int argc, char *argv[])
     // ---------- SPEAKER ----------
     AudioSpeaker speaker;
     speaker.start();
-
     //playback microhpone..
     // QObject::connect(&audio, &AudioCapture::pcmReady,
     //         &speaker, &AudioSpeaker::playPcm);
 
-    //play received voice from udp
+    //play received voice from udp socket
     QObject::connect(
         &usr,
         &User::voiceReceived,
         &speaker,
         &AudioSpeaker::playPcm);
 
-    //make soundmanager output change when speakre output changed.
+    //make soundmanager output change when speaker output changed.
     QObject::connect(
         &speaker,
         QOverload<QAudioDevice*>::of(&AudioSpeaker::currentAudioOutputChanged),
@@ -131,40 +170,25 @@ int main(int argc, char *argv[])
         &SoundManager::changeAudioOutput);
 
 
-    // ---------- CAMERA ----------
-    CameraCapture cam;
-    // cam.start();
 
-    // QObject::connect(&cam, &CameraCapture::frameReady,
-    //                  [](const QVideoFrame &frame)
-    //                  {
-                         // qDebug() << "Frame received:" << frame.size();
-                     // });
 
     // ---------- SCREEN ----------
-    //monitor
     // MonitorCapture *capture = new MonitorCapture();
     // QStringList monitors = capture->monitors();
     // for (int i = 0; i < monitors.size(); ++i)
-    // {
     //     qDebug() << i << monitors[i];
-    // }
-    // capture->selectMonitor(0);
 
+    // capture->selectMonitor(0);
     // QObject::connect(capture,
     //         &MonitorCapture::frameReady,
     //         [](const QVideoFrame &frame)
     //         {
     //             QVideoFrame copy(frame);
-
     //             if (!copy.map(QVideoFrame::ReadOnly))
     //                 return;
 
     //             QImage image = copy.toImage();
-
     //             // Encode and send over network
-    //             // e.g. JPEG, H264, WebRTC
-
     //             copy.unmap();
     //         });
     // capture->start();
@@ -176,11 +200,9 @@ int main(int argc, char *argv[])
 
 
 
-    ParticipantModel participants;
 
     //add test users.. with camera
-    // const int userCount = 7;
-
+    // const int userCount = 2;
     // for (int i = 0; i < userCount; ++i)
     // {
     //     participants.addUser(
@@ -188,12 +210,9 @@ int main(int argc, char *argv[])
     //         (i%2==0?false:true),   // microphone
     //         (i%2==0?true:false));  // camera
     // }
-
     // for (int i = 0; i < userCount; ++i)
     // {
-    //     Participant *p =
-    //         participants.findUser(
-    //             QString("User %1").arg(i + 1));
+    //     Participant *p = participants.findUser(QString("User %1").arg(i + 1));
 
     //     if (!p)
     //         continue;
@@ -232,11 +251,9 @@ int main(int argc, char *argv[])
 
 
 
-    //check renreder
-    auto *window =
-        qobject_cast<QQuickWindow*>(
-            engine.rootObjects().first());
-    qDebug() << "render" << window->rendererInterface()->graphicsApi();
+    //check renderer
+    auto *window = qobject_cast<QQuickWindow*>(engine.rootObjects().first());
+    qDebug() << "window graphicsApi renderer Interface : " << window->rendererInterface()->graphicsApi();
 
 
     return app.exec();

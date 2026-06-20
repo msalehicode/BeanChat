@@ -20,4 +20,9 @@ make -j$(nproc)
 
 sudo make install
 
+
+
+can use heaptrack ./app
+or
+valgrind --tool=massif ./appBean
  */

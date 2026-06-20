@@ -23,7 +23,7 @@ signals:
     void frameChanged();
     void frameReady(const QVideoFrame &frame);
     void imageReady(const QImage &image);
-
+    void jpegReady(const QByteArray& jpegData); //send to socket
 private:
     QCamera *camera = nullptr;
     QMediaCaptureSession session;

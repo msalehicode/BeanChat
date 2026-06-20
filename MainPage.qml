@@ -323,11 +323,11 @@ Item {
 
                                                 Image
                                                 {
-                                                    visible: true // modelData.isCameraOpen
+                                                    visible: modelData.hasVideo
                                                     Layout.preferredWidth: 20
                                                     Layout.preferredHeight: 20
                                                     fillMode: Image.PreserveAspectFit
-                                                    source: "icons/videocall.png"
+                                                    source: "icons/camera.png"
                                                 }
 
                                                 Image
@@ -336,7 +336,7 @@ Item {
                                                     Layout.preferredWidth: 20
                                                     Layout.preferredHeight: 20
                                                     fillMode: Image.PreserveAspectFit
-                                                    source: "icons/microphone-red.png"
+                                                    source: "icons/microphone-closed.png"
                                                 }
 
 
@@ -346,7 +346,7 @@ Item {
                                                     Layout.preferredWidth: 20
                                                     Layout.preferredHeight: 20
                                                     fillMode: Image.PreserveAspectFit
-                                                    source: "icons/headphone-red.png"
+                                                    source: "icons/headphone-closed.png"
                                                 }
                                             }
                                         }
@@ -376,24 +376,7 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
                             spacing: 5
 
-                            // Rectangle
-                            // {
-                            //     width: iconW
-                            //     height: iconW
-                            //     color: "transparent"
 
-                            //     Image
-                            //     {
-                            //         anchors.fill: parent
-                            //         source: "icons/signal.png"
-                            //     }
-
-                            //     MouseArea
-                            //     {
-                            //         anchors.fill: parent
-                            //         onClicked: console.log("signal status")
-                            //     }
-                            // }
                             Rectangle
                             {
                                 id:signalBase
@@ -557,13 +540,13 @@ Item {
                                 Image
                                 {
                                     anchors.fill: parent
-                                    source: "icons/videocall.png"
+                                    source: user.isCameraOpen ? "icons/camera.png" : "icons/camera-closed.png"
                                 }
 
                                 MouseArea
                                 {
                                     anchors.fill: parent
-                                    onClicked: console.log("camera")
+                                    onClicked: user.isCameraOpen = !user.isCameraOpen
                                 }
                             }
 
@@ -576,7 +559,7 @@ Item {
                                 Image
                                 {
                                     anchors.fill: parent
-                                    source: "icons/screen.png"
+                                    source: "icons/screen-closed.png"
                                 }
 
                                 MouseArea
@@ -694,7 +677,7 @@ Item {
                                     anchors.fill: parent
                                     source: !user.muteMicrophone
                                             ? "icons/microphone.png"
-                                            : "icons/microphone-red.png"
+                                            : "icons/microphone-closed.png"
                                 }
 
                                 MouseArea
@@ -715,7 +698,7 @@ Item {
                                     anchors.fill: parent
                                     source: !user.muteHeadphone
                                             ? "icons/headphone.png"
-                                            : "icons/headphone-red.png"
+                                            : "icons/headphone-closed.png"
                                 }
 
                                 MouseArea
@@ -735,7 +718,7 @@ Item {
                                 Image
                                 {
                                     anchors.fill: parent
-                                    source: "icons/settings50.png"
+                                    source: "icons/settings.png"
                                 }
 
                                 MouseArea
@@ -810,50 +793,55 @@ Item {
                     {
                         id:channelClientsGridView
 
-                        property int minTileWidth: 220
-                        property int maxTileWidth: 320
+                        cellWidth: 250
+                        cellHeight: 150
+                        anchors.fill: parent
 
-                        property int columns:
-                            Math.max(1,
-                                     Math.ceil(Math.sqrt(count)))
+                        // property int minTileWidth: 220
+                        // property int maxTileWidth: 320
 
-                        property int rows:
-                            Math.ceil(count / columns)
+                        // property int columns:
+                        //     Math.max(1,
+                        //              Math.ceil(Math.sqrt(count)))
 
-                        cellWidth: Math.max(
-                                       minTileWidth,
-                                       Math.min(
-                                           maxTileWidth,
-                                           parent.width / columns))
+                        // property int rows:
+                        //     Math.ceil(count / columns)
 
-                        cellHeight: cellWidth * 9 / 16
+                        // cellWidth: Math.max(
+                        //                minTileWidth,
+                        //                Math.min(
+                        //                    maxTileWidth,
+                        //                    parent.width / columns))
 
-                        property int contentRowsHeight:
-                            rows * cellHeight
+                        // cellHeight: cellWidth * 9 / 16
 
-                        width: Math.min(
-                                   parent.width,
-                                   Math.min(count, columns) * cellWidth)
+                        // property int contentRowsHeight:
+                        //     rows * cellHeight
 
-                        height: Math.min(
-                                    parent.height,
-                                    contentRowsHeight)
+                        // width: Math.min(
+                        //            parent.width,
+                        //            Math.min(count, columns) * cellWidth)
 
-                        x: (parent.width - width) / 2
+                        // height: Math.min(
+                        //             parent.height,
+                        //             contentRowsHeight)
 
-                        y: contentRowsHeight < parent.height
-                           ? (parent.height - contentRowsHeight) / 2
-                           : 0
+                        // x: (parent.width - width) / 2
+
+                        // y: contentRowsHeight < parent.height
+                        //    ? (parent.height - contentRowsHeight) / 2
+                        //    : 0
 
                         model: participantModel
 
                         delegate:Rectangle
                         {
-                            width: channelClientsGridView.cellWidth - 20
-                            height:channelClientsGridView.cellHeight - 20
+                            // width: channelClientsGridView.cellWidth - 20
+                            // height:channelClientsGridView.cellHeight - 20
+                            width: channelClientsGridView.cellWidth - 10
+                            height: channelClientsGridView.cellHeight - 10
                             radius: 30
                             color: "grey"
-
 
 
                             Rectangle
@@ -888,16 +876,16 @@ Item {
                                 id:userWithVideo
                                 anchors.fill: parent
                                 radius:parent.radius
-                                visible: isCameraOpen
+                                visible: model.isCameraOpen
                                 color:"transparent"
                                 clip: true
                                 VideoItem
                                 {
                                     anchors.fill: parent
-                                    sink: videoSink
+                                    sink: model.videoSink
                                     radius: 45
                                     Component.onCompleted: {
-                                        console.log(username, videoSink)
+                                        console.log("username=",username, "sink=",videoSink, "isCameraOpen=",isCameraOpen)
                                     }
                                     Rectangle
                                     {
@@ -905,7 +893,7 @@ Item {
                                         anchors.fill: parent
                                         color:"transparent"
                                         radius: userWithVideo.radius
-                                        border.width: model.isTalking ? 4 : 0
+                                        border.width: model.isTalking ? 4 : 0 //model.isDeafened isTalking..
                                         border.color: "yellow"
                                     }
                                 }
