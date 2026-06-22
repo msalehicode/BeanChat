@@ -19,38 +19,34 @@ Window {
 
     function changePage(page)
     {
-
-        if(page==="settings")
-            mainStack.push(settingsPage)
-        else if(page==="pv")
-            mainStack.push(privatePage)
+        if (page === "settings")
+            mainStack.push(settingsPageComponent)
+        else if (page === "pv")
+            mainStack.push(privatePageComponent)
         else
             mainStack.pop()
     }
 
-    PrivateChatPage
-    {
-        id:privatePage
-    }
 
-    SettingsPage
-    {
-        id: settingsPage
-    }
-
-    MainPage
-    {
-        id:mainPage
-    }
-
-
-
-
-    StackView
-    {
-        id:mainStack
+    StackView {
+        id: mainStack
         anchors.fill: parent
-        initialItem: mainPage
+        initialItem: mainPageComponent
+    }
+
+    Component {
+        id: mainPageComponent
+        MainPage {}
+    }
+
+    Component {
+        id: settingsPageComponent
+        SettingsPage {}
+    }
+
+    Component {
+        id: privatePageComponent
+        PrivateChatPage {}
     }
 
 

@@ -9,7 +9,7 @@ Item {
 
     Rectangle
     {
-        color:"black"
+        color:"purple"
         anchors.fill: parent
     }
 
@@ -27,7 +27,7 @@ Item {
             color:"grey"
             Text
             {
-                text: user.myChannelName
+                text: "Chat in " + user.myChannelName
                 anchors.centerIn: parent
                 color:"white"
             }
@@ -35,13 +35,12 @@ Item {
         ListView
         {
             id: chatView
-            width: parent.width//-handle.width
+            width: parent.width
             height: parent.height-(title.height+enterTextBase.height)
             model: chatModel
             spacing: 8
             clip: true
-            // anchors.left: parent.left
-            // anchors.leftMargin: handle.width
+
             ScrollBar.vertical: ScrollBar
             {
                 policy: ScrollBar.AsNeeded
@@ -117,8 +116,6 @@ Item {
         width: parent.width
         height: 60
         anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.leftMargin: handle.width/2
         color:"transparent"
         Rectangle
         {
@@ -151,48 +148,4 @@ Item {
         }
     }
 
-
-    Rectangle
-    {
-        id: handle
-
-        width: 15
-        height: parent.height
-
-        x: -width / 2
-        y: 0
-
-        color: "grey"
-
-        MouseArea
-        {
-            anchors.fill: parent
-            cursorShape: Qt.SizeHorCursor
-
-            property real startX: 0
-            property real startWidth: 0
-
-            onPressed: function(mouse)
-            {
-                startX = mouse.x
-                startWidth = root.parent.width
-            }
-
-            onPositionChanged: function(mouse)
-            {
-                if (pressed)
-                {
-                    let dx = mouse.x - startX
-                    let pos = startWidth - dx
-
-                    if (pos < 250)
-                        pos = 250
-                    else if (pos > 800)
-                        pos = 800
-
-                    root.parent.width = pos
-                }
-            }
-        }
-    }
 }

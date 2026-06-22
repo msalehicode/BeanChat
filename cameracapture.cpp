@@ -10,16 +10,51 @@
 CameraCapture::CameraCapture(QObject *parent)
     : QObject(parent)
 {
+    refreshCameraInputs();
+
+
+
+
+    //connect for later changes
+    QObject::connect(&m_cameraDevices, &QMediaDevices::videoInputsChanged, this, [this]()
+            {
+                qDebug() << "Camera hardware change detected!";
+
+                // 1. Refresh your local list
+                refreshCameraInputs();
+
+                // 2. Decide what to do if the active mic was removed
+                if (m_currentCameraInput >= m_cameraInputs.size())
+                {
+                    // If the current mic is gone, reset to default 0
+                    setCurrentCameraInput(0);
+                }
+            });
 }
 
 void CameraCapture::start()
 {
-    auto device = QMediaDevices::defaultVideoInput();
+    // Check if the current index is actually valid
+    if (m_cameraInputs.isEmpty() || m_currentCameraInput>= m_cameraInputs.size()) {
+        qWarning() << "Invalid camera input index!";
+        // device = QMediaDevices::defaultVideoInput();
+        return;
+    }
+
+    // Clean up existing capture before starting new one
+    if (camera)
+    {
+        stop();
+    }
+
+
+
+    camera = new QCamera(m_cameraInputs[m_currentCameraInput], this);
 
 
 #ifdef D_PRINT_CAMERA_INFO
     //test performace
-    auto formats = device.videoFormats();
+    auto formats = m_cameraInputs[m_currentCameraInput].videoFormats();
     for(const auto &fmt : formats)
     {
         qDebug()
@@ -31,28 +66,6 @@ void CameraCapture::start()
     qDebug()
         << "Video input:"
         << QMediaDevices::defaultVideoInput().description();
-#endif
-
-
-
-    // camera = new QCamera(device, this);
-    camera = new QCamera(device, this);
-
-#ifdef D_PRINT_CAMERA_INFO
-    for(const auto &fmt : device.videoFormats())
-    {
-        if(fmt.resolution() == QSize(640,480))
-        {
-            camera->setCameraFormat(fmt);
-
-            qDebug()
-                << "Selected"
-                << fmt.resolution()
-                << fmt.maxFrameRate();
-
-            break;
-        }
-    }
 #endif
 
     sink = new QVideoSink(this);
@@ -150,9 +163,69 @@ void CameraCapture::start()
 #endif
 }
 
+
+void CameraCapture::refreshCameraInputs()
+{
+    qDebug() << "=== CAMERA DEVICES ===";
+    QList<QCameraDevice> inputs = QMediaDevices::videoInputs();
+    for (int i = 0; i < inputs.size(); i++)
+    {
+        qDebug() << i
+                 << inputs[i].description();
+    }
+
+    setCameraInputs(inputs);
+}
+
+void CameraCapture::setCameraInputs(QList<QCameraDevice> newList)
+{
+    if(m_cameraInputs == newList)
+        return;
+
+    m_cameraInputs=newList;
+
+    emit cameraInputsChanged();
+}
+
+
 void CameraCapture::stop()
 {
-    camera->stop();
-    delete camera;
-    delete sink;
+    if (camera)
+    {
+        camera->stop();
+        delete camera;
+        camera = nullptr;
+    }
+
+    if (sink)
+    {
+        delete sink;
+        sink = nullptr;
+    }
 }
+
+QStringList CameraCapture::cameraInputsNames() const
+{
+    QStringList names;
+
+    for (const auto &device : m_cameraInputs)
+    {
+        names << device.description();
+    }
+
+    return names;
+}
+
+int CameraCapture::currentCameraInput() const
+{
+    return m_currentCameraInput;
+}
+
+void CameraCapture::setCurrentCameraInput(int newCurrentCameraInput)
+{
+    if (m_currentCameraInput == newCurrentCameraInput)
+        return;
+    m_currentCameraInput = newCurrentCameraInput;
+    emit currentCameraInputChanged();
+}
+

@@ -4,9 +4,6 @@
 
 
 //list of devcies
-#include <QMediaDevices>
-#include <QAudioDevice>
-#include <QCameraDevice>
 #include <QScreen>
 #include <QDebug>
 
@@ -28,6 +25,7 @@
 
 #include "channelmodel.h"
 #include "chatmodel.h"
+#include "connectedusersmodel.h"
 
 #include "user.h"
 
@@ -39,51 +37,34 @@
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
-    //list devices
 
 
-    qDebug() << "\n=== CAMERAS ===";
-    auto cameras = QMediaDevices::videoInputs();
-    for (int i = 0; i < cameras.size(); i++)
-    {
-        qDebug() << i
-                 << cameras[i].description();
-    }
-
-    qDebug() << "\n=== MONITORS ===";
-    const auto screens = QGuiApplication::screens();
-    qDebug() << "Monitor count:" << screens.size();
-
-    for (int i = 0; i < screens.size(); ++i)
-    {
-        QScreen *screen = screens[i];
-
-        qDebug() << "Monitor" << i;
-        qDebug() << "  Name:" << screen->name();
-        qDebug() << "  Geometry:" << screen->geometry();
-        qDebug() << "  Size:" << screen->size();
-        qDebug() << "  DPI:" << screen->logicalDotsPerInch();
-        qDebug() << "  Refresh Rate:" << screen->refreshRate();
-    }
-
+    //---------- resources ----------
+    AudioCapture audio;
     CameraCapture cam;
+    SoundManager soundManager; //play effects
+    AudioSpeaker speaker;
 
-    SoundManager soundManager;
 
 
+    //---------- models ----------
     ChannelModel channelModel;
     ChatModel chatModel;
-    ParticipantModel participants;//hold center rectangles for current channel users.
-    User usr(&channelModel,&chatModel,&participants, &cam);
+    ParticipantModel participantsModel;//participant = current channel users which has video sink and shown on center of screen
+    ConnectedUsersModel connectedUsersModel;
 
-    //CAMERA aconnection:
+
+    //----------
+    User usr(&channelModel, &chatModel, &participantsModel, &connectedUsersModel, &cam, &audio, &speaker);
+
+    //---------- camera connection ----------
     QObject::connect(
         &cam,
         &CameraCapture::jpegReady,
         &usr,
         &User::sendVideoFrame);
 
-    //just make fake camera feed for test due to camera can use once
+    //just make fake camera feed for test due to camera can use only once
     // QTimer timer;
     // QObject::connect(
     //     &timer,
@@ -91,17 +72,12 @@ int main(int argc, char *argv[])
     //     [&usr]()
     //     {
     //         qDebug() << "generating fake camera ..";
-
     //         QImage img(640, 400, QImage::Format_RGB32);
     //         img.fill(Qt::red);
-
     //         QByteArray jpgData;
-
     //         QBuffer buffer(&jpgData);
     //         buffer.open(QIODevice::WriteOnly);
-
     //         img.save(&buffer, "JPG", 60);
-
     //         usr.sendVideoFrame(jpgData);
     //     });
     // timer.start(1000);
@@ -109,7 +85,17 @@ int main(int argc, char *argv[])
 
 
 
-    //sound effects connections
+    //---------- microphone connection ----------
+    QObject::connect(
+        &audio,
+        &AudioCapture::pcmReady,
+        &usr,
+        &User::sendVoicePcm);
+
+
+
+
+    //---------- sound effects connection //----------
     QObject::connect(
         &usr,
         &User::userJoined,
@@ -131,29 +117,7 @@ int main(int argc, char *argv[])
 
 
 
-
-    // ---------- MICROHPONE ----------
-    AudioCapture audio;
-    audio.start();
-
-    //print volume level.
-    // QObject::connect(&audio, &AudioCapture::levelChanged, [](double level) { qDebug() << "Voice Level:" << level; });
-
-    //send mic voice over udp
-    QObject::connect(
-        &audio,
-        &AudioCapture::pcmReady,
-        &usr,
-        &User::sendVoicePcm);
-
-
-
-    // ---------- SPEAKER ----------
-    AudioSpeaker speaker;
-    speaker.start();
-    //playback microhpone..
-    // QObject::connect(&audio, &AudioCapture::pcmReady,
-    //         &speaker, &AudioSpeaker::playPcm);
+    // ---------- speaker connection ----------
 
     //play received voice from udp socket
     QObject::connect(
@@ -173,6 +137,21 @@ int main(int argc, char *argv[])
 
 
     // ---------- SCREEN ----------
+    // qDebug() << "\n=== MONITORS ===";
+    // const auto screens = QGuiApplication::screens();
+    // qDebug() << "Monitor count:" << screens.size();
+
+    // for (int i = 0; i < screens.size(); ++i)
+    // {
+    //     QScreen *screen = screens[i];
+
+    //     qDebug() << "Monitor" << i;
+    //     qDebug() << "  Name:" << screen->name();
+    //     qDebug() << "  Geometry:" << screen->geometry();
+    //     qDebug() << "  Size:" << screen->size();
+    //     qDebug() << "  DPI:" << screen->logicalDotsPerInch();
+    //     qDebug() << "  Refresh Rate:" << screen->refreshRate();
+    // }
     // MonitorCapture *capture = new MonitorCapture();
     // QStringList monitors = capture->monitors();
     // for (int i = 0; i < monitors.size(); ++i)
@@ -195,37 +174,6 @@ int main(int argc, char *argv[])
 
 
 
-
-
-
-
-
-
-    //add test users.. with camera
-    // const int userCount = 2;
-    // for (int i = 0; i < userCount; ++i)
-    // {
-    //     participants.addUser(
-    //         QString("User %1").arg(i + 1),
-    //         (i%2==0?false:true),   // microphone
-    //         (i%2==0?true:false));  // camera
-    // }
-    // for (int i = 0; i < userCount; ++i)
-    // {
-    //     Participant *p = participants.findUser(QString("User %1").arg(i + 1));
-
-    //     if (!p)
-    //         continue;
-
-    //     QObject::connect(
-    //         &cam,
-    //         &CameraCapture::imageReady,
-    //         p->videoSink(),
-    //         &VideoSink::setImage,
-    //         Qt::QueuedConnection);
-    // }
-
-
     //register to QML
     qmlRegisterType<MyVideoItem>("CustomVideo", 1, 0, "VideoItem");
     qmlRegisterUncreatableType<VideoSink>("CustomVideo", 1, 0, "VideoSink", "VideoSink cannot be created from QML");
@@ -235,7 +183,9 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("microphone", &audio);
     engine.rootContext()->setContextProperty("speaker", &speaker);
-    engine.rootContext()->setContextProperty("participantModel", &participants);
+    engine.rootContext()->setContextProperty("camera", &cam);
+    engine.rootContext()->setContextProperty("participantModel", &participantsModel);
+    engine.rootContext()->setContextProperty("connectedUsersModel", &connectedUsersModel);
     engine.rootContext()->setContextProperty("user", &usr);
     engine.rootContext()->setContextProperty("channelModel",&channelModel);
     engine.rootContext()->setContextProperty("chatModel",&chatModel);

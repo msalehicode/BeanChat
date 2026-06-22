@@ -2,10 +2,12 @@
 #include <QTimer>
 
 User::User(ChannelModel *channelModel, ChatModel *chatModel,
-            ParticipantModel* currentChannelParticipant,CameraCapture* cam,
-            QObject *parent)
+           ParticipantModel* currentChannelParticipant, ConnectedUsersModel *connectedUsersModel,
+           CameraCapture* cam, AudioCapture *mic, AudioSpeaker* speaker,
+           QObject *parent)
     : QObject{parent}, m_channelModel(channelModel), m_chatModel(chatModel),
-    m_currentChannelParticipant(currentChannelParticipant), m_cam(cam)
+    m_currentChannelParticipant(currentChannelParticipant), m_connectedUsersModel(connectedUsersModel),
+    m_cam(cam), m_mic(mic), m_speaker(speaker)
 {
     qDebug() << "user starting..";
 
@@ -52,9 +54,13 @@ void User::joinChannel(int channelId)
 
 void User::login(QString username, QString tokenlike)
 {
+    QString targetIp = "127.0.0.1";
+    quint16 targetPort = 9987;
     socket.connectToHost(
-        "127.0.0.1",
-        9987);
+        targetIp,
+        targetPort);
+
+    setMyServerName(targetIp+":"+QString::number(targetPort));
 
     LoginRequestPacket login;
 
@@ -77,10 +83,51 @@ void User::login(QString username, QString tokenlike)
     socket.write(p.serialize());
 }
 
+void User::disconnect()
+{
+    //disocnnect sockets.
+    socket.disconnectFromHost();
+    m_udpSocket.disconnectFromHost();
+
+    //clear models
+    m_channelModel->clear();
+    m_currentChannelParticipant->clear();
+    m_connectedUsersModel->clear();
+    m_chatModel->clear();
+
+    //reset variables
+    setMyServerName("");
+    setMyChannelName("");
+    m_me=nullptr;
+
+    //because of method we do use setter to send requests to server
+    //then if server allowed/responsed we would do emits so, have to here reset them manually cant use setter.
+    m_muteHeadphone=false;
+    emit muteHeadphoneChanged();
+
+    m_muteMicrophone=false;
+    emit muteMicrophoneChanged();
+
+    m_isCameraOpen=false;
+    emit isCameraOpenChanged();
+
+
+    //release resourses
+    if(m_cam)
+        m_cam->stop();
+
+    if(m_mic)
+        m_mic->stop();
+
+    if(m_speaker)
+        m_speaker->stop();
+
+}
+
 void User::createChannel(QString channelName, QString password)
 {
     CreateChannelPacket cc;
-    cc.name = "Gaming";
+    cc.name = "Gaming"+QString::number(QRandomGenerator::global()->bounded(100));
     cc.password="123";
     cc.permanentChat=true;
     cc.temporaryChat=false;
@@ -210,15 +257,33 @@ void User::onTcpReadyRead()
             // start or stop camera
             if(m_cam)
             {
+                m_me = m_currentChannelParticipant->findUser(myId());
+                if(!m_me)
+                    return;
+
                 if(resp.status)
                 {
                     qDebug() << "staring camera..";
                     m_cam->start();
+
+
+                    //feed this user's vidoeSink with preview.
+                    QObject::connect(
+                        m_cam,
+                        &CameraCapture::imageReady,
+                        m_me->videoSink(),
+                        &VideoSink::setImage,
+                        Qt::QueuedConnection);
                 }
                 else
                 {
                     qDebug() << "stopping camera..";
                     m_cam->stop();
+                    QObject::disconnect(
+                        m_cam,
+                        &CameraCapture::imageReady,
+                        m_me->videoSink(),
+                        &VideoSink::setImage);
                 }
             }
             else
@@ -232,6 +297,7 @@ void User::onTcpReadyRead()
         }
 
         m_channelModel->setUserHasVideo(resp.userId,resp.status);
+        m_currentChannelParticipant->setCameraOpen(resp.userId,resp.status);
     }break;
 
 
@@ -256,6 +322,7 @@ void User::onTcpReadyRead()
         }
 
         m_channelModel->setUserMuted(resp.userId,resp.status);
+        m_currentChannelParticipant->setMuted(resp.userId,resp.status);
     }break;
 
 
@@ -278,6 +345,7 @@ void User::onTcpReadyRead()
         }
 
         m_channelModel->setUserDeafened(resp.userId,resp.status);
+        m_currentChannelParticipant->setDeafened(resp.userId,resp.status);
     }break;
 
     case PacketType::UserJoinedChannel:
@@ -290,25 +358,64 @@ void User::onTcpReadyRead()
         m_channelModel->moveUser(resp.userId,resp.channelId);
 
 
+        //if user has no channel add him to channelModel
+        if(resp.oldChannelId==-1) //if it's -1 means user just connected to server and didnt join any channel yet. so don't need add him channelModel
+        {
+            //read user's data from connectedUsersModel
+            ConnectedUser* user = m_connectedUsersModel->findUser(resp.userId);
+
+            //add user to channemodel
+            m_channelModel->addUser(resp.channelId,user->id,user->username,
+                                    user->muted,user->deafened,user->hasVideo);
+        }
+
+
         if(resp.userId == static_cast<quint64>(myId()))
         {
             qDebug() << "voice: channel switched.";
 
 
+            //open mic and speaker
+            if(m_mic)
+                m_mic->start();
+            if(m_speaker)
+                m_speaker->start();
+
+            //rest talkin status of all previous channel users, because if dont it would show/stuck user is talkin on previous channel..
+            m_channelModel->resetChannelTalkingStatus(resp.oldChannelId);
+
+
             //set channel name for Chat and other parts to know current channel name
             m_myChannelId = resp.channelId;
-            setMyChannelName(m_channelModel->getChannelName(m_myChannelId));
+            m_channelModel->setCurrentChannelId(m_myChannelId); //for update isTalking status users
+            setMyChannelName(m_channelModel->getChannelName(m_myChannelId)); //to show on top of Chat also on userConnectedServer.
 
-            m_channelModel->setCurrentChannelId(m_myChannelId);
+
+            if(!m_me) //if this user is not inside participantModel, reset model comepletely.
+                m_currentChannelParticipant->clear();
+            else //otherwise hold user to save camera preview ,moreover less user add user, clear model but hold this user.
+                m_currentChannelParticipant->clearExcept(myId()); //to dont ruin camera preview feedback, if clear completely this user camera preview would be black!
+
 
             //add each users of this channel of (which user joint) into participantModel
-            m_currentChannelParticipant->clear(); //clear participant model data.
             ChannelItem* channel = m_channelModel->findChannel(resp.channelId);
             if(channel)
             {
                 //add found users into participant model
                 for(const UserItem& user: channel->users)
-                    m_currentChannelParticipant->addUser(user.id,user.username,user.isTalking,user.deafened,user.hasVideo);
+                {
+                    if(user.id == myId()) //because we didnt completely clear participantmodel, we hold this user.
+                    {
+                        if(m_me) //is thisUser inside participantModel?
+                            continue;
+                    }
+
+                    m_currentChannelParticipant->addUser(user.id,user.username,user.isTalking,user.muted,
+                                                         user.deafened,user.hasVideo);
+                }
+
+                if(!m_me) //user was not inside model therefore it has been added recently so lets set pointer
+                    m_me = m_currentChannelParticipant->findUser(myId()); //update user's pointer (uses for camera preview to set this user videoSink to show local preview for camera)
             }
             else
                 qDebug() << "could not find channel id:" << resp.channelId;
@@ -323,7 +430,8 @@ void User::onTcpReadyRead()
             {
                 UserItem* jointUser = m_channelModel->findUserInChannel(channel,resp.userId);
                 if(jointUser)
-                    m_currentChannelParticipant->addUser(jointUser->id,jointUser->username,jointUser->isTalking,jointUser->deafened,jointUser->hasVideo);
+                    m_currentChannelParticipant->addUser(jointUser->id,jointUser->username,jointUser->isTalking,jointUser->muted,
+                                                         jointUser->deafened,jointUser->hasVideo);
                 else
                     qDebug() << "user joined could not find user inside channel id:" << resp.channelId << " userid=" << resp.userId;
             }
@@ -340,6 +448,9 @@ void User::onTcpReadyRead()
 
             //remove that user from participant model
             m_currentChannelParticipant->removeUser(resp.userId);
+
+            //rest leaved user talkin status
+            m_channelModel->setUserTalking(resp.userId,false);
 
             //for soundmanager to play effect
             emit userLeft();
@@ -398,16 +509,21 @@ void User::onTcpReadyRead()
     case PacketType::UserConnected:
     {
         qInfo() << "user connected:";
-        auto user =
+        auto u =
             PacketHelpers::unpack<UserConnectedPacket>(
                 packet.payload);
 
         qDebug()
             << "User joined:"
-            << user.username;
+            << u.username;
 
-        m_channelModel->addUser(1,user.id,user.username,user.muted,user.deafened,user.camera);
-
+        m_connectedUsersModel->addUser(u.id,
+                                       u.username,
+                                       "",false,//server doesnt send these right now.
+                                       u.muted,
+                                       u.deafened,
+                                       u.camera,
+                                       UserActivityStatus::Online);//also server doesnt send this too.
         break;
     }
 
@@ -422,11 +538,28 @@ void User::onTcpReadyRead()
             << "User disconnected:"
             << user.username;
 
-        m_channelModel->removeUser(user.id);
+        ChannelItem* channel = m_channelModel->findChannelOfUser(user.id);
+        if(!channel)
+        {
+            qDebug() << "invalid hcannel id not found cant find usr was in our channel or not";
+        }
 
+        //check whether user was on our channel, if was play sound effect
+        if(channel->id == m_myChannelId)
+        {
+            qDebug() << "play user left.";
+            emit userLeft();
+        }
+
+        //remove user from connected users list
+        m_connectedUsersModel->removeUser(user.id);
 
         //we dont know if user was inside our channel or not but anyway try to remove him from participantmodel.
         m_currentChannelParticipant->removeUser(user.id);
+
+        //also dont know if user was inside a channel or not anyway try to remove him from model
+        m_channelModel->removeUser(user.id);
+
         break;
     }
 
@@ -452,6 +585,8 @@ void User::onTcpReadyRead()
 
         m_channelModel->clear();
 
+        m_connectedUsersModel->clear();
+
         for(auto& c : state.channels)
         {
             m_channelModel->addChannel(
@@ -461,19 +596,21 @@ void User::onTcpReadyRead()
 
         for(auto& u : state.users)
         {
-            m_channelModel->addUser(
-                u.channelId,
-                u.id,
-                u.username,
-                u.muted,
-                u.deafened,
-                u.camera);
-            qDebug() << "user " << u.username << " camra=" << u.camera;
+            m_connectedUsersModel->addUser(u.id,
+                                           u.username,
+                                           "",false,//server doesnt send these right now.
+                                           u.muted,
+                                           u.deafened,
+                                           u.camera,
+                                           UserActivityStatus::Online);//also server doesnt send this too.
+
+
+            //add those users are in channels to our channel model
+            if(u.channelId!=-1)
+                m_channelModel->addUser(u.channelId,u.id,u.username,u.muted,u.deafened,u.camera);
         }
 
         qInfo() << "voice: connected to server.";
-        m_channelModel->setCurrentChannelId(m_myChannelId);
-
     }
     break;
 
@@ -612,17 +749,19 @@ void User::sendVideoFrame(const QByteArray &jpegData)
         data,
         QHostAddress("127.0.0.1"),
         9988);
+}
 
-    //update self status and show preview.
-    m_currentChannelParticipant->setCameraOpen(myId(),true);
-    Participant* me = m_currentChannelParticipant->findUser(myId());
+QString User::myServerName() const
+{
+    return m_myServerName;
+}
 
-    QObject::connect(
-        m_cam,
-        &CameraCapture::imageReady,
-        me->videoSink(),
-        &VideoSink::setImage,
-        Qt::QueuedConnection);
+void User::setMyServerName(const QString &newMyServerName)
+{
+    if (m_myServerName == newMyServerName)
+        return;
+    m_myServerName = newMyServerName;
+    emit myServerNameChanged();
 }
 
 bool User::isCameraOpen() const

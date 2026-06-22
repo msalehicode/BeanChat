@@ -52,6 +52,8 @@ qt_add_qml_module(appBeanChat
         VideoChat.qml
         TextChat.qml
         PrivateChatPage.qml
+        ConnectedUsers.qml
+        ChannelList.qml
 
     SOURCES
         # just in case
@@ -73,6 +75,7 @@ qt_add_qml_module(appBeanChat
         channelmodel.h channelmodel.cpp
         chatmodel.h chatmodel.cpp
         participantmodel.h
+        connectedusersmodel.h connectedusersmodel.cpp
 
         # C++ qml components
         myvideoitem.h myvideoitem.cpp
@@ -86,17 +89,18 @@ qt_add_qml_module(appBeanChat
     RESOURCES
     icons/beanChatIcon.png
     icons/chat.png
+    icons/users.png
     icons/folder.png
-    icons/lock.png icons/lock-black.png
-    icons/voice.png icons/voice-black.png
-    icons/settings.png icons/settings-black.png
-    icons/endcall.png icons/endcall-black.png icons/endcall-red.png
-    icons/camera.png icons/camera-black-closed.png icons/camera-closed.png icons/camera-red.png
-    icons/disconnect.png icons/disconnect-black.png icons/disconnect-red.png
-    icons/headphone.png icons/headphone-black-closed.png icons/headphone-closed.png icons/headphone-red.png
-    icons/microhpone-black-closed.png icons/microphone.png icons/microphone-closed.png icons/microphone-red.png
-    icons/screen.png icons/screen-black.png icons/screen-black-closed.png icons/screen-closed.png icons/screen-red.png
-    icons/signal.png icons/signal-black.png icons/signal-green.png icons/signal-orange.png icons/signal-red.png icons/signal-yellow.png
+    icons/lock.png
+    icons/voice.png
+    icons/settings.png
+    icons/endcall.png icons/endcall-red.png
+    icons/camera.png icons/camera-closed.png icons/camera-red.png
+    icons/disconnect.png icons/disconnect-red.png
+    icons/headphone.png icons/headphone-closed.png icons/headphone-red.png
+    icons/microphone.png icons/microphone-closed.png icons/microphone-red.png
+    icons/screen.png icons/screen-closed.png icons/screen-red.png
+    icons/signal.png icons/signal-green.png icons/signal-orange.png icons/signal-red.png icons/signal-yellow.png
 
 
     # from Server. later move these into a library
@@ -104,6 +108,7 @@ qt_add_qml_module(appBeanChat
         ../BeanChatServer/src/network/packet.h ../BeanChatServer/src/network/packet.cpp
         ../BeanChatServer/src/network/packets.h
         ../BeanChatServer/src/network/packethelpers.h
+
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

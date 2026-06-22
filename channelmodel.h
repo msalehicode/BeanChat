@@ -92,6 +92,7 @@ public:
     void setUserMuted(quint64 userId, bool muted);
     void setUserDeafened(quint64 userId, bool deafened);
     void setUserHasVideo(quint64 userId, bool hasVideo);
+    void resetChannelTalkingStatus(quint64 channelId);
 signals:
     void userTalkingStatus(quint64 userId,bool status);
 

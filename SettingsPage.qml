@@ -366,16 +366,29 @@ Page {
             }
 
 
-
-            TextInput
+            Row
             {
-                id:usernameText
-                text: "usr"
-                color: "white"
-                font.pixelSize: 20
-                width: 60
-                height: implicitHeight
-                // onAccepted: user.s
+                Label
+                {
+                    text:"cameras:"
+                    color:"white"
+                }
+
+                ComboBox {
+                    id: cameraPicker
+                    width: 200
+                    height: 100
+
+                    model: camera.cameraInputsNames
+
+                    onCurrentIndexChanged: {
+                        camera.currentCameraInput = currentIndex
+                    }
+
+                    Component.onCompleted: {
+                        currentIndex = camera.currentCameraInput
+                    }
+                }
             }
 
             Button

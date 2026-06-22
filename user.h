@@ -18,7 +18,10 @@
 #include <QNetworkDatagram>
 
 #include "cameracapture.h"
+#include "audiocapture.h"
+#include "audiospeaker.h"
 
+#include "connectedusersmodel.h"
 class User : public QObject
 {
     Q_OBJECT
@@ -26,11 +29,13 @@ class User : public QObject
 
 public:
     explicit User(ChannelModel *channelModel,ChatModel* chatModel,
-                  ParticipantModel* currentChannelParticipant,CameraCapture* cam,
+                  ParticipantModel* currentChannelParticipant,ConnectedUsersModel* connectedUsersModel,
+                  CameraCapture* cam, AudioCapture* mic, AudioSpeaker* speaker,
                   QObject *parent = nullptr);
 
     Q_INVOKABLE void joinChannel(int channelId);
     Q_INVOKABLE void login(QString username="", QString tokenlike="defaultBeanChatIdentity");
+    Q_INVOKABLE void disconnect();
     Q_INVOKABLE void createChannel(QString channelName, QString password);
     Q_INVOKABLE void sendMessage(QString message);
     Q_INVOKABLE void askForServerState();
@@ -57,6 +62,9 @@ public:
     bool isCameraOpen() const;
     void setIsCameraOpen(bool status);
 
+    QString myServerName() const;
+    void setMyServerName(const QString &newMyServerName);
+
 signals:
 
     void messagesChanged();
@@ -81,6 +89,8 @@ signals:
 
     void isCameraOpenChanged();
 
+    void myServerNameChanged();
+
 public slots:
     void onTcpReadyRead();
     void onUdpReadyRead();
@@ -96,8 +106,12 @@ private:
     QUdpSocket m_udpSocket;
     QString m_myUsername = "";
     int m_myId =-1;
-    quint64 m_myChannelId=1;
-    QString m_myChannelName = "Chat";
+    quint64 m_myChannelId=-2; //channelId -1 is default value for those users didn't connect to any channel just connected to server.
+    QString m_myChannelName = "noChannel"; //current channel
+    QString m_myServerName= ""; //current server connected to
+
+    // QString m_targetIp;
+    // quint64 m_targetPort;
 
     //voice
     quint32 m_sequence = 0;
@@ -107,16 +121,24 @@ private:
 
     QString m_messages;
 
+
+    Participant* m_me=nullptr; //hold this user info and update it when channel switched, to connect with cameraCapture and show images as local preview
+
     ChannelModel* m_channelModel=nullptr;
     ChatModel* m_chatModel=nullptr;
     ParticipantModel* m_currentChannelParticipant=nullptr;
     CameraCapture* m_cam=nullptr;
+    AudioCapture* m_mic=nullptr;
+    AudioSpeaker* m_speaker=nullptr;
+
+    ConnectedUsersModel* m_connectedUsersModel=nullptr;
     Q_PROPERTY(int myId READ myId WRITE setMyId NOTIFY myIdChanged FINAL)
     Q_PROPERTY(QString myUsername READ myUsername WRITE setMyUsername NOTIFY myUsernameChanged FINAL)
     Q_PROPERTY(QString myChannelName READ myChannelName NOTIFY myChannelNameChanged FINAL)
     Q_PROPERTY(bool muteHeadphone READ muteHeadphone WRITE setMuteHeadphone NOTIFY muteHeadphoneChanged FINAL)
     Q_PROPERTY(bool muteMicrophone READ muteMicrophone WRITE setMuteMicrophone NOTIFY muteMicrophoneChanged FINAL)
     Q_PROPERTY(bool isCameraOpen READ isCameraOpen WRITE setIsCameraOpen NOTIFY isCameraOpenChanged FINAL)
+    Q_PROPERTY(QString myServerName READ myServerName WRITE setMyServerName NOTIFY myServerNameChanged FINAL)
 };
 
 #endif // USER_H

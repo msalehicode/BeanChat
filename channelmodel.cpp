@@ -175,6 +175,17 @@ void ChannelModel::updateUserStatus(quint64 userId, bool isTalking, bool isMuted
 }
 
 
+void ChannelModel::resetChannelTalkingStatus(quint64 channelId)
+{
+    ChannelItem* channel = findChannel(channelId);
+    if(!channel)
+        return;
+
+    for(auto& user : channel->users)
+    {
+        setUserTalking(user.id,false);
+    }
+}
 
 
 

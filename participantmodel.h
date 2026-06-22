@@ -15,7 +15,8 @@ public:
         IsTalkingRole,
         IsCameraOpenRole,
         UserId,
-        IsDeafened
+        IsDeafened,
+        IsMuted
     };
 
     explicit ParticipantModel(QObject *parent = nullptr)
@@ -55,7 +56,12 @@ public:
 
         case IsDeafened:
             return user->isDeafened();
+
+        case IsMuted:
+            return user->isMuted();
         }
+
+
 
         return {};
     }
@@ -69,15 +75,17 @@ public:
             {IsCameraOpenRole,"isCameraOpen"},
             {VideoSinkRole,"videoSink"},
             {UserId,"userId"},
-            {IsDeafened, "isDeafened"}
+            {IsDeafened, "isDeafened"},
+            {IsMuted, "isMuted"}
         };
     }
 
-    void addUser(quint64 id, const QString &name, bool isTalking=false,bool isDeafened=false, bool isCameraOpen=false)
+    void addUser(quint64 id, const QString &name, bool isTalking=false, bool isMuted=false,
+                 bool isDeafened=false, bool isCameraOpen=false)
     {
         beginInsertRows(QModelIndex(), m_users.size(), m_users.size());
 
-        m_users.append(new Participant(id,name,isTalking,isDeafened,isCameraOpen,this));
+        m_users.append(new Participant(id,name,isTalking,isMuted,isDeafened,isCameraOpen,this));
 
         endInsertRows();
     }
@@ -111,9 +119,31 @@ public:
         endResetModel();
     }
 
+    void clearExcept(quint64 keepId)
+    {
+        beginResetModel();
+
+        auto it = m_users.begin();
+        while (it != m_users.end())
+        {
+            if ((*it)->id() == keepId)
+            {
+                ++it;
+            }
+            else
+            {
+                delete *it;
+                it = m_users.erase(it);
+            }
+        }
+
+        endResetModel();
+    }
+
     void updateUser(
         quint64 userId,
         bool isTalking,
+        bool isMuted,
         bool isDeafened,
         bool isCameraOpen)
     {
@@ -125,6 +155,7 @@ public:
             {
                 user->setIsTalking(isTalking);
                 user->setIsDeafened(isDeafened);
+                user->setIsMuted(isMuted);
                 user->setIsCameraOpen(isCameraOpen);
 
                 QModelIndex idx = index(i);
@@ -134,6 +165,7 @@ public:
                     idx,
                     {
                         IsTalkingRole,
+                        IsMuted,
                         IsDeafened,
                         IsCameraOpenRole
                     });
@@ -204,6 +236,26 @@ public:
         }
     }
 
+
+    void setMuted(
+        quint64 userId,
+        bool muted)
+    {
+        for(int i = 0; i < m_users.size(); ++i)
+        {
+            if(m_users[i]->id() == userId)
+            {
+                m_users[i]->setIsMuted(muted);
+
+                emit dataChanged(
+                    index(i),
+                    index(i),
+                    { IsMuted });
+
+                return;
+            }
+        }
+    }
     Participant *findUser(quint64 userId)
     {
         for(auto user : m_users)

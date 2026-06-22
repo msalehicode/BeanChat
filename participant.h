@@ -28,16 +28,22 @@ class Participant : public QObject
                        CONSTANT)
 
 
+    Q_PROPERTY(bool isMuted
+                   READ isMuted
+                       CONSTANT)
+
+
     Q_PROPERTY(bool isCameraOpen
                    READ isCameraOpen
                        CONSTANT)
 
 public:
     explicit Participant(quint64 id,
-        const QString &username, bool isTalking, bool isDeafened, bool isCameraOpen,
+        const QString &username, bool isTalking, bool isMuted, bool isDeafened, bool isCameraOpen,
         QObject *parent = nullptr)
         : QObject(parent),
-        m_id(id), m_username(username), m_isCameraOpen(isCameraOpen), m_isTalking(isTalking), m_isDeafened(isDeafened)
+        m_id(id), m_username(username), m_isCameraOpen(isCameraOpen),
+        m_isTalking(isTalking), m_isMuted(isMuted), m_isDeafened(isDeafened)
     {
         m_videoSink = new VideoSink(this);
     }
@@ -102,10 +108,24 @@ public:
         return m_isDeafened;
     }
 
+
+    void setIsMuted(bool status)
+    {
+        if(m_isMuted==status)
+            return;
+
+        m_isMuted=status;
+    }
+    bool isMuted() const
+    {
+        return m_isMuted;
+    }
+
 private:
     quint64 m_id;
     QString m_username;
     bool m_isTalking;
+    bool m_isMuted;
     bool m_isDeafened;
     bool m_isCameraOpen;
     VideoSink* m_videoSink = nullptr;
