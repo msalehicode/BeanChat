@@ -57,6 +57,8 @@ public:
     Q_INVOKABLE bool initialPushToTalkHotkey(); //to later after change modifier and key call this from QML
 
     QString pushToTalkKeyString() const;
+    bool started() const;
+
 signals:
     void pcmReady(QByteArray pcm);
     void levelChanged(double level);
@@ -85,6 +87,8 @@ signals:
     void pushToTalkKeyStringChanged();
 
 private:
+    bool m_started=false; //hold status of mic
+
     //denoise stuff
     bool m_rnnoiseStatus;
     float m_rnnoiseValue= 0.15f;

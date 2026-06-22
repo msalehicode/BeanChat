@@ -110,8 +110,9 @@ private:
     QString m_myChannelName = "noChannel"; //current channel
     QString m_myServerName= ""; //current server connected to
 
-    // QString m_targetIp;
-    // quint64 m_targetPort;
+    QString m_targetIp = "10.89.46.137";
+    quint64 m_targetPort=9987;
+    quint64 m_targetUdpPort=9988;
 
     //voice
     quint32 m_sequence = 0;

@@ -22,6 +22,8 @@ public:
     int currentAudioOutput() const;
     void setCurrentAudioOutput(int newCurrentAudioOutput);
     void setAudioOutputs(QList<QAudioDevice> newList);
+    bool started() const;
+
 signals:
     void audioOutputsChanged();
 
@@ -33,6 +35,9 @@ public slots:
     void playPcm(const QByteArray &pcm);
 
 private:
+    bool m_started=false;
+
+
     void refreshAudioOutputs();
     QAudioSink *m_sink = nullptr;
     QIODevice *m_device = nullptr;

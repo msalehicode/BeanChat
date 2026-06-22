@@ -69,6 +69,7 @@ void AudioCapture::start()
     m_audioSource = new QAudioSource(m_audioInputs[m_currentAudioInput], format, this);
     m_device = m_audioSource->start();
 
+    m_started=true;
 
     connect(m_device, &QIODevice::readyRead, this, [this]()
             {
@@ -224,6 +225,8 @@ void AudioCapture::stop()
         if (m_device) {
             m_device->disconnect();
         }
+
+        m_started=false;
 
         // Clean up the object
         m_audioSource->deleteLater();
@@ -411,6 +414,11 @@ QString AudioCapture::pushToTalkKeyString() const
                m_pushToTalkModifiers |
                m_pushToTalkKey
                ).toString(QKeySequence::NativeText);
+}
+
+bool AudioCapture::started() const
+{
+    return m_started;
 }
 
 void AudioCapture::refreshAudioInputs()

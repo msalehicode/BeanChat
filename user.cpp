@@ -54,13 +54,11 @@ void User::joinChannel(int channelId)
 
 void User::login(QString username, QString tokenlike)
 {
-    QString targetIp = "127.0.0.1";
-    quint16 targetPort = 9987;
     socket.connectToHost(
-        targetIp,
-        targetPort);
+        m_targetIp,
+        m_targetPort);
 
-    setMyServerName(targetIp+":"+QString::number(targetPort));
+    setMyServerName(m_targetIp+":"+QString::number(m_targetPort));
 
     LoginRequestPacket login;
 
@@ -176,8 +174,8 @@ void User::sendVoicePcm(
 
     m_udpSocket.writeDatagram(
         data,
-        QHostAddress("127.0.0.1"),
-        9988);
+        QHostAddress(m_targetIp),
+        m_targetUdpPort);
 
     //update isTalking this user/device
     UserItem* senderUser = m_channelModel->getUser(m_myChannelId, myId());
@@ -376,9 +374,9 @@ void User::onTcpReadyRead()
 
 
             //open mic and speaker
-            if(m_mic)
+            if(m_mic && !m_mic->started()) //check is mic start or not if it's start dont restart it!
                 m_mic->start();
-            if(m_speaker)
+            if(m_speaker && !m_speaker->started())  //check is speaker started or not, if it started dont restart.
                 m_speaker->start();
 
             //rest talkin status of all previous channel users, because if dont it would show/stuck user is talkin on previous channel..
@@ -497,8 +495,8 @@ void User::onTcpReadyRead()
 
             m_udpSocket.writeDatagram(
                 data,
-                QHostAddress("127.0.0.1"),
-                9988);
+                QHostAddress(m_targetIp),
+                m_targetUdpPort);
             qDebug() << " just sent a register udp message to server.";
         }
 
@@ -747,8 +745,8 @@ void User::sendVideoFrame(const QByteArray &jpegData)
 
     m_udpSocket.writeDatagram(
         data,
-        QHostAddress("127.0.0.1"),
-        9988);
+        QHostAddress(m_targetIp),
+        m_targetUdpPort);
 }
 
 QString User::myServerName() const

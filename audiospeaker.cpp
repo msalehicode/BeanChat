@@ -60,6 +60,8 @@ bool AudioSpeaker::start()
     m_sink = new QAudioSink(m_audioOutputs[m_currentAudioOutput], m_format, this);
     m_device = m_sink->start();
 
+    m_started=true;
+
     if (!m_device)
     {
         qDebug() << "Failed to start audio sink";
@@ -79,6 +81,8 @@ void AudioSpeaker::stop()
         m_sink = nullptr;
     }
 
+    m_started=false;
+
     m_device = nullptr;
 }
 
@@ -89,6 +93,11 @@ void AudioSpeaker::playPcm(const QByteArray &pcm)
         return;
 
     m_device->write(pcm);
+}
+
+bool AudioSpeaker::started() const
+{
+    return m_started;
 }
 
 
