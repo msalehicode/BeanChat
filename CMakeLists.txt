@@ -54,6 +54,8 @@ qt_add_qml_module(appBeanChat
         PrivateChatPage.qml
         ConnectedUsers.qml
         ChannelList.qml
+        CurrentChannelParticipants.qml
+        MyServers.qml
 
     SOURCES
         # just in case
@@ -161,3 +163,13 @@ install(TARGETS appBeanChat
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+
+
+
+# to deploy
+qt_generate_deploy_app_script(
+    TARGET appBeanChat
+    OUTPUT_SCRIPT deploy_script
+    NO_UNSUPPORTED_PLATFORM_ERROR
+)
+install(SCRIPT ${deploy_script})

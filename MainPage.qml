@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 
-import CustomVideo 1.0
 import QtQuick.Controls.Material
 
 import QtQuick.Layouts
@@ -30,20 +29,44 @@ Item {
         anchors.fill: parent
         Item
         {
-            id:connectionStatusBase
+            id:importantNotifierBar
             width: parent.width
             height:25
-            // visible: false
             Rectangle
             {
                 anchors.fill: parent
                 color: "red"
                 Text
                 {
-                    text:"You are offline"
+                    // text:"You are offline"
+                    text: "Audio Input not found."
                     anchors.centerIn: parent
                     color:"white"
                     font.bold: true
+                }
+                Rectangle
+                {
+                    id:closeButtonNotifierBar
+                    width: 20
+                    height: 20
+                    color: "black"
+                    anchors
+                    {
+                        right:parent.right
+                        rightMargin:20
+                        verticalCenter:parent.verticalCenter
+                    }
+
+                    Text {
+                        text: "X"
+                        anchors.centerIn: parent
+                        color:"white"
+                    }
+                    MouseArea
+                    {
+                        anchors.fill: parent
+                        onClicked: importantNotifierBar.visible=false
+                    }
                 }
             }
         }
@@ -52,306 +75,24 @@ Item {
         Row
         {
             width: parent.width
-            height: parent.height-connectionStatusBase.height
-            Item
+            height: parent.height-importantNotifierBar.height
+
+            MyServers
             {
                 id:leftPanel
-                width:60
-                height:parent.height
-                Rectangle
-                {
-                    color: "transparent"
-                    anchors.fill: parent
-                }
-                Column
-                {
-                    anchors.fill: parent
-                    Rectangle
-                    {
-                        id:accountButton
-                        color:"black"
-                        width:60
-                        height: 60
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        Image
-                        {
-                            width: 60
-                            height: 60
-                            source:"icons/beanChatIcon.png"
-                            anchors.centerIn: parent
-                        }
-                        MouseArea
-                        {
-                            anchors.fill: parent
-                            // onClicked:
-                        }
-                        Rectangle
-                        {
-                            id:privateChatNotificationIndicator
-                            color: "red"
-                            width: 20
-                            height: width
-                            radius: width
-                            anchors
-                            {
-                                bottom: parent.bottom
-                                left: parent.right
-                                leftMargin: -20
-                            }
-                            Text {
-                                text: "5"
-                                anchors.centerIn: parent
-                                color:"white"
-                                font.bold: true
-                                font.pixelSize: 12
-                            }
-                        }
-                    }
-
-                    ListView
-                    {
-                        id:myServers
-                        width: parent.width
-                        clip: true
-                        height: parent.height-(accountButton.height+addServer.height+10)
-                        model: 10
-                        spacing: 5
-                        delegate: Rectangle
-                        {
-                            anchors.horizontalCenter:parent.horizontalCenter
-                            width:parent.width/1.5
-                            height: width
-                            radius: width
-                            color:"pink"
-                            Text
-                            {
-                                text:"SER " + index
-                                anchors.centerIn: parent
-                                color:"black"
-                            }
-                            MouseArea
-                            {
-                                anchors.fill: parent
-                                onClicked: model.index===0 ? user.login() : console.log(" load server index="+model.index)
-                            }
-                        }
-                    }
-                    Rectangle
-                    {
-                        id:addServer
-                        color:"black"
-                        anchors.horizontalCenter:parent.horizontalCenter
-                        width:parent.width/1.5
-                        height: width
-                        radius: width
-                        border.width: 4
-                        border.color: "purple"
-                        Text
-                        {
-                            text: "+"
-                            font.pixelSize: 30
-                            color: "purple"
-                            anchors.centerIn: parent
-                        }
-                        MouseArea
-                        {
-                            anchors.fill: parent
-                            onClicked:console.log("add new server")
-                        }
-                    }
-                }
-
-
+                //beanChat button, List of Saved Servers, Add Server Button
             }
-
 
             ChannelList
             {
                 id:channelList
+                //current Connected server name, list of channels and users inside them, user control buttons
             }
 
-            Item
+            CurrentChannelParticipants
             {
                 id:centerContentBase
-                width: parent.width-(rightPanel.width+(channelList.width)+leftPanel.width)
-                height: parent.height
-                clip: true
-
-                Rectangle {
-                    id: centerContent
-                    anchors.fill: parent
-                    anchors.left: parent.left
-                    anchors.leftMargin: channelList.handleWidth
-                    color: "transparent"
-
-
-                    GridView
-                    {
-                        id:channelClientsGridView
-
-                        cellWidth: 250
-                        cellHeight: 150
-                        anchors.fill: parent
-
-                        // property int minTileWidth: 220
-                        // property int maxTileWidth: 320
-
-                        // property int columns:
-                        //     Math.max(1,
-                        //              Math.ceil(Math.sqrt(count)))
-
-                        // property int rows:
-                        //     Math.ceil(count / columns)
-
-                        // cellWidth: Math.max(
-                        //                minTileWidth,
-                        //                Math.min(
-                        //                    maxTileWidth,
-                        //                    parent.width / columns))
-
-                        // cellHeight: cellWidth * 9 / 16
-
-                        // property int contentRowsHeight:
-                        //     rows * cellHeight
-
-                        // width: Math.min(
-                        //            parent.width,
-                        //            Math.min(count, columns) * cellWidth)
-
-                        // height: Math.min(
-                        //             parent.height,
-                        //             contentRowsHeight)
-
-                        // x: (parent.width - width) / 2
-
-                        // y: contentRowsHeight < parent.height
-                        //    ? (parent.height - contentRowsHeight) / 2
-                        //    : 0
-
-                        model: participantModel
-
-                        delegate:Rectangle
-                        {
-                            // width: channelClientsGridView.cellWidth - 20
-                            // height:channelClientsGridView.cellHeight - 20
-                            width: channelClientsGridView.cellWidth - 10
-                            height: channelClientsGridView.cellHeight - 10
-                            radius: 30
-                            color: "grey"
-
-                            Rectangle
-                            {
-                                id:userWithVideo
-                                anchors.fill: parent
-                                radius:parent.radius
-                                visible: model.isCameraOpen
-                                color:"transparent"
-                                clip: true
-                                VideoItem
-                                {
-                                    anchors.fill: parent
-                                    sink: model.videoSink
-                                    radius: 45 //due to its C++ Property radius value may be varied to normal qml radiuses. e.g 30 has to be 45 too looks simular
-                                    Component.onCompleted:
-                                    {
-                                        console.log("building VideItem, username=",username, "sink=",videoSink, "isCameraOpen=",isCameraOpen)
-                                    }
-                                }
-                            }
-
-
-                            Rectangle
-                            {
-                                id:baseUserParticipantInfo
-                                anchors.fill: parent
-                                radius: parent.radius
-                                color: model.isCameraOpen ? "transparent" : "purple"
-                                border.width: model.isTalking ? 4 : 0
-                                border.color: "lime"
-
-                                Rectangle
-                                {
-                                    id:userAvatarCenterParticipant
-                                    width: 50
-                                    height: 50
-                                    color: "white"
-                                    radius: 30
-                                    visible: !model.isCameraOpen
-                                    anchors.centerIn: parent
-                                }
-                                Rectangle
-                                {
-                                    id:userStatusIconsOverParticipant
-                                    width: parent.width
-                                    height: 40
-                                    radius: height
-                                    color: "transparent"
-                                    anchors.bottom: parent.bottom
-
-                                    RowLayout
-                                    {
-                                        anchors.fill: parent
-                                        anchors.leftMargin: 10
-                                        anchors.rightMargin: 10
-                                        spacing: 5
-
-                                        Text
-                                        {
-                                            text: "(" + model.userId + ") " + model.username
-                                            font.pixelSize: 15
-                                            color: "white"
-                                            font.bold:model.userId === user.myId
-                                            Layout.alignment: Qt.AlignVCenter
-                                        }
-
-                                        Item
-                                        {
-                                            Layout.fillWidth: true
-                                        }
-
-                                        RowLayout
-                                        {
-                                            spacing: 2
-                                            Layout.alignment: Qt.AlignVCenter
-
-                                            // Image
-                                            // {
-                                            //     visible: model.isScreenShare
-                                            //     Layout.preferredWidth: 20
-                                            //     Layout.preferredHeight: 20
-                                            //     fillMode: Image.PreserveAspectFit
-                                            //     source: "icons/screen.png"
-                                            // }
-
-                                            Image
-                                            {
-                                                visible: model.isMuted
-                                                Layout.preferredWidth: 20
-                                                Layout.preferredHeight: 20
-                                                fillMode: Image.PreserveAspectFit
-                                                source: "icons/microphone-closed.png"
-                                            }
-
-
-                                            Image
-                                            {
-                                                visible: model.isDeafened
-                                                Layout.preferredWidth: 20
-                                                Layout.preferredHeight: 20
-                                                fillMode: Image.PreserveAspectFit
-                                                source: "icons/headphone-closed.png"
-                                            }
-                                        }
-                                    }
-                                }
-
-                            }
-
-
-                        }
-                    }
-
-                }
+                //when joint a channel would display current channel users. with their status, camera feed, and ...
             }
 
             Item
@@ -372,6 +113,7 @@ Item {
 
                         RowLayout
                         {
+                            id:indicatorStackView
                             Layout.fillWidth: true
                             spacing: 2
 

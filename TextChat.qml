@@ -5,8 +5,8 @@ import QtQuick.Controls.Material
 
 Item {
     id:root
-    anchors.fill: parent
-
+    width: parent.width
+    height: parent.height
     Rectangle
     {
         color:"purple"
