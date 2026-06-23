@@ -7,13 +7,14 @@
 #include "../BeanChatServer/src/network/packets.h"
 #include "../BeanChatServer/src/network/packethelpers.h"
 #include "../BeanChatServer/src/network/voicepackets.h"
-
+#include "../BeanChatServer/src/models/user.h"
 #include <QUdpSocket>
 #include "channelmodel.h"
 #include "chatmodel.h"
 #include "participantmodel.h"
 #include "myserversmodel.h"
 
+#include <QCoreApplication>
 #include <QDataStream>
 
 #include <QRandomGenerator> //to get a random number for default username
@@ -24,6 +25,9 @@
 #include "audiospeaker.h"
 
 #include "connectedusersmodel.h"
+
+#include <QSysInfo>
+
 class User : public QObject
 {
     Q_OBJECT
@@ -77,6 +81,8 @@ public:
     int chatUnreadMessages() const;
     void setChatUnreadMessages(int newChatUnreadMessages);
 
+
+
 signals:
 
     void myIdChanged();
@@ -115,6 +121,8 @@ public slots:
     void sendVideoFrame(const QByteArray& jpegData);
 
 private:
+    QString platformName();
+
     bool m_muteMicrophone=false;
     bool m_muteHeadphone=false;
     bool m_isCameraOpen=false;
@@ -133,6 +141,7 @@ private:
     quint64 m_myChannelId=-2; //channelId -1 is default value for those users didn't connect to any channel just connected to server.
     QString m_myChannelName = "noChannel"; //current channel
     QString m_myServerName= ""; //current server connected to
+    UserModel m_info; //to store system info such as appVersio and ..
 
     bool m_isConnectedToServer=false;
 

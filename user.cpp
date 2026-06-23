@@ -33,6 +33,18 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
     connect(m_channelModel, &ChannelModel::userTalkingStatus,
             m_currentChannelParticipant, &ParticipantModel::setTalking);
 
+
+    //get system info to send to server on login stage.
+    m_info.appVersion = QCoreApplication::applicationVersion();
+    #ifdef QT_NO_DEBUG
+        m_info.buildType = "Release";
+    #else
+        m_info.buildType = "Debug";
+    #endif
+    m_info.osName = platformName();
+    m_info.osVersion = QSysInfo::prettyProductName();
+    m_info.machineName = QSysInfo::machineHostName();
+    m_info.machineId = QString(QSysInfo::machineUniqueId().toHex());
 }
 
 
@@ -109,6 +121,13 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
     setIsConnectedToServer(true);
     login.username = myUsername();
     login.identity = myIdentity();
+    //system info.
+    login.appVersion = m_info.appVersion;
+    login.buildType = m_info.buildType;
+    login.machineId = m_info.machineId;
+    login.machineName = m_info.machineName;
+    login.osName = m_info.osName;
+    login.osVersion = m_info.osVersion;
 
     Packet p;
     p.type = PacketType::LoginRequest;
@@ -582,6 +601,7 @@ void User::onTcpReadyRead()
                                        u.muted,
                                        u.deafened,
                                        u.camera,
+                                       u.appVersion, u.buildType, u.osName, u.osVersion,
                                        UserActivityStatus::Online);//also server doesnt send this too.
         break;
     }
@@ -660,12 +680,14 @@ void User::onTcpReadyRead()
 
         for(auto& u : state.users)
         {
+            qDebug() << "add user to connected: " <<  u.appVersion << "-" << u.buildType << "-" << u.osName << "-" << u.osVersion;
             m_connectedUsersModel->addUser(u.id,
                                            u.username,
                                            "",false,//server doesnt send these right now.
                                            u.muted,
                                            u.deafened,
                                            u.camera,
+                                           u.appVersion, u.buildType, u.osName, u.osVersion,
                                            UserActivityStatus::Online);//also server doesnt send this too.
 
 
@@ -813,6 +835,25 @@ void User::sendVideoFrame(const QByteArray &jpegData)
         data,
         QHostAddress(m_serverIp),
         m_serverPort+1);
+}
+
+
+QString User::platformName()
+{
+    #ifdef Q_OS_ANDROID
+        return "Android";
+    #elif defined(Q_OS_WIN)
+        return "Windows";
+    #elif defined(Q_OS_IOS)
+            return "IOS";
+    #elif defined(Q_OS_MACOS)
+        return "MacOS";
+    #elif defined(Q_OS_LINUX)
+        return "Linux";
+#elif
+    #else
+        return "Unknown";
+    #endif
 }
 
 int User::chatUnreadMessages() const

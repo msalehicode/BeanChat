@@ -119,6 +119,36 @@ Item
                         text: userId + " " + userName
                         anchors.verticalCenter: parent.verticalCenter
                     }
+
+
+                    Image
+                    {
+                        id:iconUserOs
+                        function getOsIcon(name)
+                        {
+                            switch(name)
+                            {
+                            case "Android": return "icons/os/android.png";
+                            case "Windows": return "icons/os/windows.png";
+                            case "iOS": return "icons/os/ios.png";
+                            case "macOS": return "icons/os/macos.png";
+                            case "Linux": return "icons/os/linux.png";
+                            default: return "";
+                            }
+                        }
+
+                        source: getOsIcon(model.userOsName)
+                        width: 20
+                        height: 20
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    // Text
+                    // {
+                    //     text: userOsVersion + " " +userAppVersion + " " +userAppBuildType
+                    //     color: "white"
+                    //     anchors.verticalCenter: parent.verticalCenter
+                    // }
                 }
 
 

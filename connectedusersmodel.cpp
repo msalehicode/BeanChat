@@ -40,6 +40,18 @@ QVariant ConnectedUsersModel::data(
     case UserIconsRole:
         return usr.iconsId;
 
+    case UserOsVersionRole:
+        return usr.osVersion;
+
+    case USerOsNameRole:
+        return usr.osName;
+
+    case UserAppVersionRole:
+        return usr.appVersion;
+
+    case UserAppBuildTypeRole:
+        return usr.buildType;
+
     }
 
     return {};
@@ -53,7 +65,11 @@ ConnectedUsersModel::roleNames() const
             { UserIdRole, "userId" },
             { UserNameRole, "userName" },
             { UserStatusRole, "userStatus" },
-            { UserIconsRole, "userIcons"}
+            { UserIconsRole, "userIcons"},
+            { UserOsVersionRole, "userOsVersion"},
+            { USerOsNameRole, "userOsName"},
+            { UserAppVersionRole, "userAppVersion"},
+            { UserAppBuildTypeRole, "userAppBuildType" }
         };
 }
 
@@ -68,6 +84,7 @@ void ConnectedUsersModel::clear()
 
 void ConnectedUsersModel::addUser(quint64 id, QString username, QString iconsId,
                                   bool talking, bool muted, bool deafened, bool camera,
+                                  QString version, QString buildType, QString osName, QString osVersion,
                                   UserActivityStatus status)
 {
     beginInsertRows(
@@ -84,6 +101,10 @@ void ConnectedUsersModel::addUser(quint64 id, QString username, QString iconsId,
     user.deafened=deafened;
     user.hasVideo=camera;
     user.status=status;
+    user.osName = osName;
+    user.osVersion = osVersion;
+    user.buildType = buildType;
+    user.appVersion = version;
 
 
     m_connectedUsers.append(user);

@@ -4,6 +4,11 @@ project(BeanChat VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(APP_CURRENT_VERSION "0.12.0")
+set(APP_TitleName "Bean Chat")
+set(APP_OrganizationName "orgBeanChat")
+set(APP_ApplicationName "appBeanChat")
+
 find_package(Qt6 REQUIRED COMPONENTS Core Quick Multimedia Network)
 
 # hotkey
@@ -108,7 +113,7 @@ qt_add_qml_module(appBeanChat
     icons/microphone.png icons/microphone-closed.png icons/microphone-red.png
     icons/screen.png icons/screen-closed.png icons/screen-red.png
     icons/signal.png icons/signal-green.png icons/signal-orange.png icons/signal-red.png icons/signal-yellow.png
-
+    icons/os/android.png icons/os/ios.png icons/os/linux.png icons/os/macos.png icons/os/windows.png
 
     # from Server. later move these into a library
     SOURCES
@@ -145,6 +150,14 @@ target_link_libraries(appBeanChat PRIVATE PkgConfig::RNNOISE)
 # hotkey
 target_link_libraries(appBeanChat PRIVATE
     qhotkey
+)
+
+# announce cmake variables to Cpp side
+target_compile_definitions(appBeanChat PRIVATE
+    APP_VERSION="${APP_CURRENT_VERSION}"
+    APP_TITLE="${APP_TitleName}"
+    APP_ORGANIZATION="${APP_OrganizationName}"
+    APP_NAME="${APP_ApplicationName}"
 )
 
 # debug tool to get sigfault infos.

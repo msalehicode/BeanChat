@@ -24,6 +24,15 @@ struct ConnectedUser
 
     UserActivityStatus status= UserActivityStatus::Online;
 
+
+    // Client information
+    QString appVersion;      // "1.2.5"
+    QString buildType;       // "Release", "Debug"
+
+    // Operating system
+    QString osName;          // "Windows", "Linux", "macOS"
+    QString osVersion;       // "11", "Ubuntu 24.04"
+
 };
 
 
@@ -40,7 +49,11 @@ public:
         UserIdRole = Qt::UserRole + 1,
         UserNameRole,
         UserStatusRole,
-        UserIconsRole
+        UserIconsRole,
+        UserOsVersionRole,
+        USerOsNameRole,
+        UserAppVersionRole,
+        UserAppBuildTypeRole
     };
 
 
@@ -62,6 +75,7 @@ public:
 
     void addUser(quint64 id, QString username, QString iconsId,
                  bool talking, bool muted, bool deafened, bool camera,
+                 QString version, QString buildType, QString osName, QString osVersion,
                  UserActivityStatus status=UserActivityStatus::Online);
 
     void removeUser(quint64 userId);

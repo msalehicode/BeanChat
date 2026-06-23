@@ -40,6 +40,13 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 
 
+
+    //reading these from cmake
+    QCoreApplication::setOrganizationName(QString::fromUtf8(APP_ORGANIZATION));
+    QCoreApplication::setApplicationName(QString::fromUtf8(APP_NAME));
+    QCoreApplication::setApplicationVersion(QString::fromUtf8(APP_VERSION));
+
+
     //---------- resources ----------
     AudioCapture audio;
     CameraCapture cam;
