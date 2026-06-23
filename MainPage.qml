@@ -249,4 +249,9 @@ Item {
     }
 
 
+    ConnectPopup
+    {
+        id: connectPopup
+    }
+
 }

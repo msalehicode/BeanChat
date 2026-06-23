@@ -2,11 +2,12 @@
 #include <QTimer>
 
 User::User(ChannelModel *channelModel, ChatModel *chatModel,
-           ParticipantModel* currentChannelParticipant, ConnectedUsersModel *connectedUsersModel,
+           ParticipantModel* currentChannelParticipant, ConnectedUsersModel *connectedUsersModel, MyServersModel* myServersModel,
            CameraCapture* cam, AudioCapture *mic, AudioSpeaker* speaker,
            QObject *parent)
     : QObject{parent}, m_channelModel(channelModel), m_chatModel(chatModel),
     m_currentChannelParticipant(currentChannelParticipant), m_connectedUsersModel(connectedUsersModel),
+    m_myServersModel(myServersModel),
     m_cam(cam), m_mic(mic), m_speaker(speaker)
 {
     qDebug() << "user starting..";
@@ -32,8 +33,6 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
     connect(m_channelModel, &ChannelModel::userTalkingStatus,
             m_currentChannelParticipant, &ParticipantModel::setTalking);
 
-
-
 }
 
 
@@ -52,36 +51,86 @@ void User::joinChannel(int channelId)
     socket.write(p.serialize());
 }
 
-void User::login(QString username, QString tokenlike)
+void User::connectToServer(bool saveThisConnection, const QString& serverIp, const QString& str_serverPort)
 {
-    socket.connectToHost(
-        m_targetIp,
-        m_targetPort);
+    //if user is connected to somewhere, disconnect before new connection
+    if(isConnectedToServer())
+        disconnect(true); //TURE to set -> we are switching so dont reset myServersModel item.isActive
 
-    setMyServerName(m_targetIp+":"+QString::number(m_targetPort));
+
+    //convert ports to quint64
+    bool ok = false;
+    quint64 serverPort = str_serverPort.toULongLong(&ok);
+    if(!ok)
+    {
+        qDebug() << "Invalid port number!";
+        return;
+    }
+
+
+    //validate entered ip and ports
+    //code here
+
+
+    //save this server if was not in myServers
+    if(!m_myServersModel->doesServerExists(serverIp, str_serverPort))
+    {
+        if(saveThisConnection)
+        {
+            //save server into local storage
+            //code here
+        }
+
+        //add to myServers model
+        m_myServersModel->addServer("server-name", serverIp, str_serverPort); //by defualt would set status IsActive item to true
+    }
+
+
+    //store in variables for different parts of app
+    m_serverIp=serverIp;
+    m_serverPort=serverPort;
+
+    //connect to TCP
+    socket.connectToHost(
+        m_serverIp,
+        m_serverPort);
+
+    //set a temporary name for server until server say his name
+    setMyServerName(m_serverIp + ":"+QString::number(m_serverPort));
 
     LoginRequestPacket login;
 
-    if(username=="")
+    if(m_myUsername=="")
     {
         //do a default and random name..
         setMyUsername("BeanUser"+QString::number(QRandomGenerator::global()->bounded(100)));
     }
-    else
-    {
-        setMyUsername(username);
-    }
+
+    setIsConnectedToServer(true);
     login.username = myUsername();
-    login.identity = tokenlike;
+    login.identity = myIdentity();
 
     Packet p;
     p.type = PacketType::LoginRequest;
     p.payload = PacketHelpers::pack(login);
 
+    qDebug() << "sending login request.. will wait for response.. connecting server is "
+             << m_serverIp << ":" << m_serverPort  << " name=" << myUsername() << "identity=" << myIdentity() ;
+
     socket.write(p.serialize());
 }
 
-void User::disconnect()
+void User::connectToServer(const QString &serverIp, const QString &str_serverPort, int serverId)
+{
+    qDebug() << "connectToServer server id, called ";
+    //tell myServers model im connected to this server.
+    m_myServersModel->setIsActive(serverId);
+
+    //do normal connectToServer things
+    connectToServer(false, serverIp,str_serverPort);
+}
+
+void User::disconnect(bool switchingServer)
 {
     //disocnnect sockets.
     socket.disconnectFromHost();
@@ -96,7 +145,13 @@ void User::disconnect()
     //reset variables
     setMyServerName("");
     setMyChannelName("");
+    setIsConnectedToServer(false);
     m_me=nullptr;
+    m_serverIp.clear();
+    m_serverPort=0;
+
+    if(!switchingServer)
+        m_myServersModel->resetPreviousIsActiveServer();
 
     //because of method we do use setter to send requests to server
     //then if server allowed/responsed we would do emits so, have to here reset them manually cant use setter.
@@ -174,8 +229,8 @@ void User::sendVoicePcm(
 
     m_udpSocket.writeDatagram(
         data,
-        QHostAddress(m_targetIp),
-        m_targetUdpPort);
+        QHostAddress(m_serverIp),
+        m_serverPort+1);
 
     //update isTalking this user/device
     UserItem* senderUser = m_channelModel->getUser(m_myChannelId, myId());
@@ -227,7 +282,6 @@ void User::onTcpReadyRead()
         Packet::deserialize(data);
 
     qInfo() << "received message: code:" << static_cast<int>(packet.type);
-    setMessages(data);
     switch(packet.type)
     {
 
@@ -475,11 +529,11 @@ void User::onTcpReadyRead()
             qInfo() << "login.. failed" ;
         else
         {
-            setMyId(resp.id);
+            setMyId(resp.id); //server just told us our name, to know when e.g: user connected to that channel is that same channel as us? what is my id? so here is it.
             qDebug() << "my id is=" << myId();
-            askForServerState();
 
-            //----------------udp voice. register
+
+            //----------------udp voice. video login
             UdpRegisterPacket reg;
 
             reg.userId = static_cast<quint64>(myId());
@@ -490,14 +544,21 @@ void User::onTcpReadyRead()
                 &data,
                 QIODevice::WriteOnly);
 
-            out << quint16(100);
+            //for now we dont login for UDP later need token/identity and .. for security
+            //code here
+
+            out << quint16(100); //#100 is known as register on server.
             out << reg;
 
             m_udpSocket.writeDatagram(
                 data,
-                QHostAddress(m_targetIp),
-                m_targetUdpPort);
+                QHostAddress(m_serverIp),
+                m_serverPort+1);
             qDebug() << " just sent a register udp message to server.";
+
+
+            //ask for server channels, users, ...
+            askForServerState();
         }
 
         qDebug() << "LOGIN MESSAGE= " << resp.message;
@@ -745,8 +806,34 @@ void User::sendVideoFrame(const QByteArray &jpegData)
 
     m_udpSocket.writeDatagram(
         data,
-        QHostAddress(m_targetIp),
-        m_targetUdpPort);
+        QHostAddress(m_serverIp),
+        m_serverPort+1);
+}
+
+QString User::myIdentity() const
+{
+    return m_myIdentity;
+}
+
+void User::setMyIdentity(const QString &newIdentity)
+{
+    if (m_myIdentity == newIdentity)
+        return;
+    m_myIdentity = newIdentity;
+    emit myIdentityChanged();
+}
+
+bool User::isConnectedToServer() const
+{
+    return m_isConnectedToServer;
+}
+
+void User::setIsConnectedToServer(bool newConnectedToServer)
+{
+    if (m_isConnectedToServer == newConnectedToServer)
+        return;
+    m_isConnectedToServer = newConnectedToServer;
+    emit isConnectedToServerChanged();
 }
 
 QString User::myServerName() const
@@ -862,15 +949,3 @@ void User::setMyChannelName(const QString& name)
     emit myChannelNameChanged();
 }
 
-void User::setMessages(const QString &newMessages)
-{
-    if (m_messages == newMessages)
-        return;
-    m_messages += "\n"+  newMessages;
-    emit messagesChanged();
-}
-
-QString User::getMessages() const
-{
-    return m_messages;
-}

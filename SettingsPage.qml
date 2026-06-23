@@ -20,13 +20,6 @@ Page {
         text:"back"
         onClicked: rootWindow.changePage()
     }
-    Text
-    {
-        text:user.messages
-        color:"white"
-        anchors.top: parent.top
-        anchors.right: parent.right
-    }
 
     Rectangle
     {

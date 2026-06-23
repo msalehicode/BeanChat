@@ -56,6 +56,7 @@ qt_add_qml_module(appBeanChat
         ChannelList.qml
         CurrentChannelParticipants.qml
         MyServers.qml
+        ConnectPopup.qml
 
     SOURCES
         # just in case
@@ -78,6 +79,7 @@ qt_add_qml_module(appBeanChat
         chatmodel.h chatmodel.cpp
         participantmodel.h
         connectedusersmodel.h connectedusersmodel.cpp
+        myserversmodel.h myserversmodel.cpp
 
         # C++ qml components
         myvideoitem.h myvideoitem.cpp

@@ -24,6 +24,7 @@ Item
             id:serverTitle
             color: bg2
             width:parent.width
+            visible: user.isConnectedToServer
             height: 60
             Text
             {
@@ -37,7 +38,9 @@ Item
         {
             id:channelView
             width: parent.width
-            height: parent.height-(serverTitle.height+userStuff.height+userStuffOnServer.height)
+            height: user.isConnectedToServer ?
+                        parent.height-(serverTitle.height+userStuff.height+userStuffOnServer.height)
+                      :  parent.height-(userStuff.height)
             clip: true
             model: channelModel
             spacing: 10
@@ -226,6 +229,7 @@ Item
             id: userStuffOnServer
             color: "#1e1f23"
             width: parent.width
+            visible: user.isConnectedToServer
             height: 50
 
             // Left side
@@ -352,6 +356,7 @@ Item
                     {
                         width: parent.width
                         height: 15
+                        visible: user.myChannelName.length>0
                         Row
                         {
                             spacing: 5

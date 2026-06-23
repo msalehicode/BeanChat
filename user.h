@@ -12,6 +12,8 @@
 #include "channelmodel.h"
 #include "chatmodel.h"
 #include "participantmodel.h"
+#include "myserversmodel.h"
+
 #include <QDataStream>
 
 #include <QRandomGenerator> //to get a random number for default username
@@ -25,23 +27,21 @@
 class User : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QString messages READ getMessages WRITE setMessages NOTIFY messagesChanged FINAL)
 
 public:
     explicit User(ChannelModel *channelModel,ChatModel* chatModel,
-                  ParticipantModel* currentChannelParticipant,ConnectedUsersModel* connectedUsersModel,
+                  ParticipantModel* currentChannelParticipant,ConnectedUsersModel* connectedUsersModel, MyServersModel* myServersModel,
                   CameraCapture* cam, AudioCapture* mic, AudioSpeaker* speaker,
                   QObject *parent = nullptr);
 
     Q_INVOKABLE void joinChannel(int channelId);
-    Q_INVOKABLE void login(QString username="", QString tokenlike="defaultBeanChatIdentity");
-    Q_INVOKABLE void disconnect();
+    Q_INVOKABLE void connectToServer(bool saveThisConnection, const QString& serverIp, const QString& str_serverPort);
+    Q_INVOKABLE void connectToServer(const QString& serverIp, const QString& str_serverPort, int serverId);
+    Q_INVOKABLE void disconnect(bool switchingServer=false);
     Q_INVOKABLE void createChannel(QString channelName, QString password);
     Q_INVOKABLE void sendMessage(QString message);
-    Q_INVOKABLE void askForServerState();
 
-    QString getMessages() const;
-    void setMessages(const QString &newMessages);
+    void askForServerState();
 
     int myId() const;
     void setMyId(int newMyId);
@@ -65,9 +65,13 @@ public:
     QString myServerName() const;
     void setMyServerName(const QString &newMyServerName);
 
-signals:
+    bool isConnectedToServer() const;
+    void setIsConnectedToServer(bool newConnectedToServer);
 
-    void messagesChanged();
+    QString myIdentity() const;
+    void setMyIdentity(const QString &newIdentity);
+
+signals:
 
     void myIdChanged();
 
@@ -91,6 +95,10 @@ signals:
 
     void myServerNameChanged();
 
+    void isConnectedToServerChanged();
+
+    void myIdentityChanged();
+
 public slots:
     void onTcpReadyRead();
     void onUdpReadyRead();
@@ -104,15 +112,24 @@ private:
 
     QTcpSocket socket;
     QUdpSocket m_udpSocket;
+
+
+    //user can modify
     QString m_myUsername = "";
+    QString m_myIdentity = "identity";
+
+    //user cant modify, would receive from target server
     int m_myId =-1;
     quint64 m_myChannelId=-2; //channelId -1 is default value for those users didn't connect to any channel just connected to server.
     QString m_myChannelName = "noChannel"; //current channel
     QString m_myServerName= ""; //current server connected to
 
-    QString m_targetIp = "10.89.46.137";
-    quint64 m_targetPort=9987;
-    quint64 m_targetUdpPort=9988;
+    bool m_isConnectedToServer=false;
+
+
+    //to hold ip and ports for different parts of app such as sendVoice, sendVideo
+    QString m_serverIp = "10.89.46.137";
+    quint64 m_serverPort=9987; //udp port is this value+1
 
     //voice
     quint32 m_sequence = 0;
@@ -120,14 +137,13 @@ private:
     //video
     quint32 m_videoSequence = 0;
 
-    QString m_messages;
-
-
     Participant* m_me=nullptr; //hold this user info and update it when channel switched, to connect with cameraCapture and show images as local preview
 
     ChannelModel* m_channelModel=nullptr;
     ChatModel* m_chatModel=nullptr;
     ParticipantModel* m_currentChannelParticipant=nullptr;
+    MyServersModel* m_myServersModel=nullptr;
+
     CameraCapture* m_cam=nullptr;
     AudioCapture* m_mic=nullptr;
     AudioSpeaker* m_speaker=nullptr;
@@ -140,6 +156,8 @@ private:
     Q_PROPERTY(bool muteMicrophone READ muteMicrophone WRITE setMuteMicrophone NOTIFY muteMicrophoneChanged FINAL)
     Q_PROPERTY(bool isCameraOpen READ isCameraOpen WRITE setIsCameraOpen NOTIFY isCameraOpenChanged FINAL)
     Q_PROPERTY(QString myServerName READ myServerName WRITE setMyServerName NOTIFY myServerNameChanged FINAL)
+    Q_PROPERTY(bool isConnectedToServer READ isConnectedToServer WRITE setIsConnectedToServer NOTIFY isConnectedToServerChanged FINAL)
+    Q_PROPERTY(QString myIdentity READ myIdentity WRITE setMyIdentity NOTIFY myIdentityChanged FINAL)
 };
 
 #endif // USER_H

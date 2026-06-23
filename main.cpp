@@ -26,6 +26,7 @@
 #include "channelmodel.h"
 #include "chatmodel.h"
 #include "connectedusersmodel.h"
+#include "myserversmodel.h"
 
 #include "user.h"
 
@@ -52,10 +53,11 @@ int main(int argc, char *argv[])
     ChatModel chatModel;
     ParticipantModel participantsModel;//participant = current channel users which has video sink and shown on center of screen
     ConnectedUsersModel connectedUsersModel;
-
+    MyServersModel myServersModel;
 
     //----------
-    User usr(&channelModel, &chatModel, &participantsModel, &connectedUsersModel, &cam, &audio, &speaker);
+    User usr(&channelModel, &chatModel, &participantsModel, &connectedUsersModel, &myServersModel,
+             &cam, &audio, &speaker);
 
     //---------- camera connection ----------
     QObject::connect(
@@ -186,6 +188,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("camera", &cam);
     engine.rootContext()->setContextProperty("participantModel", &participantsModel);
     engine.rootContext()->setContextProperty("connectedUsersModel", &connectedUsersModel);
+    engine.rootContext()->setContextProperty("myServersModel", &myServersModel);
     engine.rootContext()->setContextProperty("user", &usr);
     engine.rootContext()->setContextProperty("channelModel",&channelModel);
     engine.rootContext()->setContextProperty("chatModel",&chatModel);

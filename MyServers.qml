@@ -65,7 +65,7 @@ Item
             width: parent.width
             height: parent.height-(beanChatButton.height+addServer.height+10)
             clip: true
-            model: 35
+            model: myServersModel
             spacing: 5
             delegate: Rectangle
             {
@@ -74,17 +74,20 @@ Item
                 height: width
                 radius: width
                 color:"pink"
+                border.width: 4
+                border.color: model.isActive ? "lime" : "transparent"
                 Text
                 {
-                    text:"SER " + index
+                    text: model.name
                     anchors.centerIn: parent
                     color:"black"
                 }
                 MouseArea
                 {
                     anchors.fill: parent
-                    onClicked: model.index===0 ? user.login() : console.log(" load server index="+model.index)
+                    onDoubleClicked: user.connectToServer(model.ip, model.port, model.id)
                 }
+
             }
         }
 
@@ -108,7 +111,7 @@ Item
             MouseArea
             {
                 anchors.fill: parent
-                onClicked:console.log("add new server")
+                onClicked: connectPopup.open()
             }
         }
     }
