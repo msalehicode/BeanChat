@@ -618,17 +618,18 @@ void User::onTcpReadyRead()
             << user.username;
 
         ChannelItem* channel = m_channelModel->findChannelOfUser(user.id);
-        if(!channel)
+        if(channel)
         {
-            qDebug() << "invalid hcannel id not found cant find usr was in our channel or not";
+            //check whether user was on our channel, if was play sound effect
+            if(channel->id == m_myChannelId)
+            {
+                qDebug() << "play user left.";
+                emit userLeft();
+            }
         }
+        else
+            qDebug() << "invalid channel id, not found cant find usr was in our channel or not";
 
-        //check whether user was on our channel, if was play sound effect
-        if(channel->id == m_myChannelId)
-        {
-            qDebug() << "play user left.";
-            emit userLeft();
-        }
 
         //remove user from connected users list
         m_connectedUsersModel->removeUser(user.id);
