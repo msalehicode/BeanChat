@@ -36,12 +36,12 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
 }
 
 
-void User::joinChannel(int channelId)
+void User::joinChannel(int channelId, const QString& password)
 {
     JoinChannelPacket join;
 
     join.channelId = channelId;
-    join.password = "123";
+    join.password =  password;
 
     Packet p;
 
@@ -292,7 +292,7 @@ void User::onTcpReadyRead()
             PacketHelpers::unpack<ChannelCreatedPacket>(
                 packet.payload);
 
-        m_channelModel->addChannel(resp.id,resp.name);
+        m_channelModel->addChannel(resp.id,resp.name,resp.isLocked);
     }break;
 
     case PacketType::UserCameraClosed:
@@ -654,7 +654,8 @@ void User::onTcpReadyRead()
         {
             m_channelModel->addChannel(
                 c.id,
-                c.name);
+                c.name,
+                c.isLocked);
         }
 
         for(auto& u : state.users)

@@ -56,7 +56,10 @@ qt_add_qml_module(appBeanChat
         ChannelList.qml
         CurrentChannelParticipants.qml
         MyServers.qml
+
+        #pop up dialogs
         ConnectPopup.qml
+        EnterChannelPasswordPopup.qml
 
     SOURCES
         # just in case

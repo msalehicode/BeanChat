@@ -98,6 +98,16 @@ Item
                             font.pixelSize: 15
                             color:"white"
                         }
+
+                        Image
+                        {
+                            id:theChannelLockStatus
+                            width:23
+                            height: 20
+                            visible: model.isLocked
+                            source: "icons/lock.png"
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
                     }
 
                     MouseArea
@@ -106,7 +116,15 @@ Item
                         onDoubleClicked:
                         {
                             console.log("try to join channel id:" , channelId, " name=", channelName)
-                            user.joinChannel(channelId)
+                            if(model.isLocked)
+                            {
+                                //show popup enter password
+                                channelPasswordPopup.channelId=model.channelId;
+                                channelPasswordPopup.channelName=model.channelName;
+                                channelPasswordPopup.open()
+                            }
+                            else
+                                user.joinChannel(channelId,"") //non locked passwords default password is empty ""
                         }
                     }
                 }

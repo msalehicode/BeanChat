@@ -38,6 +38,9 @@ QVariant ChannelModel::data(
     case NameRole:
         return channel.name;
 
+    case IsLcokedRole:
+        return channel.isLocked;
+
     case UsersRole:
     {
         QVariantList users;
@@ -82,6 +85,7 @@ ChannelModel::roleNames() const
         {
             { IdRole, "channelId" },
             { NameRole, "channelName" },
+            { IsLcokedRole, "isLocked"},
             { UsersRole, "users" }
         };
 }
@@ -97,7 +101,7 @@ void ChannelModel::clear()
 
 void ChannelModel::addChannel(
     quint64 id,
-    const QString& name)
+    const QString& name, bool isLocked)
 {
     beginInsertRows(
         QModelIndex(),
@@ -108,6 +112,7 @@ void ChannelModel::addChannel(
 
     channel.id = id;
     channel.name = name;
+    channel.isLocked = isLocked;
 
     m_channels.push_back(
         channel);

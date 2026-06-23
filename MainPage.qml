@@ -285,4 +285,14 @@ Item {
         id: connectPopup
     }
 
+    EnterChannelPasswordPopup
+    {
+        id: channelPasswordPopup
+
+        onPasswordEntered:
+        {
+            user.joinChannel(channelId, password)
+        }
+    }
+
 }

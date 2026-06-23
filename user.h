@@ -34,7 +34,7 @@ public:
                   CameraCapture* cam, AudioCapture* mic, AudioSpeaker* speaker,
                   QObject *parent = nullptr);
 
-    Q_INVOKABLE void joinChannel(int channelId);
+    Q_INVOKABLE void joinChannel(int channelId, const QString& password="");
     Q_INVOKABLE void connectToServer(bool saveThisConnection, const QString& serverIp, const QString& str_serverPort);
     Q_INVOKABLE void connectToServer(const QString& serverIp, const QString& str_serverPort, int serverId);
     Q_INVOKABLE void disconnect(bool switchingServer=false);

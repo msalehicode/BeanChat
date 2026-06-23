@@ -27,6 +27,7 @@ struct ChannelItem
 {
     quint64 id;
     QString name;
+    bool isLocked=false;
 
     QList<UserItem> users;
 };
@@ -41,6 +42,7 @@ public:
     {
         IdRole = Qt::UserRole + 1,
         NameRole,
+        IsLcokedRole,
         UsersRole
     };
 
@@ -62,7 +64,7 @@ public:
 
     void addChannel(
         quint64 id,
-        const QString& name);
+        const QString& name, bool isLocked);
 
     void addUser(
         quint64 channelId,
