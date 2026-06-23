@@ -82,6 +82,14 @@ public:
     void setChatUnreadMessages(int newChatUnreadMessages);
 
 
+    int myPing() const;
+    void setMyPing(int newMyPing);
+
+    float myVoicePacketLoss() const;
+    void setMyVoicePacketLoss(float newMyVoicePacketLoss);
+
+    float myVideoPacketLoss() const;
+    void setMyVideoPacketLoss(float newMyVideoPacketLoss);
 
 signals:
 
@@ -115,6 +123,12 @@ signals:
 
     void chatUnreadMessagesChanged();
 
+    void myPingChanged();
+
+    void myVoicePacketLossChanged();
+
+    void myVideoPacketLossChanged();
+
 public slots:
     void onTcpReadyRead();
     void onUdpReadyRead();
@@ -136,6 +150,7 @@ private:
     QString m_myUsername = "";
     QString m_myIdentity = "identity";
 
+
     //user cant modify, would receive from target server
     int m_myId =-1;
     quint64 m_myChannelId=-2; //channelId -1 is default value for those users didn't connect to any channel just connected to server.
@@ -145,6 +160,9 @@ private:
 
     bool m_isConnectedToServer=false;
 
+    int m_myPing=-1;
+    float m_myVoicePacketLoss=0.0f;
+    float m_myVideoPacketLoss=0.0f;
 
     //chat notification
     bool m_isChatOpen=false;//a flag to know is chatTab is active or not
@@ -184,6 +202,9 @@ private:
     Q_PROPERTY(QString myIdentity READ myIdentity WRITE setMyIdentity NOTIFY myIdentityChanged FINAL)
     Q_PROPERTY(bool isChatOpen READ isChatOpen WRITE setIsChatOpen NOTIFY isChatOpenChanged FINAL)
     Q_PROPERTY(int chatUnreadMessages READ chatUnreadMessages WRITE setChatUnreadMessages NOTIFY chatUnreadMessagesChanged FINAL)
+    Q_PROPERTY(int myPing READ myPing WRITE setMyPing NOTIFY myPingChanged FINAL)
+    Q_PROPERTY(float myVoicePacketLoss READ myVoicePacketLoss WRITE setMyVoicePacketLoss NOTIFY myVoicePacketLossChanged FINAL)
+    Q_PROPERTY(float myVideoPacketLoss READ myVideoPacketLoss WRITE setMyVideoPacketLoss NOTIFY myVideoPacketLossChanged FINAL)
 };
 
 #endif // USER_H

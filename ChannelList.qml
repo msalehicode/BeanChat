@@ -273,7 +273,25 @@ Item
                     Image
                     {
                         anchors.fill: parent
-                        source: "icons/signal.png"
+
+                        source: signalIcon(user.myPing)
+
+                        function signalIcon(ping)
+                        {
+                            if(ping < 0)
+                                return "icons/signal.png"; //undefined
+
+                            if(ping <= 60)
+                                return "icons/signal-green.png";
+
+                            if(ping <= 120)
+                                return "icons/signal-yellow.png";
+
+                            if(ping <= 200)
+                                return "icons/signal-orange.png";
+
+                            return "icons/signal-red.png";
+                        }
                     }
 
                     MouseArea
@@ -291,7 +309,7 @@ Item
                         visible: parent.infoVisible
 
                         width: 160
-                        height: 70
+                        height: 100
 
                         radius: 8
 
@@ -299,7 +317,7 @@ Item
                         border.color: "#333333"
 
                         anchors.bottom: parent.top
-                        anchors.bottomMargin: 8
+                        anchors.bottomMargin: 10
 
                         anchors.left: parent.left
 
@@ -344,13 +362,19 @@ Item
 
                             Text
                             {
-                                text: "Ping: 32 ms"
+                                text: "Ping: " + user.myPing + " ms"
                                 color: "#b5bac1"
                             }
 
                             Text
                             {
-                                text: "Packet Loss: 0.2%"
+                                text: "Voice Packet Loss: " + user.myVoicePacketLoss + "%"
+                                color: "#b5bac1"
+                            }
+
+                            Text
+                            {
+                                text: "Video Packet Loss: " + user.myVideoPacketLoss + "%"
                                 color: "#b5bac1"
                             }
                         }

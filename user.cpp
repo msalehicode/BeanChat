@@ -722,7 +722,9 @@ void User::onUdpReadyRead()
 
         in >> type;
 
-        if(type == 101) //voice
+        switch(type)
+        {
+        case 101:  //voice
         {
             VoicePacket packet;
             in >> packet;
@@ -752,20 +754,22 @@ void User::onUdpReadyRead()
             //     << packet.sequence
             //     << "size"
             //     << packet.audioData.size();
+            break;
         }
-        else if(type ==102) //video
+
+        case 102: //video
         {
             VideoPacket packet;
 
             in >> packet;
 
-            qDebug()
-                << "Video received from "
-                << packet.senderId
-                << "seq="
-                << packet.sequence
-                << "size="
-                << packet.videoData.size();
+            // qDebug()
+            //     << "Video received from "
+            //     << packet.senderId
+            //     << "seq="
+            //     << packet.sequence
+            //     << "size="
+            //     << packet.videoData.size();
 
             Participant* senderParticipant = m_currentChannelParticipant->findUser(packet.senderId);
             if(!senderParticipant)
@@ -799,9 +803,33 @@ void User::onUdpReadyRead()
             }
 
             // emit videoReceived(packet.videoData);
+            break;
         }
-        else
-            continue;
+
+        case 103: //ping requst from server.
+            PingPacket p;
+            in >> p;
+
+            setMyPing(p.lastPing);
+            setMyVoicePacketLoss(p.voicePacketLoss);
+            setMyVideoPacketLoss(p.videoPacketLoss);
+
+            //send back same sequence..
+            QByteArray data2;
+
+            QDataStream out(
+                &data2,
+                QIODevice::WriteOnly);
+
+            out << quint16(104);//response ping
+            out << p;
+
+            m_udpSocket.writeDatagram(
+                data2,
+                QHostAddress(m_serverIp),
+                m_serverPort+1);
+            break;
+        }
     }
 }
 
@@ -855,6 +883,45 @@ QString User::platformName()
     #else
         return "Unknown";
     #endif
+}
+
+float User::myVideoPacketLoss() const
+{
+    return m_myVideoPacketLoss;
+}
+
+void User::setMyVideoPacketLoss(float newMyVideoPacketLoss)
+{
+    if (qFuzzyCompare(m_myVideoPacketLoss, newMyVideoPacketLoss))
+        return;
+    m_myVideoPacketLoss = newMyVideoPacketLoss;
+    emit myVideoPacketLossChanged();
+}
+
+float User::myVoicePacketLoss() const
+{
+    return m_myVoicePacketLoss;
+}
+
+void User::setMyVoicePacketLoss(float newMyVoicePacketLoss)
+{
+    if (qFuzzyCompare(m_myVoicePacketLoss, newMyVoicePacketLoss))
+        return;
+    m_myVoicePacketLoss = newMyVoicePacketLoss;
+    emit myVoicePacketLossChanged();
+}
+
+int User::myPing() const
+{
+    return m_myPing;
+}
+
+void User::setMyPing(int newMyPing)
+{
+    if (m_myPing == newMyPing)
+        return;
+    m_myPing = newMyPing;
+    emit myPingChanged();
 }
 
 int User::chatUnreadMessages() const
