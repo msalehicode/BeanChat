@@ -144,7 +144,11 @@ Item {
                                 MouseArea
                                 {
                                     anchors.fill: parent
-                                    onClicked: rightPanel.currentTab = 0
+                                    onClicked:
+                                    {
+                                        rightPanel.currentTab = 0
+                                        user.isChatOpen=false
+                                    }
                                 }
                             }
 
@@ -158,6 +162,7 @@ Item {
                                 Row
                                 {
                                     anchors.centerIn: parent
+                                    spacing: 5
                                     Image
                                     {
                                         width: 30
@@ -170,15 +175,41 @@ Item {
                                         text: "Chat"
                                         color: "white"
                                         anchors.verticalCenter: parent.verticalCenter
+                                    }
 
+                                    // Unread badge
+                                    Rectangle
+                                    {
+                                        visible: !user.isChatOpen && user.chatUnreadMessages>0
+
+                                        width: user.chatUnreadMessages > 99 ? 24 : 18
+                                        height: width
+                                        radius: width / 2
+
+                                        color: "red"
+                                        anchors.verticalCenter: parent.verticalCenter
+
+
+                                        Text
+                                        {
+                                            anchors.centerIn: parent
+                                            text: user.chatUnreadMessages > 99 ? "99+" : user.chatUnreadMessages
+                                            color: "white"
+                                            font.pixelSize: 12
+                                            font.bold: true
+                                        }
                                     }
                                 }
-
 
                                 MouseArea
                                 {
                                     anchors.fill: parent
-                                    onClicked: rightPanel.currentTab = 1
+                                    onClicked:
+                                    {
+                                        rightPanel.currentTab = 1
+                                        user.chatUnreadMessages=0; //reset unread messags count
+                                        user.isChatOpen=true
+                                    }
                                 }
                             }
 

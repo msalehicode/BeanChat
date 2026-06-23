@@ -627,6 +627,10 @@ void User::onTcpReadyRead()
         qInfo() << "chat message:";
         auto msg = PacketHelpers::unpack<ChatMessagePacket>(packet.payload);
 
+        //show notification dot near chat indicator when chat isn't open
+        if(!m_isChatOpen)
+            setChatUnreadMessages(chatUnreadMessages()+1); //increase unread messages count
+
         m_chatModel->addMessage(msg);
         emit newMessage();
     }
@@ -808,6 +812,32 @@ void User::sendVideoFrame(const QByteArray &jpegData)
         data,
         QHostAddress(m_serverIp),
         m_serverPort+1);
+}
+
+int User::chatUnreadMessages() const
+{
+    return m_chatUnreadMessages;
+}
+
+void User::setChatUnreadMessages(int newChatUnreadMessages)
+{
+    if (m_chatUnreadMessages == newChatUnreadMessages)
+        return;
+    m_chatUnreadMessages = newChatUnreadMessages;
+    emit chatUnreadMessagesChanged();
+}
+
+bool User::isChatOpen() const
+{
+    return m_isChatOpen;
+}
+
+void User::setIsChatOpen(bool newIsChatOpen)
+{
+    if (m_isChatOpen == newIsChatOpen)
+        return;
+    m_isChatOpen = newIsChatOpen;
+    emit isChatOpenChanged();
 }
 
 QString User::myIdentity() const

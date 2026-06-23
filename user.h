@@ -71,6 +71,12 @@ public:
     QString myIdentity() const;
     void setMyIdentity(const QString &newIdentity);
 
+    bool isChatOpen() const;
+    void setIsChatOpen(bool newIsChatOpen);
+
+    int chatUnreadMessages() const;
+    void setChatUnreadMessages(int newChatUnreadMessages);
+
 signals:
 
     void myIdChanged();
@@ -99,6 +105,10 @@ signals:
 
     void myIdentityChanged();
 
+    void isChatOpenChanged();
+
+    void chatUnreadMessagesChanged();
+
 public slots:
     void onTcpReadyRead();
     void onUdpReadyRead();
@@ -125,6 +135,11 @@ private:
     QString m_myServerName= ""; //current server connected to
 
     bool m_isConnectedToServer=false;
+
+
+    //chat notification
+    bool m_isChatOpen=false;//a flag to know is chatTab is active or not
+    int m_chatUnreadMessages=0; //hold count of new unread messags when user is not in chatTab
 
 
     //to hold ip and ports for different parts of app such as sendVoice, sendVideo
@@ -158,6 +173,8 @@ private:
     Q_PROPERTY(QString myServerName READ myServerName WRITE setMyServerName NOTIFY myServerNameChanged FINAL)
     Q_PROPERTY(bool isConnectedToServer READ isConnectedToServer WRITE setIsConnectedToServer NOTIFY isConnectedToServerChanged FINAL)
     Q_PROPERTY(QString myIdentity READ myIdentity WRITE setMyIdentity NOTIFY myIdentityChanged FINAL)
+    Q_PROPERTY(bool isChatOpen READ isChatOpen WRITE setIsChatOpen NOTIFY isChatOpenChanged FINAL)
+    Q_PROPERTY(int chatUnreadMessages READ chatUnreadMessages WRITE setChatUnreadMessages NOTIFY chatUnreadMessagesChanged FINAL)
 };
 
 #endif // USER_H
