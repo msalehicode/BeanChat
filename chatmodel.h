@@ -2,7 +2,8 @@
 
 #include <QAbstractListModel>
 
-#include "../BeanChatServer/src/network/packets.h"
+// include from BeanChatServer to server and client speak one language and undrestand packets
+#include "network/packets.h"
 
 class ChatModel : public QAbstractListModel
 {

@@ -1,10 +1,5 @@
 #include "myvideoitem.h"
-#include <QSGSimpleTextureNode>
-#include <QSGTexture>
-#include <QImage>
-#include <QSGImageNode>
-#include <QPainter>
-#include <QPainterPath>
+
 
 
 // #define D_PRINT_MYVIDEOITEM_INFO

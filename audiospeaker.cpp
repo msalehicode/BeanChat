@@ -1,6 +1,5 @@
 #include "audiospeaker.h"
 
-#include <QDebug>
 
 AudioSpeaker::AudioSpeaker(QObject *parent)
     : QObject(parent)

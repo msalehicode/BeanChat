@@ -1,7 +1,6 @@
 #include "audiocapture.h"
 
-#include <QAudioFormat>
-#include <QDebug>
+
 
 AudioCapture::AudioCapture(QObject *parent)
     : QObject(parent)

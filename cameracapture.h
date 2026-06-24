@@ -7,7 +7,10 @@
 #include <QVideoFrame>
 #include <QImage>
 #include <QMediaDevices>
-
+#include <QDebug>
+#include <QBuffer>
+#include <QByteArray>
+#include <QElapsedTimer>
 
 class CameraCapture : public QObject
 {

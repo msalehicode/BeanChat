@@ -3,37 +3,40 @@
 #include <QQmlContext>
 
 
-//list of devcies
+//
 #include <QScreen>
 #include <QDebug>
+#include <QSGRendererInterface>
+#include <QBuffer>
+#include <QTimer>
 
-#include "audiocapture.h"
-
+//resources
+#include "audiospeaker.h"
 #include "cameracapture.h"
-
-#include "myvideoitem.h"
-
+#include "audiocapture.h"
 #include "monitorcapture.h"
 
-#include "participantmodel.h"
 
-#include <QSGRendererInterface>
-// #include "opusencoder.h"
-// #include "videoencoder.h"
-// #include "ffmpegencoder.h"
-#include "audiospeaker.h"
-
+//models
 #include "channelmodel.h"
 #include "chatmodel.h"
 #include "connectedusersmodel.h"
 #include "myserversmodel.h"
+#include "participantmodel.h"
 
+//QML components
+#include "myvideoitem.h"
+
+
+//
 #include "user.h"
-
 #include "soundmanager.h"
 
-#include <QBuffer>
-#include <QTimer>
+//encode decode
+// #include "opusencoder.h"
+// #include "videoencoder.h"
+// #include "ffmpegencoder.h"
+
 
 int main(int argc, char *argv[])
 {

@@ -1,9 +1,4 @@
 #include "cameracapture.h"
-#include <QMediaDevices>
-#include <QDebug>
-#include <QBuffer>
-#include <QByteArray>
-#include <QElapsedTimer>
 
 // #define D_PRINT_CAMERA_INFO
 

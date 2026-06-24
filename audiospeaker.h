@@ -5,6 +5,7 @@
 #include <QMediaDevices>
 #include <QAudioFormat>
 #include <QIODevice>
+#include <QDebug>
 
 class AudioSpeaker : public QObject
 {

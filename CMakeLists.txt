@@ -31,8 +31,6 @@ pkg_check_modules(FFMPEG REQUIRED
 )
 
 
-
-
 qt_standard_project_setup(REQUIRES 6.8)
 
 qt_add_executable(appBeanChat
@@ -135,6 +133,12 @@ set_target_properties(appBeanChat PROPERTIES
     MACOSX_BUNDLE TRUE
     WIN32_EXECUTABLE TRUE
 )
+
+
+
+# switch line down if your BeanChatServer is situated by this CMake file
+target_include_directories(appBeanChat PRIVATE ${CMAKE_SOURCE_DIR}/../BeanChatServer/src )
+# target_include_directories(appBeanChat PRIVATE ${CMAKE_SOURCE_DIR}/BeanChatServer/src )
 
 
 

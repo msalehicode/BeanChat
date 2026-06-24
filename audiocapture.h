@@ -3,6 +3,8 @@
 #include <QObject>
 #include <QAudioSource>
 #include <QMediaDevices>
+#include <QAudioFormat>
+#include <QDebug>
 
 #include <rnnoise.h>
 

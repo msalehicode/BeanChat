@@ -8,6 +8,12 @@
 #include <QMutex>
 #include "videosink.h"
 #include <QThread>
+#include <QSGSimpleTextureNode>
+#include <QSGTexture>
+#include <QImage>
+#include <QSGImageNode>
+#include <QPainter>
+#include <QPainterPath>
 
 class MyVideoItem : public QQuickItem
 {

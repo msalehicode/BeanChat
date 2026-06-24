@@ -3,6 +3,8 @@
 #include <QObject>
 #include <QSoundEffect>
 #include <QElapsedTimer>
+#include <QDebug>
+
 
 class SoundManager : public QObject
 {

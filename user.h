@@ -3,30 +3,36 @@
 
 #include <QObject>
 #include <QTcpSocket>
-#include "../BeanChatServer/src/network/packet.h"
-#include "../BeanChatServer/src/network/packets.h"
-#include "../BeanChatServer/src/network/packethelpers.h"
-#include "../BeanChatServer/src/network/voicepackets.h"
-#include "../BeanChatServer/src/models/user.h"
 #include <QUdpSocket>
+#include <QNetworkDatagram>
+#include <QCoreApplication>
+#include <QDataStream>
+#include <QRandomGenerator> //to get a random number for default username
+#include <QSysInfo>
+#include <QTimer>
+
+
+// include from BeanChatServer to server and client speak one language and undrestand packets
+#include "network/packet.h"
+#include "network/packets.h"
+#include "network/packethelpers.h"
+#include "network/voicepackets.h"
+#include "models/user.h"
+
+
+// C++ models to expose data to QML lists
 #include "channelmodel.h"
 #include "chatmodel.h"
 #include "participantmodel.h"
 #include "myserversmodel.h"
+#include "connectedusersmodel.h"
 
-#include <QCoreApplication>
-#include <QDataStream>
 
-#include <QRandomGenerator> //to get a random number for default username
-#include <QNetworkDatagram>
-
+//capture resources
 #include "cameracapture.h"
 #include "audiocapture.h"
 #include "audiospeaker.h"
 
-#include "connectedusersmodel.h"
-
-#include <QSysInfo>
 
 class User : public QObject
 {

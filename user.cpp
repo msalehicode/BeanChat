@@ -1,5 +1,4 @@
 #include "user.h"
-#include <QTimer>
 
 User::User(ChannelModel *channelModel, ChatModel *chatModel,
            ParticipantModel* currentChannelParticipant, ConnectedUsersModel *connectedUsersModel, MyServersModel* myServersModel,
