@@ -1,6 +1,7 @@
 # BeanChat
 ### preview until now:
-<img width="1920" height="802" alt="normal" src="https://github.com/user-attachments/assets/21a51b63-44c7-45fd-8b05-d721d0710745" />
+https://github.com/user-attachments/assets/173ff989-3f11-43f8-b8bf-315dd6bd3cfd
+
 
 
 #### settings:
