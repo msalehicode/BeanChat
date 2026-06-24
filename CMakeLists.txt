@@ -104,6 +104,8 @@ qt_add_qml_module(appBeanChat
     ui/icons/users.png
     ui/icons/folder.png
     ui/icons/lock.png
+    ui/icons/send.png
+    ui/icons/down.png
     ui/icons/voice.png
     ui/icons/settings.png
     ui/icons/endcall.png ui/icons/endcall-red.png

@@ -116,6 +116,7 @@ Item {
                         {
                             id:indicatorStackView
                             Layout.fillWidth: true
+                            visible: user.myChannelName.length>0
                             spacing: 2
 
                             Rectangle
@@ -149,6 +150,7 @@ Item {
                                     {
                                         rightPanel.currentTab = 0
                                         user.isChatOpen=false
+                                        rightPanel.width=300
                                     }
                                 }
                             }
@@ -157,7 +159,6 @@ Item {
                             {
                                 Layout.fillWidth: true
                                 height: 40
-
                                 color: rightPanel.currentTab === 1 ? "#2a82da" : "#222"
 
                                 Row
@@ -210,6 +211,7 @@ Item {
                                         rightPanel.currentTab = 1
                                         user.chatUnreadMessages=0; //reset unread messags count
                                         user.isChatOpen=true
+                                        rightPanel.width=400
                                     }
                                 }
                             }

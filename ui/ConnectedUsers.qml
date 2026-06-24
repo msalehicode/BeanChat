@@ -8,7 +8,7 @@ Item
 {
     Rectangle
     {
-        color:bg1
+        color: "#313338"
         anchors.fill: parent
     }
 
@@ -20,15 +20,21 @@ Item
         Rectangle
         {
             id: title
+
             width: parent.width
             height: 60
-            color: "grey"
+
+            color: "#222427"
 
             Text
             {
                 anchors.centerIn: parent
+
                 text: "Server Users (" + connectedUsersModel.count + ")"
+
                 color: "white"
+                font.pixelSize: 18
+                font.bold: true
             }
         }
 

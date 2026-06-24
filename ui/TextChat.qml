@@ -3,147 +3,340 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
 
-Item {
-    id:root
+Item
+{
+    id: root
+
     width: parent.width
     height: parent.height
+
     Rectangle
     {
-        color:"purple"
         anchors.fill: parent
+        color: "#313338"
     }
 
-    Column
+    Rectangle
     {
-        width: parent.width
-        height: parent.height
+        id: title
 
-        Rectangle
-        {
-            id:title
-            width: parent.width
-            // anchors.top: parent.top
-            height: 60
-            color:"grey"
-            Text
-            {
-                text: "Chat in " + user.myChannelName
-                anchors.centerIn: parent
-                color:"white"
-            }
+        anchors {
+            top: parent.top
+            left: parent.left
+            right: parent.right
         }
-        ListView
+
+        height: 60
+        color: "#222427"
+
+        Text
         {
-            id: chatView
-            width: parent.width
-            height: parent.height-(title.height+enterTextBase.height)
-            model: chatModel
-            spacing: 8
-            clip: true
+            anchors.centerIn: parent
 
-            ScrollBar.vertical: ScrollBar
+            text: "Chat in " + user.myChannelName
+
+            color: "white"
+            font.pixelSize: 18
+            font.bold: true
+        }
+    }
+
+    ListView
+    {
+        id: chatView
+
+        anchors {
+            top: title.bottom
+            left: parent.left
+            right: parent.right
+            bottom: enterTextBase.top
+        }
+
+        clip: true
+        spacing: 2
+
+        model: chatModel
+
+        ScrollBar.vertical: ScrollBar
+        {
+            policy: ScrollBar.AsNeeded
+        }
+
+        boundsBehavior: Flickable.StopAtBounds
+
+        flickableDirection: Flickable.VerticalFlick
+
+        pressDelay: 150
+
+        // onCountChanged:
+        //     {
+        //         positionViewAtEnd()
+        //     }
+
+        delegate: Item
+        {
+            width: chatView.width
+            implicitHeight: contentColumn.implicitHeight + 12
+
+            Rectangle
             {
-                policy: ScrollBar.AsNeeded
-                opacity:0.8
-                width: 12
-                visible: chatView.contentHeight > chatView.height
-
-                contentItem: Rectangle
-                {
-                    implicitWidth: 8
-                    radius: width / 2
-                    color: "#72767d"
-                }
-
-                background: Rectangle
-                {
-                    color: "#202225"
-                }
+                anchors.fill: parent
+                color: hoverHandler.hovered
+                       ? "#222427"
+                       : "transparent"
+                z: -1
             }
 
-            delegate: Item
+            HoverHandler
             {
-                width: chatView.width
-                height: bubble.height + 8
+                id: hoverHandler
+            }
 
-                Rectangle {
-                    id: bubble
+            Row
+            {
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                    leftMargin: 12
+                    rightMargin: 12
+                    top: parent.top
+                    topMargin: 6
+                }
 
-                    width: Math.min(chatView.width * 0.2,
-                                    textItem.paintedWidth + textItem.implicitWidth)
+                spacing: 12
 
-                    height: textItem.paintedHeight + 20
+                Rectangle
+                {
+                    width: 40
+                    height: 40
+                    radius: 20
 
-                    radius: 12
-                    color: model.senderId===user.myId  ? "#3b82f6" : "#404040"
-
-                    anchors {
-                        right: model.senderId===user.myId ? parent.right : undefined
-                        left: model.senderId===user.myId  ? undefined : parent.left
-                        leftMargin: 20
-                        rightMargin: 20
-                    }
-
-                    Text {
-                        id: textItem
-                        anchors.fill: parent
-                        anchors.margins: 10
-
-                        text: model.senderId + " : " +model.textMessage
-                        wrapMode: Text.Wrap
-                        color: "white"
-                    }
+                    color: "#5865F2"
 
                     Text
                     {
-                        id:textTime
-                        text: model.timestamp
-                        color:"red"
-                        anchors.bottom: parent.bottom
-                        anchors.right: parent.right
+                        anchors.centerIn: parent
+
+                        text: model.senderId.toString().charAt(0)
+
+                        color: "white"
+                        font.bold: true
+                    }
+                }
+
+                Column
+                {
+                    id: contentColumn
+
+                    width: parent.width - 60
+
+                    spacing: 2
+
+                    Row
+                    {
+                        spacing: 8
+
+                        Text
+                        {
+                            text: model.senderId
+                            color: "white"
+                            font.bold: true
+                            font.pixelSize: 15
+                        }
+
+                        Text
+                        {
+                            text: model.timestamp
+                            color: "#949BA4"
+                            font.pixelSize: 11
+                        }
+                    }
+
+                    TextArea
+                    {
+                        id: messageText
+
+                        width: parent.width
+
+                        text: model.textMessage
+
+                        readOnly: true
+
+                        selectByMouse: true
+
+                        wrapMode: TextArea.Wrap
+
+                        background: null
+
+                        color: "#DBDEE1"
+
+                        implicitHeight: contentHeight
                     }
                 }
             }
-
-
         }
-
-
     }
+
+
     Rectangle
     {
-        id:enterTextBase
-        width: parent.width
-        height: 60
-        anchors.bottom: parent.bottom
-        color:"transparent"
+        id: scrollToBottomButton
+
+        width: 48
+        height: 48
+
+        visible: !chatView.atYEnd
+
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: enterTextBase.top
+
+        anchors.bottomMargin: 12
+        radius: width / 2
+        color: "#2B2D31"
+        border.color: "#4A4D52"
+        z:100
+        Image
+        {
+            width: parent.width/2
+            height: width
+            anchors.centerIn: parent
+            source: "icons/down.png"
+        }
+
+        MouseArea
+        {
+            anchors.fill: parent
+            onClicked: chatView.positionViewAtEnd()
+        }
+
+    }
+
+    Rectangle
+    {
+        id: enterTextBase
+
+        function sendMessage()
+        {
+            var msg = messageInput.text.trim()
+
+            if (msg.length === 0)
+                return
+
+            user.sendMessage(msg)
+
+            messageInput.clear()
+
+            // chatView.positionViewAtEnd()
+        }
+
+        anchors {
+            left: parent.left
+            right: parent.right
+            bottom: parent.bottom
+        }
+
+        color: "#313338"
+
+        height: inputBackground.height + 16
+
         Rectangle
         {
-            id:bgEnterMessage
-            width: parent.width-buttonSendMessage.width
-            height: parent.height
-            color: "grey"
-            TextInput
-            {
-                id:enteredMessage
-                anchors.fill: parent
-                text: ""
-                color: "black"
-                font.pixelSize: 20
-                onAccepted: buttonSendMessage.clicked()
+            id: inputBackground
+
+            anchors {
+                left: parent.left
+                right: parent.right
+                bottom: parent.bottom
+
+                leftMargin: 16
+                rightMargin: 16
+                bottomMargin: 8
             }
-        }
-        Button
-        {
-            id:buttonSendMessage
-            height: parent.height
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            text: "Send"
-            onClicked:
+
+            radius: 8
+            color: "#383A40"
+
+            height: Math.min(
+                        Math.max(messageInput.contentHeight + 24, 48),
+                        180)
+
+            Row
             {
-                user.sendMessage(enteredMessage.text)
-                enteredMessage.clear()
+                anchors.fill: parent
+
+                anchors.leftMargin: 12
+                anchors.rightMargin: 12
+
+                spacing: 10
+
+
+                ScrollView
+                {
+                    id: messageScroll
+
+                    width: parent.width - sendButton.width - 20
+                    height: parent.height
+
+                    ScrollBar.vertical.policy: ScrollBar.AsNeeded
+
+                    TextArea
+                    {
+                        id: messageInput
+
+                        width: messageScroll.availableWidth
+
+                        wrapMode: TextEdit.Wrap
+
+                        color: "#DBDEE1"
+
+                        background: Rectangle
+                        {
+                            color:"#4a4c51"
+                        }
+
+                        topPadding: 10
+                        bottomPadding: 10
+
+                        placeholderText: "Message"
+
+                        Keys.onPressed: function(event)
+                        {
+                            if ((event.key === Qt.Key_Return
+                                 || event.key === Qt.Key_Enter)
+                                && !(event.modifiers & Qt.ShiftModifier))
+                            {
+                                event.accepted = true
+                                enterTextBase.sendMessage()
+                            }
+                        }
+                    }
+                }
+
+                Rectangle
+                {
+                    id: sendButton
+
+                    width: 40
+                    height: 40
+                    radius: 20
+                    color: "#5865F2"
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Image
+                    {
+                        width: parent.width/2
+                        height: width
+                        anchors.centerIn: parent
+                        source: "icons/send.png"
+                    }
+
+                    MouseArea
+                    {
+                        anchors.fill: parent
+                        onClicked: enterTextBase.sendMessage()
+                    }
+
+                }
             }
         }
     }

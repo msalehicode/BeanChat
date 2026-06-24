@@ -160,7 +160,7 @@ private:
     //user cant modify, would receive from target server
     int m_myId =-1;
     quint64 m_myChannelId=-2; //channelId -1 is default value for those users didn't connect to any channel just connected to server.
-    QString m_myChannelName = "noChannel"; //current channel
+    QString m_myChannelName = ""; //current channel
     QString m_myServerName= ""; //current server connected to
     UserModel m_info; //to store system info such as appVersio and ..
 
