@@ -64,7 +64,7 @@ qt_add_qml_module(appBeanChat
         #pop up dialogs
         ui/ConnectPopup.qml
         ui/EnterChannelPasswordPopup.qml
-
+        ui/ShowImagePopup.qml
 
     SOURCES
         # just in case

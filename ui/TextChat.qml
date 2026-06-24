@@ -75,8 +75,27 @@ Item
 
         delegate: Item
         {
+            id:delegatedItem
             width: chatView.width
             implicitHeight: contentColumn.implicitHeight + 12
+
+            //detect those links which are image to show them automatically.
+            property bool isImage: model.textMessage.match(/^https?:\/\/.*\.(png|jpg|jpeg|gif|webp)$/i)
+
+            function makeLinksClickable(text)
+            {
+                text = text.replace(/&/g, "&amp;")
+                text = text.replace(/</g, "&lt;")
+                text = text.replace(/>/g, "&gt;")
+
+                text = text.replace(
+                    /(https?:\/\/[^\s]+)/g,
+                    '<a href="$1">$1</a>')
+
+                text = text.replace(/\n/g, "<br>")
+
+                return text
+            }
 
             Rectangle
             {
@@ -152,26 +171,67 @@ Item
                         }
                     }
 
-                    TextArea
+
+                    Image
+                    {
+                        visible: delegatedItem.isImage
+
+                        source: delegatedItem.isImage
+                                    ? model.textMessage
+                                    : ""
+
+                        width: 300
+                        fillMode: Image.PreserveAspectFit
+
+                        cache: true
+                        MouseArea
+                        {
+                            anchors.fill: parent
+
+                            cursorShape: Qt.PointingHandCursor
+
+                            onClicked:
+                            {
+                                showImagePopup.imageSource = model.textMessage
+                                showImagePopup.open()
+                            }
+                        }
+                    }
+
+                    TextEdit
                     {
                         id: messageText
 
-                        width: parent.width
-
-                        text: model.textMessage
-
+                        textFormat: TextEdit.RichText
                         readOnly: true
-
                         selectByMouse: true
 
+                        font.pixelSize: !delegatedItem.isImage? 14 : 7
+                        width: parent.width
                         wrapMode: TextArea.Wrap
-
-                        background: null
-
                         color: "#DBDEE1"
+                        text: delegatedItem.makeLinksClickable(model.textMessage)
 
-                        implicitHeight: contentHeight
+                        cursorDelegate: null
+
+                        MouseArea
+                        {
+                            anchors.fill: parent
+                            acceptedButtons: Qt.NoButton
+
+                            cursorShape: messageText.hoveredLink.length > 0
+                                         ? Qt.PointingHandCursor
+                                         : Qt.IBeamCursor
+
+                            hoverEnabled: true
+                        }
+
+                        onLinkActivated: function(link)
+                        {
+                            Qt.openUrlExternally(link)
+                        }
                     }
+
                 }
             }
         }

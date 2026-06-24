@@ -299,4 +299,9 @@ Item {
         }
     }
 
+    ShowImagePopup
+    {
+        id:showImagePopup
+    }
+
 }
