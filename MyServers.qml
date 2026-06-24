@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 
 // import QtQuick.Controls.Material
-
 // import QtQuick.Layouts
 
 Item
@@ -85,7 +84,7 @@ Item
                 MouseArea
                 {
                     anchors.fill: parent
-                    onDoubleClicked: user.connectToServer(model.ip, model.port, model.id)
+                    onDoubleClicked: user.switchOrConnectToServer(model.ip, model.port, model.id)
                 }
 
             }

@@ -40,8 +40,8 @@ public:
 
     Q_INVOKABLE void joinChannel(int channelId, const QString& password="");
     Q_INVOKABLE void connectToServer(bool saveThisConnection, const QString& serverIp, const QString& str_serverPort);
-    Q_INVOKABLE void connectToServer(const QString& serverIp, const QString& str_serverPort, int serverId);
-    Q_INVOKABLE void disconnect(bool switchingServer=false);
+    Q_INVOKABLE void switchOrConnectToServer(const QString& serverIp, const QString& str_serverPort, int serverId);
+    Q_INVOKABLE void disconnect();
     Q_INVOKABLE void createChannel(QString channelName, QString password);
     Q_INVOKABLE void sendMessage(QString message);
 
@@ -131,6 +131,9 @@ signals:
 
 public slots:
     void onTcpReadyRead();
+    void onDisconnected();
+    void onSocketError(QAbstractSocket::SocketError error);
+
     void onUdpReadyRead();
     void sendVideoFrame(const QByteArray& jpegData);
 
@@ -140,10 +143,6 @@ private:
     bool m_muteMicrophone=false;
     bool m_muteHeadphone=false;
     bool m_isCameraOpen=false;
-
-
-    QTcpSocket socket;
-    QUdpSocket m_udpSocket;
 
 
     //user can modify
@@ -159,10 +158,20 @@ private:
     UserModel m_info; //to store system info such as appVersio and ..
 
     bool m_isConnectedToServer=false;
+    bool m_switchingServer = false;
 
+    //TCP connection
+    QTcpSocket socket;
     int m_myPing=-1;
     float m_myVoicePacketLoss=0.0f;
     float m_myVideoPacketLoss=0.0f;
+    QTimer m_udpConnectionTimeout;
+
+
+
+    //UDP connection
+    QUdpSocket m_udpSocket;
+
 
     //chat notification
     bool m_isChatOpen=false;//a flag to know is chatTab is active or not
@@ -179,8 +188,8 @@ private:
     //video
     quint32 m_videoSequence = 0;
 
+    //pointers to access and contorl esources/models
     Participant* m_me=nullptr; //hold this user info and update it when channel switched, to connect with cameraCapture and show images as local preview
-
     ChannelModel* m_channelModel=nullptr;
     ChatModel* m_chatModel=nullptr;
     ParticipantModel* m_currentChannelParticipant=nullptr;

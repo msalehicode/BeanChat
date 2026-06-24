@@ -195,16 +195,16 @@ void MyServersModel::resetPreviousIsActiveServer()
     m_lastIsActiveId=-1; //reset it
 }
 
-bool MyServersModel::doesServerExists(const QString &ip, const QString& port)
+int MyServersModel::doesServerExists(const QString &ip, const QString& port)
 {
     for (int i = 0; i < m_servers.size(); ++i)
     {
         //check if server is the same.
         if (m_servers[i].ip == ip && m_servers[i].port == port)
-            return true;
+            return m_servers[i].id;
     }
 
-    return false;
+    return -1;
 }
 
 

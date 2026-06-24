@@ -348,7 +348,7 @@ Item
                         Column
                         {
                             anchors.fill: parent
-                            anchors.margins: 8
+                            anchors.margins: 10
 
                             spacing: 4
 

@@ -59,7 +59,7 @@ public:
     void setIsActive(quint64 serverId);
     void resetPreviousIsActiveServer();
 
-    bool doesServerExists(const QString& ip, const QString &port);
+    int doesServerExists(const QString& ip, const QString &port);
 
 private:
     quint64 m_lastIsActiveId=-1; //to reset last item when new item is activated

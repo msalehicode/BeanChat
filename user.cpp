@@ -13,18 +13,40 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
     qDebug() << "user starting..";
 
 
-    //setup socket
-    m_udpSocket.bind();
+    //setup TCP socket
 
     connect(&socket,
             &QTcpSocket::readyRead,
             this,
             &User::onTcpReadyRead);
 
+    connect(&socket, &QTcpSocket::disconnected,
+            this, &User::onDisconnected);
+
+    connect(&socket, &QTcpSocket::errorOccurred,
+            this, &User::onSocketError);
+
+
+    //setup UDP socket
+    m_udpSocket.bind();
+
     connect(&m_udpSocket,
             &QUdpSocket::readyRead,
             this,
             &User::onUdpReadyRead);
+
+    //when request register sent to to udp server, would expect ping request evey xSeconds from server, whenever didn't receive any assuming server is down or connection is lost.
+    m_udpConnectionTimeout.setSingleShot(true);
+
+    connect(&m_udpConnectionTimeout, &QTimer::timeout,
+            this, [&]()
+            {
+                qDebug() << "server didn't send ping request for xSeconds so UDP connection has lost.";
+
+                disconnect(); //make sure tcp disconnects and ui show disconnected elemnts
+            });
+
+
 
     /*
      * make a connection between channelmodel  to participantModel (center of screen [those rectangles]) sync with channelModel user's talking status
@@ -67,7 +89,7 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
 {
     //if user is connected to somewhere, disconnect before new connection
     if(isConnectedToServer())
-        disconnect(true); //TURE to set -> we are switching so dont reset myServersModel item.isActive
+        disconnect();
 
 
     //convert ports to quint64
@@ -85,7 +107,8 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
 
 
     //save this server if was not in myServers
-    if(!m_myServersModel->doesServerExists(serverIp, str_serverPort))
+    int serverId = m_myServersModel->doesServerExists(serverIp, str_serverPort);
+    if(serverId==-1) //server doesnt exist on list
     {
         if(saveThisConnection)
         {
@@ -96,6 +119,9 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
         //add to myServers model
         m_myServersModel->addServer("server-name", serverIp, str_serverPort); //by defualt would set status IsActive item to true
     }
+    else //set server active
+        m_myServersModel->setIsActive(serverId);
+
 
 
     //store in variables for different parts of app
@@ -137,20 +163,30 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
              << m_serverIp << ":" << m_serverPort  << " name=" << myUsername() << "identity=" << myIdentity() ;
 
     socket.write(p.serialize());
+
+
+    //reset flag for next use.
+    m_switchingServer=false;
 }
 
-void User::connectToServer(const QString &serverIp, const QString &str_serverPort, int serverId)
+void User::switchOrConnectToServer(const QString &serverIp, const QString &str_serverPort, int serverId)
 {
     qDebug() << "connectToServer server id, called ";
     //tell myServers model im connected to this server.
     m_myServersModel->setIsActive(serverId);
 
+    m_switchingServer=true;
+
     //do normal connectToServer things
     connectToServer(false, serverIp,str_serverPort);
 }
 
-void User::disconnect(bool switchingServer)
+void User::disconnect()
 {
+    if(!isConnectedToServer()) //to prevent double run this function, first user do disconnect manually/switched to antoher server, then QTCPSocket::Disconnect would run this again..
+        return;
+
+
     //disocnnect sockets.
     socket.disconnectFromHost();
     m_udpSocket.disconnectFromHost();
@@ -169,7 +205,7 @@ void User::disconnect(bool switchingServer)
     m_serverIp.clear();
     m_serverPort=0;
 
-    if(!switchingServer)
+    if(!m_switchingServer) //if we are not switching reset/turn-off all server's indicator status
         m_myServersModel->resetPreviousIsActiveServer();
 
     //because of method we do use setter to send requests to server
@@ -214,6 +250,9 @@ void User::createChannel(QString channelName, QString password)
 void User::sendVoicePcm(
     const QByteArray& pcm)
 {
+    if(!isConnectedToServer())
+        return;
+
     if(muteMicrophone() | muteHeadphone())
     {
         // qDebug() << "mic or headphone is muted.";
@@ -569,6 +608,12 @@ void User::onTcpReadyRead()
             out << quint16(100); //#100 is known as register on server.
             out << reg;
 
+
+
+            //start to expect every xSeconds ping request from server otherwise, assuming UDP connection has failed
+            m_udpConnectionTimeout.start(10000); // 10 seconds
+
+
             m_udpSocket.writeDatagram(
                 data,
                 QHostAddress(m_serverIp),
@@ -702,8 +747,22 @@ void User::onTcpReadyRead()
     break;
 
     default:
+        qDebug() << "an unknown packetType received. type=" << static_cast<int>(packet.type);
         break;
     }
+}
+
+void User::onDisconnected()
+{
+    qDebug() << "Server disconnected";
+    disconnect();
+}
+
+void User::onSocketError(QAbstractSocket::SocketError error)
+{
+    qDebug() << "TCP error:" << error
+             << socket.errorString();
+    disconnect();
 }
 
 void User::onUdpReadyRead()
@@ -794,7 +853,7 @@ void User::onUdpReadyRead()
             {
                 senderParticipant->setIsCameraOpen(true);
                 senderSink->setImage(image);
-                qDebug() << "image set fine to sender's sink..";
+                // qDebug() << "image set fine to sender's sink..";
             }
             else
             {
@@ -810,9 +869,15 @@ void User::onUdpReadyRead()
             PingPacket p;
             in >> p;
 
+            //set variables to show in QML component.
             setMyPing(p.lastPing);
             setMyVoicePacketLoss(p.voicePacketLoss);
             setMyVideoPacketLoss(p.videoPacketLoss);
+
+
+            //a udp request-ping received, now reset connection timeout to later know is udp connection still alive or not
+            m_udpConnectionTimeout.start(10000);
+
 
             //send back same sequence..
             QByteArray data2;
@@ -829,12 +894,15 @@ void User::onUdpReadyRead()
                 QHostAddress(m_serverIp),
                 m_serverPort+1);
             break;
-        }
+        }        
     }
 }
 
 void User::sendVideoFrame(const QByteArray &jpegData)
 {
+    if(!isConnectedToServer())
+        return;
+
     if(!isCameraOpen())
         return;
 
@@ -858,7 +926,7 @@ void User::sendVideoFrame(const QByteArray &jpegData)
     out << quint16(102);
     out << videoPacket;
 
-    qDebug() << "Sending Video JPEG bytes:" << jpegData.size();
+    // qDebug() << "Sending Video JPEG bytes:" << jpegData.size();
 
     m_udpSocket.writeDatagram(
         data,

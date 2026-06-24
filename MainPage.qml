@@ -98,9 +98,10 @@ Item {
             Item
             {
                 id:rightPanel
-                width: 400
+                width: 250
                 height: parent.height
                 clip: true
+                visible: user.isConnectedToServer
                 property int currentTab: 0
 
                 Rectangle
@@ -259,11 +260,12 @@ Item {
                                 if (pressed)
                                 {
                                     let dx = mouse.x - startX
-                                    let pos = startWidth - dx
+                                    let pos = Math.max(50, startWidth - dx);
                                     if (pos < 250)
                                         pos = 250
                                     else if (pos > 800)
                                         pos = 800
+
                                     rightPanel.width = pos
                                 }
                             }
