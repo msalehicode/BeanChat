@@ -42,29 +42,31 @@ qt_add_executable(appBeanChat
 qt_add_resources(appBeanChat resources
     PREFIX "/"
     FILES
-        soundeffects/message.wav
-        soundeffects/user-join.wav
-        soundeffects/user-left.wav
+        ui/soundeffects/message.wav
+        ui/soundeffects/user-join.wav
+        ui/soundeffects/user-left.wav
+        ui/soundeffects/message-back.wav
 )
 
 qt_add_qml_module(appBeanChat
     URI BeanChat
     VERSION 1.0
     QML_FILES
-        Main.qml
-        MainPage.qml
-        SettingsPage.qml
-        VideoChat.qml
-        TextChat.qml
-        PrivateChatPage.qml
-        ConnectedUsers.qml
-        ChannelList.qml
-        CurrentChannelParticipants.qml
-        MyServers.qml
+        ui/Main.qml
+        ui/MainPage.qml
+        ui/SettingsPage.qml
+        ui/VideoChat.qml
+        ui/TextChat.qml
+        ui/PrivateChatPage.qml
+        ui/ConnectedUsers.qml
+        ui/ChannelList.qml
+        ui/CurrentChannelParticipants.qml
+        ui/MyServers.qml
 
         #pop up dialogs
-        ConnectPopup.qml
-        EnterChannelPasswordPopup.qml
+        ui/ConnectPopup.qml
+        ui/EnterChannelPasswordPopup.qml
+
 
     SOURCES
         # just in case
@@ -99,21 +101,21 @@ qt_add_qml_module(appBeanChat
 
     # icons
     RESOURCES
-    icons/beanChatIcon.png
-    icons/chat.png
-    icons/users.png
-    icons/folder.png
-    icons/lock.png
-    icons/voice.png
-    icons/settings.png
-    icons/endcall.png icons/endcall-red.png
-    icons/camera.png icons/camera-closed.png icons/camera-red.png
-    icons/disconnect.png icons/disconnect-red.png
-    icons/headphone.png icons/headphone-closed.png icons/headphone-red.png
-    icons/microphone.png icons/microphone-closed.png icons/microphone-red.png
-    icons/screen.png icons/screen-closed.png icons/screen-red.png
-    icons/signal.png icons/signal-green.png icons/signal-orange.png icons/signal-red.png icons/signal-yellow.png
-    icons/os/android.png icons/os/ios.png icons/os/linux.png icons/os/macos.png icons/os/windows.png
+    ui/icons/beanChatIcon.png
+    ui/icons/chat.png
+    ui/icons/users.png
+    ui/icons/folder.png
+    ui/icons/lock.png
+    ui/icons/voice.png
+    ui/icons/settings.png
+    ui/icons/endcall.png ui/icons/endcall-red.png
+    ui/icons/camera.png ui/icons/camera-closed.png ui/icons/camera-red.png
+    ui/icons/disconnect.png ui/icons/disconnect-red.png
+    ui/icons/headphone.png ui/icons/headphone-closed.png ui/icons/headphone-red.png
+    ui/icons/microphone.png ui/icons/microphone-closed.png ui/icons/microphone-red.png
+    ui/icons/screen.png ui/icons/screen-closed.png ui/icons/screen-red.png
+    ui/icons/signal.png ui/icons/signal-green.png ui/icons/signal-orange.png ui/icons/signal-red.png ui/icons/signal-yellow.png
+    ui/icons/os/android.png ui/icons/os/ios.png ui/icons/os/linux.png ui/icons/os/macos.png ui/icons/os/windows.png
 
     # from Server. later move these into a library
     SOURCES
@@ -161,11 +163,11 @@ target_compile_definitions(appBeanChat PRIVATE
 )
 
 # debug tool to get sigfault infos.
-# target_compile_options(appBeanChat PRIVATE
-#     -fsanitize=address
-#     -g)
-# target_link_options(appBeanChat PRIVATE
-#     -fsanitize=address)
+target_compile_options(appBeanChat PRIVATE
+    -fsanitize=address
+    -g)
+target_link_options(appBeanChat PRIVATE
+    -fsanitize=address)
 
 
 target_link_libraries(appBeanChat

@@ -19,7 +19,7 @@ public slots:
     void playMessage();
     void playUserJoin();
     void playUserLeave();
-    void playChannelJoin();
+    void playMessageBack();
 
     void changeAudioOutput(QAudioDevice* output);
 signals:
@@ -36,11 +36,11 @@ private:
     QSoundEffect m_message;
     QSoundEffect m_userJoin;
     QSoundEffect m_userLeave;
-    QSoundEffect m_channelJoin;
+    QSoundEffect m_messageBack;
 
     QElapsedTimer m_messageCooldown;
     QElapsedTimer m_joinCooldown;
     QElapsedTimer m_leaveCooldown;
-    QElapsedTimer m_channelCooldown;
+    QElapsedTimer m_messageBackCooldown;
     Q_PROPERTY(float volume READ volume WRITE setVolume NOTIFY volumeChanged FINAL)
 };

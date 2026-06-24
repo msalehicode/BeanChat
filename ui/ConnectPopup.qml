@@ -65,6 +65,7 @@ Popup
             Layout.fillWidth: true
             placeholderText: "127.0.0.1"
             color: "white"
+            text:"localhost" //for tests
             onAccepted: buttonConnect.clicked()
 
             background: Rectangle

@@ -6,21 +6,21 @@ SoundManager::SoundManager(QObject* parent)
     QObject(parent)
 {
     m_message.setSource(
-        QUrl("qrc:/soundeffects/message.wav"));
+        QUrl("qrc:/ui/soundeffects/message.wav"));
 
     m_userJoin.setSource(
-        QUrl("qrc:/soundeffects/user-join.wav"));
+        QUrl("qrc:/ui/soundeffects/user-join.wav"));
 
     m_userLeave.setSource(
-        QUrl("qrc:/soundeffects/user-left.wav"));
+        QUrl("qrc:/ui/soundeffects/user-left.wav"));
 
-    // m_channelJoin.setSource(
-        // QUrl("qrc:/sounds/channel_join.wav"));
+    m_messageBack.setSource(
+        QUrl("qrc:/ui/soundeffects/message-back.wav"));
 
     m_message.setVolume(m_volume);
     m_userJoin.setVolume(m_volume);
     m_userLeave.setVolume(m_volume);
-    m_channelJoin.setVolume(m_volume);
+    m_messageBack.setVolume(m_volume);
 }
 
 bool SoundManager::canPlay(
@@ -54,7 +54,7 @@ void SoundManager::setVolume(float newVolume)
     m_message.setVolume(m_volume);
     m_userJoin.setVolume(m_volume);
     m_userLeave.setVolume(m_volume);
-    m_channelJoin.setVolume(m_volume);
+    m_messageBack.setVolume(m_volume);
 
     emit volumeChanged();
 }
@@ -95,16 +95,16 @@ void SoundManager::playUserLeave()
     m_userLeave.play();
 }
 
-void SoundManager::playChannelJoin()
+void SoundManager::playMessageBack()
 {
     if(!canPlay(
-            m_channelCooldown,
+            m_messageBackCooldown,
             500))
     {
         return;
     }
 
-    m_channelJoin.play();
+    m_messageBack.play();
 }
 
 void SoundManager::changeAudioOutput(QAudioDevice *output)
@@ -112,6 +112,6 @@ void SoundManager::changeAudioOutput(QAudioDevice *output)
     m_message.setAudioDevice(*output);
     m_userJoin.setAudioDevice(*output);
     m_userLeave.setAudioDevice(*output);
-    m_channelJoin.setAudioDevice(*output);
-    // qDebug() << "soundmanager audio output changed.";
+    m_messageBack.setAudioDevice(*output);
+    qDebug() << "soundmanager audio output changed.";
 }

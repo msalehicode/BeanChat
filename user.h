@@ -110,6 +110,7 @@ signals:
     void userJoined();
     void userLeft();
     void newMessage();
+    void messageSent();
 
     void isCameraOpenChanged();
 

@@ -119,9 +119,16 @@ int main(int argc, char *argv[])
 
     QObject::connect(
         &usr,
-        &User::newMessage,
+        &User::messageSent,
         &soundManager,
         &SoundManager::playMessage);
+
+    QObject::connect(
+        &usr,
+        &User::newMessage,
+        &soundManager,
+        &SoundManager::playMessageBack);
+
 
 
 

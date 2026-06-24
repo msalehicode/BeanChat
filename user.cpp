@@ -317,6 +317,8 @@ void User::sendMessage(QString message)
     p.payload = PacketHelpers::pack(sm);
 
     socket.write(p.serialize());
+
+    emit messageSent();
 }
 
 void User::askForServerState()
@@ -697,8 +699,10 @@ void User::onTcpReadyRead()
         if(!m_isChatOpen)
             setChatUnreadMessages(chatUnreadMessages()+1); //increase unread messages count
 
+        if(msg.senderId!=myId()) //dont play newMessage soundeffect for self messages
+            emit newMessage(); //play message recevied effect
+
         m_chatModel->addMessage(msg);
-        emit newMessage();
     }
     break;
 

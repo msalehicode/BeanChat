@@ -1,3 +1,5 @@
 /BeanChat/build*
 *.txt.user
-/build/
+/build*/
+/deploy*/
+
