@@ -68,25 +68,75 @@ Item
             spacing: 5
             delegate: Rectangle
             {
-                anchors.horizontalCenter:parent.horizontalCenter
-                width:parent.width/1.5
+                id: delegateRoot
+
+                anchors.horizontalCenter: parent.horizontalCenter
+
+                width: parent.width / 1.5
                 height: width
-                radius: width
-                color:"pink"
-                border.width: 4
-                border.color: model.isActive ? "lime" : "transparent"
+                radius: width / 2
+
+                // Dark base instead of full green/orange
+                color: "#2B2D31"
+
+                border.width: model.isActive ? 3 : 2
+                border.color: model.isActive
+                              ? "#57F287"
+                              : "#404249"
+
                 Text
                 {
-                    text: model.name
                     anchors.centerIn: parent
-                    color:"black"
+
+                    text: model.name.length > 0
+                          ? model.name[0].toUpperCase()
+                          : "?"
+
+                    color: "white"
+
+                    font.bold: true
+                    font.pixelSize: 22
                 }
+
+                Behavior on scale
+                {
+                    NumberAnimation
+                    {
+                        duration: 120
+                    }
+                }
+
                 MouseArea
                 {
                     anchors.fill: parent
-                    onDoubleClicked: user.switchOrConnectToServer(model.ip, model.port, model.id)
-                }
+                    hoverEnabled: true
 
+                    onEntered: delegateRoot.scale = 1.08
+                    onExited: delegateRoot.scale = 1.0
+
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    onDoubleClicked: user.switchOrConnectToServer(model.ip, model.port, model.id)
+                    onClicked: function(mouse)
+                    {
+                        if (mouse.button === Qt.RightButton)
+                        {
+                            var p = mapToItem(null, width, height/2)
+
+                            myServersItemMenu.x = p.x + 12
+                            myServersItemMenu.y = p.y - myServersItemMenu.height/2
+
+                            myServersItemMenu.serverName = model.name
+                            myServersItemMenu.ip = model.ip
+                            myServersItemMenu.port = model.port
+                            myServersItemMenu.id = model.id
+                            myServersItemMenu.dbIndex = model.dbIndex
+                            myServersItemMenu.isConnected = model.isActive
+
+                            myServersItemMenu.open()
+                        }
+                    }
+
+                }
             }
         }
 

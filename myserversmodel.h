@@ -12,7 +12,8 @@ enum class ServerStatus
 
 struct ServerInfo
 {
-    quint64 id; //to do things in local database.
+    quint64 id; //runtime id, server id in datbase named index
+    int index;//index in database!
     bool isActive=false;
     QString name;
     QString ip;
@@ -30,6 +31,7 @@ public:
     enum Roles
     {
         ServerIdRole = Qt::UserRole + 1,
+        ServerIndexRole,
         ServerNameRole,
         ServerIsActiveRole,
         ServerIpRole,
@@ -51,8 +53,9 @@ public:
 
     void clear();
 
-    void addServer(QString name, const QString &ip, const QString &port);
+    void addServer(QString name, const QString &ip, const QString &port, bool isActive=false, quint64 index=-1);
     void removeServer(quint64 serverId);
+    void updateServer(quint64 serverId, const QString &name, const QString &ip, const QString &port);
     void setStatus(quint64 serverId, ServerStatus newStatus);
     void setName(quint64 serverId, QString newName); //this runs when server changed his name. user cant change name
     void setAddress(quint64 serverId, QString newIp, QString newPort);
@@ -63,7 +66,7 @@ public:
 
 private:
     quint64 m_lastIsActiveId=-1; //to reset last item when new item is activated
-    quint64 m_nextServerId = 1;
+    quint64 m_nextServerId = 1; //runtime id, server id in datbase named index
     int findRowById(quint64 serverId) const;
     QList<ServerInfo> m_servers;
 };

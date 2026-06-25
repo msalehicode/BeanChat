@@ -75,7 +75,7 @@ Item {
         Row
         {
             width: parent.width
-            height: parent.height-importantNotifierBar.height
+            height: importantNotifierBar.visible ? parent.height-importantNotifierBar.height : parent.height
 
             MyServers
             {
@@ -281,6 +281,55 @@ Item {
 
         }
 
+    }
+
+    MyServersItemMenu
+    {
+        id:myServersItemMenu
+        connectButton.onClicked:
+        {
+            user.switchOrConnectToServer(ip,
+                                         port,
+                                         id)
+            close()
+        }
+
+        disconnectButton.onClicked:
+        {
+            user.disconnect()
+            close()
+        }
+
+        modifyButton.onClicked:
+        {
+            modifySavedServerPopup.dbIndex = dbIndex;
+            modifySavedServerPopup.currentIp = ip;
+            modifySavedServerPopup.currentPort = port;
+            modifySavedServerPopup.currentName = serverName
+            modifySavedServerPopup.serverId = id;
+
+            close()
+            modifySavedServerPopup.open()
+        }
+
+        deleteButton.onClicked:
+        {
+            user.deleteSavedServer(id,dbIndex)
+            close()
+        }
+    }
+
+    ModifySavedServerPopup
+    {
+        id:modifySavedServerPopup
+        onSaveClicked:
+        {
+            user.updateSavedServer(serverId,
+                        dbIndex,
+                        serverName,
+                        ip,
+                        port)
+        }
     }
 
 

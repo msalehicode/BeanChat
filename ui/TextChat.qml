@@ -172,29 +172,46 @@ Item
                     }
 
 
-                    Image
+                    Item
                     {
                         visible: delegatedItem.isImage
 
-                        source: delegatedItem.isImage
-                                    ? model.textMessage
-                                    : ""
-
                         width: 300
-                        fillMode: Image.PreserveAspectFit
+                        height: delegatedItem.isImage ? 150 : 0
 
-                        cache: true
-                        MouseArea
+                        Image
                         {
+                            id: chatImage
+
                             anchors.fill: parent
 
-                            cursorShape: Qt.PointingHandCursor
+                            source: delegatedItem.isImage ? model.textMessage : ""
 
-                            onClicked:
+                            fillMode: Image.PreserveAspectFit
+                            cache: true
+
+                            MouseArea
                             {
-                                showImagePopup.imageSource = model.textMessage
-                                showImagePopup.open()
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+
+                                onClicked:
+                                {
+                                    if (chatImage.status === Image.Ready)
+                                    {
+                                        showImagePopup.imageSource = model.textMessage
+                                        showImagePopup.open()
+                                    }
+                                }
                             }
+                        }
+
+                        BusyIndicator
+                        {
+                            anchors.centerIn: parent
+
+                            running: chatImage.status === Image.Loading
+                            visible: running
                         }
                     }
 

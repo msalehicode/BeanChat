@@ -26,6 +26,9 @@ QVariant MyServersModel::data(
     case ServerIdRole:
         return server.id;
 
+    case ServerIndexRole:
+        return server.index;
+
     case ServerIpRole:
         return server.ip;
 
@@ -51,6 +54,7 @@ MyServersModel::roleNames() const
     return
         {
             { ServerIdRole, "id" },
+            { ServerIndexRole, "dbIndex"},
             { ServerIpRole, "ip" },
             { ServerPortRole, "port" },
             { ServerIsActiveRole, "isActive"},
@@ -70,7 +74,9 @@ void MyServersModel::clear()
 
 void MyServersModel::addServer(QString name,
                                const QString& ip,
-                               const QString& port)
+                               const QString& port,
+                               bool isActive,
+                               quint64 index)
 {
     beginInsertRows(QModelIndex(),
                     rowCount(),
@@ -78,6 +84,7 @@ void MyServersModel::addServer(QString name,
 
     ServerInfo server;
     server.id = m_nextServerId++;
+    server.index = index;
     server.name = name;
     server.ip = ip;
     server.port = port;
@@ -85,7 +92,8 @@ void MyServersModel::addServer(QString name,
 
     m_servers.append(server);
 
-    setIsActive(server.id);
+    if(isActive)
+        setIsActive(server.id);
 
     endInsertRows();
 }
@@ -105,6 +113,32 @@ void MyServersModel::removeServer(quint64 serverId)
             return;
         }
     }
+}
+
+void MyServersModel::updateServer(quint64 serverId,
+                                  const QString &name,
+                                  const QString &ip,
+                                  const QString &port)
+{
+    int row = findRowById(serverId);
+
+    if (row < 0)
+        return;
+
+    auto &server = m_servers[row];
+
+    server.name = name;
+    server.ip = ip;
+    server.port = port;
+
+    emit dataChanged(
+        index(row),
+        index(row),
+        {
+            ServerNameRole,
+            ServerIpRole,
+            ServerPortRole
+        });
 }
 
 void MyServersModel::setName(quint64 serverId, QString newName)

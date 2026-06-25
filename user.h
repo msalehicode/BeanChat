@@ -33,6 +33,7 @@
 #include "audiocapture.h"
 #include "audiospeaker.h"
 
+#include "database.h"
 
 class User : public QObject
 {
@@ -46,6 +47,8 @@ public:
 
     Q_INVOKABLE void joinChannel(int channelId, const QString& password="");
     Q_INVOKABLE void connectToServer(bool saveThisConnection, const QString& serverIp, const QString& str_serverPort);
+    Q_INVOKABLE void updateSavedServer(quint64 serverId, quint64 dbIndex, const QString &name, const QString &ip, const QString &port);
+    Q_INVOKABLE void deleteSavedServer(quint64 serverId, quint64 serverDbIndex=-1);
     Q_INVOKABLE void switchOrConnectToServer(const QString& serverIp, const QString& str_serverPort, int serverId);
     Q_INVOKABLE void disconnect();
     Q_INVOKABLE void createChannel(QString channelName, QString password);
@@ -151,6 +154,8 @@ private:
     bool m_muteHeadphone=false;
     bool m_isCameraOpen=false;
 
+
+    Database m_database;
 
     //user can modify
     QString m_myUsername = "";

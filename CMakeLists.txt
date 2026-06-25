@@ -9,7 +9,7 @@ set(APP_TitleName "Bean Chat")
 set(APP_OrganizationName "orgBeanChat")
 set(APP_ApplicationName "appBeanChat")
 
-find_package(Qt6 REQUIRED COMPONENTS Core Quick Multimedia Network)
+find_package(Qt6 REQUIRED COMPONENTS Core Quick Multimedia Network Sql)
 
 # hotkey
 find_package(QHotkey REQUIRED)
@@ -65,6 +65,8 @@ qt_add_qml_module(appBeanChat
         ui/ConnectPopup.qml
         ui/EnterChannelPasswordPopup.qml
         ui/ShowImagePopup.qml
+        ui/ModifySavedServerPopup.qml
+        ui/MyServersItemMenu.qml
 
     SOURCES
         # just in case
@@ -75,6 +77,7 @@ qt_add_qml_module(appBeanChat
         participant.h
         user.h user.cpp
         soundmanager.h soundmanager.cpp
+        database.h database.cpp
 
         # capture
         audiocapture.h audiocapture.cpp
@@ -181,6 +184,7 @@ target_link_libraries(appBeanChat
     Qt6::Multimedia
     Qt6::Core
     Qt6::Network
+    Qt6::Sql
 )
 
 include(GNUInstallDirs)

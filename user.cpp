@@ -12,6 +12,43 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
     qDebug() << "user starting..";
 
 
+    //setup database stuff
+    m_database.createTable(R"(
+        CREATE TABLE IF NOT EXISTS MyServers
+        (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            ip TEXT,
+            port TEXT
+        )
+        )");
+
+
+
+    //load all saved servers from database.
+    qDebug() << "loading all saved servers.";
+    QVariantList servers = m_database.getAll("MyServers");
+    for (const QVariant &v : servers)
+    {
+        QVariantMap row = v.toMap();
+
+        qDebug()
+            << row["id"]
+            << row["name"]
+            << row["ip"]
+            << row["port"];
+
+        //add to myServers model
+        m_myServersModel->addServer(row["name"].toString(),
+                                    row["ip"].toString(),
+                                    row["port"].toString(),
+                                    false, //set IsActive FALSE
+                                    row["id"].toUInt()); //set server index
+    }
+
+
+
+
     //setup TCP socket
 
     connect(&socket,
@@ -107,18 +144,43 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
 
     //save this server if was not in myServers
     int serverId = m_myServersModel->doesServerExists(serverIp, str_serverPort);
+
     if(serverId==-1) //server doesnt exist on list
     {
+        QString serverName= "The Server";
+        int serverDbIndex = -1;
         if(saveThisConnection)
         {
             //save server into local storage
-            //code here
+            bool result = m_database.insert("MyServers",
+                      {
+                          {"name", serverName},
+                          {"ip", serverIp},
+                          {"port", str_serverPort}
+                      });
+            if(result)
+            {
+                qDebug() << "server saved to myServers";
+                QVariantMap serverInfo = m_database.getServer(serverIp,str_serverPort);
+
+                if (serverInfo.isEmpty())
+                {
+                    qDebug() << "while reading data from recently added server got: Server not found";
+                    return;
+                }
+
+                serverDbIndex = serverInfo["id"].toInt();
+                serverName = serverInfo["name"].toString();
+                setMyServerName(serverName);
+            }
+            else
+                qDebug() << "failed to save server to myServers.";
         }
 
-        //add to myServers model
-        m_myServersModel->addServer("server-name", serverIp, str_serverPort); //by defualt would set status IsActive item to true
+        //add to myServers model and set isActive to TRUE
+        m_myServersModel->addServer(serverName, serverIp, str_serverPort,true,serverDbIndex);
     }
-    else //set server active
+    else //server exists, so just set server active
         m_myServersModel->setIsActive(serverId);
 
 
@@ -132,8 +194,16 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
         m_serverIp,
         m_serverPort);
 
-    //set a temporary name for server until server say his name
-    setMyServerName(m_serverIp + ":"+QString::number(m_serverPort));
+
+    //update servername for QML
+    if(serverId!=-1) //server exists just try to read server name from myServers table. otherwise when adding server would setServerName.
+    {
+        QVariantMap serverInfo = m_database.getServer(serverIp,str_serverPort);
+        if (!serverInfo.isEmpty())
+            setMyServerName(serverInfo["name"].toString());
+        else
+            setMyServerName("The Server");
+    }
 
     LoginRequestPacket login;
 
@@ -166,6 +236,45 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
 
     //reset flag for next use.
     m_switchingServer=false;
+}
+
+void User::updateSavedServer(quint64 serverId, quint64 dbIndex, const QString& name, const QString& ip, const QString& port)
+{
+    bool res = m_database.update("MyServers",
+                    dbIndex,
+                    {
+                        {"name", name},
+                        {"ip", ip},
+                        {"port", port.toInt()}
+                    });
+
+    if(res)
+    {
+        qDebug() << "success to update saved server.";
+
+        //update model data.
+        m_myServersModel->updateServer(serverId,name,ip,port);
+        
+        //update servername on local variable too
+        setMyServerName(name);
+    }
+    else
+        qDebug() << "failed to update saved server.";
+}
+
+void User::deleteSavedServer(quint64 serverId, quint64 serverDbIndex)
+{
+    if(serverDbIndex!=-1) //server is not saved in database. just delete it from model.
+    {
+        bool res = m_database.remove("MyServers",serverDbIndex);
+        if(res)
+            qDebug() << "server deleted from MyServers.";
+        else
+            qDebug() << "faield to delete server from MyServers.";
+    }
+
+    //anyway delete from model
+    m_myServersModel->removeServer(serverId);
 }
 
 void User::switchOrConnectToServer(const QString &serverIp, const QString &str_serverPort, int serverId)
@@ -206,6 +315,7 @@ void User::disconnect()
 
     if(!m_switchingServer) //if we are not switching reset/turn-off all server's indicator status
         m_myServersModel->resetPreviousIsActiveServer();
+
 
     //because of method we do use setter to send requests to server
     //then if server allowed/responsed we would do emits so, have to here reset them manually cant use setter.

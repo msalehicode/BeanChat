@@ -34,6 +34,18 @@ Popup
         source: imagePopup.imageSource
 
         fillMode: Image.PreserveAspectFit
+
+        Text
+        {
+            text:"x"
+            color: "white"
+            anchors
+            {
+                top:parent.top
+                right:parent.right
+            }
+            font.pixelSize: 35
+        }
     }
 
     MouseArea
