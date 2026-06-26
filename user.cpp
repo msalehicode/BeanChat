@@ -13,6 +13,14 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
 {
     qDebug() << "user starting..";
 
+
+
+    if (!m_opus.initialize(48000, 1, 32000))
+    {
+        qFatal("Failed to initialize Opus");
+    }
+
+
     initOrLoadSettings();
 
 
@@ -367,7 +375,7 @@ void User::sendVoicePcm(
     if(!isConnectedToServer())
         return;
 
-    if(muteMicrophone() | muteHeadphone())
+    if(muteMicrophone() || muteHeadphone())
     {
         // qDebug() << "mic or headphone is muted.";
         return;
@@ -379,30 +387,59 @@ void User::sendVoicePcm(
         return;
     }
 
-    VoicePacket voice;
 
-    voice.senderId =
-        static_cast<quint64>(myId());
 
-    voice.sequence =
-        ++m_sequence;
+    // Accumulate microphone PCM
+    m_sendPcmBuffer.append(pcm);
 
-    voice.audioData =
-        pcm;
+    bool sentPacket = false;
 
-    QByteArray data;
 
-    QDataStream out(
-        &data,
-        QIODevice::WriteOnly);
+    constexpr int FRAME_BYTES = 960 * sizeof(qint16);
 
-    out << quint16(101);
-    out << voice;
+    // Encode every complete 20ms frame
+    while (m_sendPcmBuffer.size() >= FRAME_BYTES)
+    {
+        QByteArray frame = m_sendPcmBuffer.left(FRAME_BYTES);
+        m_sendPcmBuffer.remove(0, FRAME_BYTES);
 
-    m_udpSocket.writeDatagram(
-        data,
-        QHostAddress(m_serverIp),
-        m_serverPort+1);
+        VoicePacket voice;
+
+        voice.senderId =
+            static_cast<quint64>(myId());
+
+        voice.sequence =
+            ++m_sequence;
+
+        voice.audioData = m_opus.encode(frame);
+
+        if (voice.audioData.isEmpty())
+            continue;
+
+        qDebug() << "sending Opus:" << voice.audioData.size()
+                 << "frame:" << frame.size()
+                 << "pcm raw " << pcm.size();
+
+        QByteArray data;
+
+        QDataStream out(
+            &data,
+            QIODevice::WriteOnly);
+
+        out << quint16(101);
+        out << voice;
+
+        m_udpSocket.writeDatagram(
+            data,
+            QHostAddress(m_serverIp),
+            m_serverPort + 1);
+
+        sentPacket = true;
+    }
+
+
+    if (!sentPacket)
+        return;
 
     //update isTalking this user/device
     UserItem* senderUser = m_channelModel->getUser(m_myChannelId, myId());
@@ -921,7 +958,13 @@ void User::onUdpReadyRead()
                 }
 
                 senderUser->lastVoicePacket.restart();
-                emit voiceReceived(packet.audioData);
+
+
+                //decode
+                QByteArray pcm = m_opus.decode(packet.audioData);
+                qDebug() << "received opus=" << pcm.size() << " raw pcm=" << packet.audioData.size();
+                if (!pcm.isEmpty())
+                    emit voiceReceived(pcm);
             }
 
             // qDebug()

@@ -81,6 +81,11 @@ void AudioCapture::start()
                     return;
 
 
+
+
+
+
+
                 //for visual speaking value
                 const qint16* samples = reinterpret_cast<const qint16*>(newData.constData());
                 int sampleCount = newData.size() / sizeof(qint16);
@@ -91,17 +96,17 @@ void AudioCapture::start()
                     sumSquare += normalized * normalized;
                 }
                 float rms = std::sqrt(sumSquare / sampleCount);
+                setCurrentVolume(rms); //qml is listening on this
+
+
 
                 if(rms<=0.0)
                 {
                     if(pushToTalkStatus()) //we want when user pressed button PTT even if no voice send empty to server.
-                        emit pcmReady(newData);
+                        emit pcmReady(newData); //empty voice.
                     else
                         return; //dont proceed because we cant hear anything. and PTT is off.
                 }
-
-                setCurrentVolume(rms); //qml is listening on this
-
 
 
                 // --- FEATURE 1: VOLUME GATE (Standalone) ---
@@ -199,7 +204,7 @@ void AudioCapture::start()
                             processedData.fill(0);
 
                             if(pushToTalkStatus()) //we want when user pressed button PTT even if no voice send empty to server.
-                                emit pcmReady(processedData);
+                                emit pcmReady(processedData); //empty voice.
                         }
                         else
                             emit pcmReady(processedData);

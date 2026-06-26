@@ -121,7 +121,6 @@ private:
     //microhpone stuff
     QAudioSource *m_audioSource = nullptr;
     QIODevice *m_device = nullptr;
-    QByteArray m_buffer;
     QList<QAudioDevice> m_audioInputs; //hold list of inputs
     QMediaDevices m_mediaDevices; //to notify input changes.
     int m_currentAudioInput=0; //hold selected input / current

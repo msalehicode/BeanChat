@@ -37,6 +37,7 @@
 #include "settingsmanager.h"
 #include "soundmanager.h"
 #include "database.h"
+#include "opuscodec.h"
 
 class User : public QObject
 {
@@ -160,6 +161,7 @@ private:
     Database m_database;
     SoundManager* m_soundManager;
     SettingsManager* m_settingsManager;
+    OpusCodec m_opus;
 
     //user can modify
     QString m_myUsername = "";
@@ -201,6 +203,7 @@ private:
     quint32 m_sequence = 0;
     AudioCapture* m_mic=nullptr;
     bool m_muteMicrophone=false;
+    QByteArray m_sendPcmBuffer;
 
     //video
     quint32 m_videoSequence = 0;
