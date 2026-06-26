@@ -1,6 +1,12 @@
 # BeanChat
 ### preview until now:
-https://github.com/user-attachments/assets/173ff989-3f11-43f8-b8bf-315dd6bd3cfd
+##### 2x speed
+https://github.com/user-attachments/assets/d9460341-b447-4478-a6ef-f135a0541dd6
+
+##### normal speed
+https://github.com/user-attachments/assets/e15b8c5a-4412-4311-97cc-68b4200d40c1
+
+
 
 
 # build:
