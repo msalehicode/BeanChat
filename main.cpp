@@ -31,6 +31,7 @@
 //
 #include "user.h"
 #include "soundmanager.h"
+#include "settingsmanager.h"
 
 //encode decode
 // #include "opusencoder.h"
@@ -53,8 +54,11 @@ int main(int argc, char *argv[])
     //---------- resources ----------
     AudioCapture audio;
     CameraCapture cam;
-    SoundManager soundManager; //play effects
     AudioSpeaker speaker;
+
+    //etc
+    SoundManager soundManager; //play effects
+    SettingsManager settingsManager;
 
 
 
@@ -67,6 +71,7 @@ int main(int argc, char *argv[])
 
     //----------
     User usr(&channelModel, &chatModel, &participantsModel, &connectedUsersModel, &myServersModel,
+             &soundManager, &settingsManager,
              &cam, &audio, &speaker);
 
     //---------- camera connection ----------
@@ -210,6 +215,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("channelModel",&channelModel);
     engine.rootContext()->setContextProperty("chatModel",&chatModel);
     engine.rootContext()->setContextProperty("soundManager",&soundManager);
+    engine.rootContext()->setContextProperty("settings",&settingsManager);
 
     QObject::connect(
         &engine,

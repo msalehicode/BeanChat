@@ -33,6 +33,9 @@
 #include "audiocapture.h"
 #include "audiospeaker.h"
 
+
+#include "settingsmanager.h"
+#include "soundmanager.h"
 #include "database.h"
 
 class User : public QObject
@@ -42,6 +45,7 @@ class User : public QObject
 public:
     explicit User(ChannelModel *channelModel,ChatModel* chatModel,
                   ParticipantModel* currentChannelParticipant,ConnectedUsersModel* connectedUsersModel, MyServersModel* myServersModel,
+                  SoundManager* sounderManager, SettingsManager* settingsManager,
                   CameraCapture* cam, AudioCapture* mic, AudioSpeaker* speaker,
                   QObject *parent = nullptr);
 
@@ -100,6 +104,9 @@ public:
     float myVideoPacketLoss() const;
     void setMyVideoPacketLoss(float newMyVideoPacketLoss);
 
+
+    void initOrLoadSettings();
+    QString myAppVersion() const;
 signals:
 
     void myIdChanged();
@@ -150,12 +157,9 @@ public slots:
 private:
     QString platformName();
 
-    bool m_muteMicrophone=false;
-    bool m_muteHeadphone=false;
-    bool m_isCameraOpen=false;
-
-
     Database m_database;
+    SoundManager* m_soundManager;
+    SettingsManager* m_settingsManager;
 
     //user can modify
     QString m_myUsername = "";
@@ -168,6 +172,7 @@ private:
     QString m_myChannelName = ""; //current channel
     QString m_myServerName= ""; //current server connected to
     UserModel m_info; //to store system info such as appVersio and ..
+    Participant* m_me=nullptr; //hold this user info and update it when channel switched, to connect with cameraCapture and show images as local preview
 
     bool m_isConnectedToServer=false;
     bool m_switchingServer = false;
@@ -175,14 +180,12 @@ private:
     //TCP connection
     QTcpSocket socket;
     int m_myPing=-1;
-    float m_myVoicePacketLoss=0.0f;
-    float m_myVideoPacketLoss=0.0f;
-    QTimer m_udpConnectionTimeout;
-
-
 
     //UDP connection
     QUdpSocket m_udpSocket;
+    float m_myVoicePacketLoss=0.0f;
+    float m_myVideoPacketLoss=0.0f;
+    QTimer m_udpConnectionTimeout;
 
 
     //chat notification
@@ -196,22 +199,26 @@ private:
 
     //voice
     quint32 m_sequence = 0;
+    AudioCapture* m_mic=nullptr;
+    bool m_muteMicrophone=false;
 
     //video
     quint32 m_videoSequence = 0;
+    CameraCapture* m_cam=nullptr;
+    bool m_isCameraOpen=false;
 
-    //pointers to access and contorl esources/models
-    Participant* m_me=nullptr; //hold this user info and update it when channel switched, to connect with cameraCapture and show images as local preview
+    //speaker
+    AudioSpeaker* m_speaker=nullptr;
+    bool m_muteHeadphone=false;
+
+    //pointers to access and contorl esources/models    
     ChannelModel* m_channelModel=nullptr;
     ChatModel* m_chatModel=nullptr;
     ParticipantModel* m_currentChannelParticipant=nullptr;
     MyServersModel* m_myServersModel=nullptr;
-
-    CameraCapture* m_cam=nullptr;
-    AudioCapture* m_mic=nullptr;
-    AudioSpeaker* m_speaker=nullptr;
-
     ConnectedUsersModel* m_connectedUsersModel=nullptr;
+
+
     Q_PROPERTY(int myId READ myId WRITE setMyId NOTIFY myIdChanged FINAL)
     Q_PROPERTY(QString myUsername READ myUsername WRITE setMyUsername NOTIFY myUsernameChanged FINAL)
     Q_PROPERTY(QString myChannelName READ myChannelName NOTIFY myChannelNameChanged FINAL)
@@ -226,6 +233,7 @@ private:
     Q_PROPERTY(int myPing READ myPing WRITE setMyPing NOTIFY myPingChanged FINAL)
     Q_PROPERTY(float myVoicePacketLoss READ myVoicePacketLoss WRITE setMyVoicePacketLoss NOTIFY myVoicePacketLossChanged FINAL)
     Q_PROPERTY(float myVideoPacketLoss READ myVideoPacketLoss WRITE setMyVideoPacketLoss NOTIFY myVideoPacketLossChanged FINAL)
+    Q_PROPERTY(QString myAppVersion READ myAppVersion)
 };
 
 #endif // USER_H

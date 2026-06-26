@@ -61,6 +61,10 @@ public:
     QString pushToTalkKeyString() const;
     bool started() const;
 
+
+    int devicesCount() const; //to know how many devices found.
+    Q_INVOKABLE QString audioInputId(int index) const; //to get device id(system id) in qml
+    int audioInputIndexFromId(const QString &id) const;
 signals:
     void pcmReady(QByteArray pcm);
     void levelChanged(double level);

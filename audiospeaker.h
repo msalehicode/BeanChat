@@ -25,6 +25,9 @@ public:
     void setAudioOutputs(QList<QAudioDevice> newList);
     bool started() const;
 
+    int devicesCount() const; //to know how many devices found.
+    Q_INVOKABLE QString audioOutputId(int index) const; //to get device id(system id) in qml
+    int audioOutputIndexFromId(const QString &id) const;
 signals:
     void audioOutputsChanged();
 

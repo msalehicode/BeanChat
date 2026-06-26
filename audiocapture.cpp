@@ -420,6 +420,30 @@ bool AudioCapture::started() const
     return m_started;
 }
 
+int AudioCapture::devicesCount() const
+{
+    return m_audioInputs.count();
+}
+
+QString AudioCapture::audioInputId(int index) const
+{
+    if (index < 0 || index >= m_audioInputs.size())
+        return {};
+
+    return QString::fromUtf8(m_audioInputs[index].id());
+}
+
+int AudioCapture::audioInputIndexFromId(const QString &id) const
+{
+    for (int i = 0; i < m_audioInputs.size(); ++i)
+    {
+        if (QString::fromUtf8(m_audioInputs[i].id()) == id)
+            return i;
+    }
+
+    return -1;
+}
+
 void AudioCapture::refreshAudioInputs()
 {
     qDebug() << "=== INPUT DEVICES ===";

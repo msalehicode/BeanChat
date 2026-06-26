@@ -31,6 +31,25 @@ AudioSpeaker::~AudioSpeaker()
     stop();
 }
 
+QString AudioSpeaker::audioOutputId(int index) const
+{
+    if (index < 0 || index >= m_audioOutputs.size())
+        return {};
+
+    return QString::fromUtf8(m_audioOutputs[index].id());
+}
+
+int AudioSpeaker::audioOutputIndexFromId(const QString &id) const
+{
+    for (int i = 0; i < m_audioOutputs.size(); ++i)
+    {
+        if (QString::fromUtf8(m_audioOutputs[i].id()) == id)
+            return i;
+    }
+
+    return -1;
+}
+
 bool AudioSpeaker::start()
 {
     // Check if the current index is actually valid
@@ -97,6 +116,11 @@ void AudioSpeaker::playPcm(const QByteArray &pcm)
 bool AudioSpeaker::started() const
 {
     return m_started;
+}
+
+int AudioSpeaker::devicesCount() const
+{
+    return m_audioOutputs.count();
 }
 
 

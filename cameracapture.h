@@ -30,6 +30,9 @@ public:
     int currentCameraInput() const;
     void setCurrentCameraInput(int newCurrentCameraInput);
 
+    int devicesCount() const; //to know how many device found.
+    Q_INVOKABLE QString cameraIntputId(int index) const; //to get device id(system id) in qml
+    int cameraInputIndexFromId(const QString &id) const;
 signals:
     void frameChanged();
     void frameReady(const QVideoFrame &frame);

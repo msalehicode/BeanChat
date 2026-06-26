@@ -1,394 +1,216 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 import QtQuick.Controls.Material
 
-Page {
+import "./settingPages/"
+Page
+{
+    id: root
+
+    Material.theme: Material.Dark
+    Material.accent: "#5865F2"
+
+    property int currentPage: 0
 
     background: Rectangle
     {
-        color:"black"
+        color: "#313338"
     }
 
-    header: Label
-    {
-        text:"settings"
-        color:"white"
-    }
 
-    Button
-    {
-        text:"back"
-        onClicked: rootWindow.changePage()
-    }
 
-    Rectangle
+    ColumnLayout
     {
-        width: parent.width/1.5
-        height: implicitHeight
-        // anchors.centerIn: parent
-        anchors.horizontalCenter: parent.horizontalCenter
-        color:"black"
+        anchors.fill: parent
+        spacing: 0
 
-        Column
+        // Top bar
+        Item
         {
-            spacing: 5
-            Row
+            Layout.fillWidth: true
+            Layout.preferredHeight: 70
+            Rectangle
             {
-                Label
+                width: rectangleSideBar.width
+                height: parent.height
+
+                color: "#2B2D31"
+            }
+            RoundButton
+            {
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.leftMargin: 24
+
+                width: 46
+                height: 46
+
+                text: "←"
+
+                onClicked: rootWindow.changePage()
+            }
+        }
+
+
+        //Main content
+
+        RowLayout
+        {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            spacing: 0
+
+
+            ////////////////////////////////////////////////////////////
+            // Sidebar
+            ////////////////////////////////////////////////////////////
+
+            Rectangle
+            {
+                id:rectangleSideBar
+                Layout.preferredWidth: 240
+                Layout.fillHeight: true
+
+                color: "#2B2D31"
+
+                SettingsSidebar
                 {
-                    text:"effects volume:"
-                    color:"white"
-                }
-                Slider
-                {
-                    width: meter.width
-                    from: 0.0
-                    to: 1.0
-                    value: soundManager.volume
-                    onMoved: soundManager.volume = value
+                    id: sidebar
+
+                    anchors.fill: parent
+
+                    currentIndex: root.currentPage
+
+                    onCurrentIndexChanged:
+                        root.currentPage = currentIndex
                 }
             }
 
-            Row
+            ////////////////////////////////////////////////////////////
+            // Content
+            ////////////////////////////////////////////////////////////
+
+            Rectangle
             {
-                // Label
-                // {
-                //     text:"note: when a button is set as push to talk hotkey, \nOS may don't send that key to other apps/windows. \nalso due to coding stuff some keys are forbidden for now cant be set."
-                //     color:"white"
-                // }
+                Layout.fillWidth: true
+                Layout.fillHeight: true
 
-                Label
+                color: "#313338"
+
+                StackLayout
                 {
-                    text:"push to talk:"
-                    color:"white"
-                }
-                CheckBox
-                {
-                    checked: microphone.pushToTalkStatus
-                    onCheckedChanged:
+                    anchors.fill: parent
+
+                    currentIndex: root.currentPage
+
+                    ////////////////////////////////////////////////////
+                    // Audio input
+                    ////////////////////////////////////////////////////
+
+                    AudioInputPage
                     {
-                        microphone.pushToTalkStatus = checked
-                        microphone.volumeGateStatus = !checked //when its push to talk doesnt make sense to do volume gate.
-                    }
-                }
-            }
-
-            Row
-            {
-                Label
-                {
-                    text:"push to talk key = " + microphone.pushToTalkKeyString
-                    color:"white"
-                }
-                Button{
-                    text: "change key"
-                    onClicked: keyCapture.waitingForKey=true
-                }
-                Button
-                {
-                    text: "cancel"
-                    onClicked: keyCapture.waitingForKey=false
-                }
-
-                Rectangle
-                {
-                    id: keyCapture
-
-                    width: 200
-                    height: 40
-
-                    property bool waitingForKey: false
-
-                    focus: waitingForKey
-                    onFocusChanged:
-                    {
-                        if(!focus)
-                            keyCapture.waitingForKey=false //cancel process
                     }
 
-                    visible: waitingForKey
 
 
-                    Text
+                    ////////////////////////////////////////////////////
+                    // Audio output
+                    ////////////////////////////////////////////////////
+
+                    AudioOutputPage
                     {
-                        anchors.centerIn: parent
 
-                        text: "Press a key..."
                     }
 
-                    MouseArea
-                    {
-                        anchors.fill: parent
 
-                        onClicked:
+                    ////////////////////////////////////////////////////
+                    // Video
+                    ////////////////////////////////////////////////////
+
+                    CameraInputPage
+                    {
+
+                    }
+
+                    ////////////////////////////////////////////////////
+                    // Appearance
+                    ////////////////////////////////////////////////////
+
+
+                    Item
+                    {
+                        Label
                         {
-                            keyCapture.waitingForKey = true
-                            keyCapture.forceActiveFocus()
+                            anchors.centerIn: parent
+
+                            text: "Appearance\nComing Soon"
+
+                            horizontalAlignment: Text.AlignHCenter
+
+                            color: "white"
+
+                            font.pixelSize: 28
+
+                            font.bold: true
                         }
                     }
 
-                    Keys.onPressed: function(event)
+                    ////////////////////////////////////////////////////
+                    // Notifications
+                    ////////////////////////////////////////////////////
+
+                    Item
                     {
-                        if (!keyCapture.waitingForKey)
-                            return
-
-                        let k = event.key
-
-                        let allowed =
-                            // A-Z
-                            (k >= Qt.Key_A && k <= Qt.Key_Z)
-
-                            // F1-F12
-                            || (k >= Qt.Key_F1 && k <= Qt.Key_F12)
-
-                            // 0-9
-                            || (k >= Qt.Key_0 && k <= Qt.Key_9)
-
-                            // Symbols you want
-                            || k === Qt.Key_BracketLeft      // [
-                            || k === Qt.Key_BracketRight     // ]
-                            || k === Qt.Key_Backslash        // \
-                            || k === Qt.Key_Semicolon        // ;
-                            || k === Qt.Key_Comma            // ,
-                            || k === Qt.Key_Period           // .
-                            || k === Qt.Key_Slash            // /
-                            || k === Qt.Key_QuoteLeft        // `
-                            || k === Qt.Key_Equal            // =
-                            || k === Qt.Key_Minus            // -
-
-                            // Special keys
-                            || k === Qt.Key_Tab
-                            || k === Qt.Key_Return
-                            || k === Qt.Key_Space
-
-                            // Arrow keys
-                            || k === Qt.Key_Left
-                            || k === Qt.Key_Right
-                            || k === Qt.Key_Up
-                            || k === Qt.Key_Down
-
-                            // Context menu key
-                            || k === Qt.Key_Menu
-
-
-                        if (!allowed)
+                        Label
                         {
-                            console.log("Key not allowed:", k)
-                            return
-                        }
+                            anchors.centerIn: parent
 
-                        microphone.pushToTalkKey = k
-                        microphone.pushToTalkModifiers = 0
+                            text: "Notifications\nComing Soon"
 
-                        microphone.initialPushToTalkHotkey()
+                            horizontalAlignment: Text.AlignHCenter
 
-                        keyCapture.waitingForKey = false
-                        event.accepted = true
-                    }
-                }
-            }
+                            color: "white"
 
-            Row
-            {
-                Label
-                {
-                    text:"microphones:"
-                    color:"white"
-                }
+                            font.pixelSize: 28
 
-                ComboBox {
-                    id: micPicker
-                    width: 200
-                    height: 100
-                    // This tells the combo box to use your list of names
-                    model: microphone.audioInputNames
-
-                    // Update the C++ backend when the selection changes
-                    onCurrentIndexChanged: {
-                        microphone.currentAudioInput = currentIndex
-                    }
-
-                    // Optional: Keeps the UI in sync if the list changes (e.g., unplugged)
-                    Component.onCompleted: {
-                        currentIndex = microphone.currentAudioInput
-                    }
-                }
-            }
-
-
-            Row
-            {
-                Label
-                {
-                    text:"noise:"
-                    color:"white"
-                }
-                Column
-                {
-                    CheckBox
-                    {
-                        checked: microphone.rnnoiseStatus
-                        onCheckedChanged: microphone.rnnoiseStatus = checked
-                    }
-                    Slider
-                    {
-                        width: meter.width
-                        visible: microphone.rnnoiseStatus
-
-                        from: 0.0
-                        to: 1.0
-
-                        value: microphone.rnnoiseValue
-
-                        onMoved:
-                            microphone.rnnoiseValue = value
-                    }
-                }
-
-
-            }
-
-
-
-
-            Row
-            {
-                Label
-                {
-                    text:"volume gate:"
-                    color:"white"
-                }
-                Column
-                {
-                    CheckBox
-                    {
-                        checked: microphone.volumeGateStatus
-                        onCheckedChanged:
-                        {
-                            microphone.volumeGateStatus = checked
-                            microphone.pushToTalkStatus = !checked //when its volumeGate doesnt make sense to do pushToTalk
+                            font.bold: true
                         }
                     }
-                    Rectangle
+
+                    ////////////////////////////////////////////////////
+                    // Privacy
+                    ////////////////////////////////////////////////////
+
+                    Item
                     {
-                        id: meter
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        width: 300
-                        height: 20
-                        radius: 4
-                        color: "#303030"
-
-                        // Current mic level
-                        Rectangle
+                        Label
                         {
-                            anchors.left: parent.left
-                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.centerIn: parent
 
-                            width: parent.width * (microphone.currentVolume / 0.5)
-                            height: parent.height
+                            text: "Privacy\nComing Soon"
 
-                            color: "lime"
-                            radius: parent.radius
+                            horizontalAlignment: Text.AlignHCenter
+
+                            color: "white"
+
+                            font.pixelSize: 28
+
+                            font.bold: true
                         }
-
-                        // Gate threshold marker
-                        Rectangle
-                        {
-                            width: 4
-                            visible: microphone.volumeGateStatus
-                            height: parent.height + 8
-
-                            x: parent.width *
-                               (microphone.volumeGateThreshold / 0.5)
-                               - width/2
-
-                            y: -4
-
-                            color: "red"
-                            radius: 2
-                        }
-                        Slider
-                        {
-                            width: meter.width
-                            visible: microphone.volumeGateStatus
-
-                            from: 0.0
-                            to: 0.5
-
-                            value: microphone.volumeGateThreshold
-
-                            onMoved:
-                                microphone.volumeGateThreshold = value
-                        }
-
                     }
 
+                    ////////////////////////////////////////////////////
+                    // Advanced
+                    ////////////////////////////////////////////////////
 
-                }
-            }
+                    AdvancePage
+                    {
 
-
-
-
-            Row
-            {
-                Label
-                {
-                    text:"speakers:"
-                    color:"white"
-                }
-
-                ComboBox {
-                    id: speakerPicker
-                    width: 200
-                    height: 100
-                    // This tells the combo box to use your list of names
-                    model: speaker.audioOutputNames
-
-                    // Update the C++ backend when the selection changes
-                    onCurrentIndexChanged: {
-                        speaker.currentAudioOutput = currentIndex
-                    }
-
-                    // Optional: Keeps the UI in sync if the list changes (e.g., unplugged)
-                    Component.onCompleted: {
-                        currentIndex = speaker.currentAudioOutput
                     }
                 }
-
-            }
-
-
-            Row
-            {
-                Label
-                {
-                    text:"cameras:"
-                    color:"white"
-                }
-
-                ComboBox {
-                    id: cameraPicker
-                    width: 200
-                    height: 100
-
-                    model: camera.cameraInputsNames
-
-                    onCurrentIndexChanged: {
-                        camera.currentCameraInput = currentIndex
-                    }
-
-                    Component.onCompleted: {
-                        currentIndex = camera.currentCameraInput
-                    }
-                }
-            }
-
-            Button
-            {
-                text:"create channel"
-                onClicked: user.createChannel("dota2","123456")
             }
         }
     }
+
 }

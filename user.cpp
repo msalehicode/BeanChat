@@ -2,14 +2,19 @@
 
 User::User(ChannelModel *channelModel, ChatModel *chatModel,
            ParticipantModel* currentChannelParticipant, ConnectedUsersModel *connectedUsersModel, MyServersModel* myServersModel,
+           SoundManager* sounderManager, SettingsManager* settingsManager,
            CameraCapture* cam, AudioCapture *mic, AudioSpeaker* speaker,
            QObject *parent)
     : QObject{parent}, m_channelModel(channelModel), m_chatModel(chatModel),
     m_currentChannelParticipant(currentChannelParticipant), m_connectedUsersModel(connectedUsersModel),
     m_myServersModel(myServersModel),
+    m_soundManager(sounderManager), m_settingsManager(settingsManager),
     m_cam(cam), m_mic(mic), m_speaker(speaker)
 {
     qDebug() << "user starting..";
+
+    initOrLoadSettings();
+
 
 
     //setup database stuff
@@ -1077,6 +1082,160 @@ void User::setMyVideoPacketLoss(float newMyVideoPacketLoss)
         return;
     m_myVideoPacketLoss = newMyVideoPacketLoss;
     emit myVideoPacketLossChanged();
+}
+
+void User::initOrLoadSettings()
+{
+    //load all saved settings such as saved devices index for audio input/output, volumes and ... and set to variables
+
+
+    // =================================== read and set audioinput settings
+    if(m_settingsManager->contains(MIC_SETTING_RNN_STATUS))
+        m_mic->setRnnoiseStatus(m_settingsManager->value(MIC_SETTING_RNN_STATUS, MIC_DEFAULT_RNNOISE_STATUS).toBool());
+    else //set default setting.
+    {
+        m_settingsManager->setValue(MIC_SETTING_RNN_STATUS, MIC_DEFAULT_RNNOISE_STATUS);
+        m_mic->setRnnoiseStatus(MIC_DEFAULT_RNNOISE_STATUS);
+    }
+
+
+    if(m_settingsManager->contains(MIC_SETTING_RNN_VALUE))
+        m_mic->setRnnoiseValue(m_settingsManager->value(MIC_SETTING_RNN_VALUE, MIC_DEFAULT_RNNOISE_VALUE).toFloat());
+    else //set default setting.
+    {
+        m_settingsManager->setValue(MIC_SETTING_RNN_VALUE, MIC_DEFAULT_RNNOISE_VALUE);
+        m_mic->setRnnoiseValue(MIC_DEFAULT_RNNOISE_VALUE);
+    }
+
+
+    if(m_settingsManager->contains(MIC_SETTING_VOLUMEGATE))
+        m_mic->setVolumeGateStatus(m_settingsManager->value(MIC_SETTING_VOLUMEGATE, MIC_DEFAULT_VOLUMEGATE_STATUS).toBool());
+    else //set default setting.
+    {
+        m_settingsManager->setValue(MIC_SETTING_VOLUMEGATE, MIC_DEFAULT_VOLUMEGATE_STATUS);
+        m_mic->setVolumeGateStatus(MIC_DEFAULT_VOLUMEGATE_STATUS);
+    }
+
+
+    if(m_settingsManager->contains(MIC_SETTING_VOLUMEGATE_THRESHOLD))
+        m_mic->setVolumeGateThreshold(m_settingsManager->value(MIC_SETTING_VOLUMEGATE_THRESHOLD, MIC_DEFAULT_VOLUMEGATE_THRESHOLD).toFloat());
+    else //set default setting.
+    {
+        m_settingsManager->setValue(MIC_SETTING_VOLUMEGATE_THRESHOLD, MIC_DEFAULT_VOLUMEGATE_THRESHOLD);
+        m_mic->setVolumeGateThreshold(MIC_DEFAULT_VOLUMEGATE_THRESHOLD);
+    }
+
+
+    if(m_settingsManager->contains(MIC_SETTING_PTT_STATUS))
+        m_mic->setPushToTalkStatus(m_settingsManager->value(MIC_SETTING_PTT_STATUS, MIC_DEFAULT_PTT_STATUS).toBool());
+    else //set default setting.
+    {
+        m_settingsManager->setValue(MIC_SETTING_PTT_STATUS, MIC_DEFAULT_PTT_STATUS);
+        m_mic->setPushToTalkStatus(MIC_DEFAULT_PTT_STATUS);
+    }
+
+
+    if(m_settingsManager->contains(MIC_SETTING_PTT_HOTKEY))
+        m_mic->setPushToTalkKey(m_settingsManager->value(MIC_SETTING_PTT_HOTKEY, MIC_DEFAULT_PTT_HOTKEY).toInt());
+    else //set default setting.
+    {
+        m_settingsManager->setValue(MIC_SETTING_PTT_HOTKEY, MIC_DEFAULT_PTT_HOTKEY);
+        m_mic->setPushToTalkKey(MIC_DEFAULT_PTT_HOTKEY);
+    }
+
+
+
+    //check for input device exists or not
+    if(m_mic->devicesCount() > 0)
+    {
+        //read from saved settings and convert to valid id,
+        int micIndex = m_mic->audioInputIndexFromId(m_settingsManager->value(MIC_SETTING_DEVICE, "").toString());
+        if(micIndex != -1)
+            m_mic->setCurrentAudioInput(micIndex); //m_soundManager->outputDevice would automatically obey this change
+        else
+        {
+            qDebug() << "saved audioInput device not found, we did reset it to default.";
+
+            //set to default (first device)
+            QString deviceId = m_mic->audioInputId(MIC_DEFUALT_DEVICE_INDEX);
+            m_mic->setCurrentAudioInput(m_mic->audioInputIndexFromId(deviceId));
+            m_settingsManager->setValue(MIC_SETTING_DEVICE, deviceId);
+        }
+    }
+    else
+    {
+        m_settingsManager->setValue(MIC_SETTING_DEVICE, "");
+        qDebug() << "ERROR there is no microphone at all.. plug something in";
+    }
+
+
+    // =================================== read and set audiooutput settings
+
+    if(m_settingsManager->contains(SPEAKER_SETTING_EFFECTS_VOLUME))
+        m_soundManager->setVolume(m_settingsManager->value(SPEAKER_SETTING_EFFECTS_VOLUME, SPEAKER_DEFAULT_EFFECTS_VOLUME).toFloat());
+    else //set default setting.
+    {
+        m_settingsManager->setValue(SPEAKER_SETTING_EFFECTS_VOLUME, SPEAKER_DEFAULT_EFFECTS_VOLUME);
+        m_soundManager->setVolume(SPEAKER_DEFAULT_EFFECTS_VOLUME);
+    }
+
+
+    //check for output device exists or not
+    if(m_speaker->devicesCount() > 0)
+    {
+        //read from saved settings and convert to valid id,
+        int speakerIndex = m_speaker->audioOutputIndexFromId(m_settingsManager->value(SPEAKER_SETTING_DEVICE, "").toString());
+        if(speakerIndex != -1)
+            m_speaker->setCurrentAudioOutput(speakerIndex); //m_soundManager->outputDevice would automatically obey this change
+        else
+        {
+            qDebug() << "saved audioOutput device not found, we did reset it to default.";
+            m_speaker->setCurrentAudioOutput(SPEAKER_DEFAULT_DEVICE_INDEX); //set to default, note m_soundManager->outputDevice would automatically obey this change
+
+            //set to default (first device)
+            QString deviceId = m_speaker->audioOutputId(SPEAKER_DEFAULT_DEVICE_INDEX);
+            m_speaker->setCurrentAudioOutput(m_speaker->audioOutputIndexFromId(deviceId));
+            m_settingsManager->setValue(SPEAKER_SETTING_DEVICE, deviceId);
+        }
+    }
+    else
+    {
+        m_settingsManager->setValue(SPEAKER_SETTING_DEVICE, "");
+        qDebug() << "ERROR there is no speaker at all.. plug something in";
+    }
+
+
+    // =================================== read and set video settings
+    //check for output device exists or not
+    if(m_cam->devicesCount() > 0)
+    {
+        //read from saved settings and convert to valid id,
+        int cameraIndex = m_cam->cameraInputIndexFromId(m_settingsManager->value(CAMERA_SETTING_DEVICE, "").toString());
+        if(cameraIndex != -1)
+            m_cam->setCurrentCameraInput(cameraIndex);
+        else
+        {
+            qDebug() << "saved cameraInput device not found, we did reset it to default.";
+
+            //set to default (first device)
+            QString deviceId = m_cam->cameraIntputId(CAMERA_DEFAULT_DEVICE_INDEX);
+            m_cam->setCurrentCameraInput(m_cam->cameraInputIndexFromId(deviceId));
+            m_settingsManager->setValue(CAMERA_SETTING_DEVICE, deviceId);
+        }
+    }
+    else
+    {
+        m_settingsManager->setValue(CAMERA_SETTING_DEVICE, "");
+        qDebug() << "ERROR there is no cameraInput at all.. plug something in";
+    }
+
+
+
+}
+
+QString User::myAppVersion() const
+{
+    return m_info.appVersion + " - " + m_info.buildType;
 }
 
 float User::myVoicePacketLoss() const

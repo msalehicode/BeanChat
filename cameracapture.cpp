@@ -224,3 +224,26 @@ void CameraCapture::setCurrentCameraInput(int newCurrentCameraInput)
     emit currentCameraInputChanged();
 }
 
+int CameraCapture::devicesCount() const
+{
+    return m_cameraInputs.count();
+}
+
+QString CameraCapture::cameraIntputId(int index) const
+{
+    if (index < 0 || index >= m_cameraInputs.size())
+        return {};
+
+    return QString::fromUtf8(m_cameraInputs[index].id());
+}
+
+int CameraCapture::cameraInputIndexFromId(const QString &id) const
+{
+    for (int i = 0; i < m_cameraInputs.size(); ++i)
+    {
+        if (QString::fromUtf8(m_cameraInputs[i].id()) == id)
+            return i;
+    }
+
+    return -1;
+}

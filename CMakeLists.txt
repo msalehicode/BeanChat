@@ -61,12 +61,26 @@ qt_add_qml_module(appBeanChat
         ui/CurrentChannelParticipants.qml
         ui/MyServers.qml
 
+
         #pop up dialogs
         ui/ConnectPopup.qml
         ui/EnterChannelPasswordPopup.qml
         ui/ShowImagePopup.qml
         ui/ModifySavedServerPopup.qml
         ui/MyServersItemMenu.qml
+
+        # settingsPage pages/components
+        ui/settingPages/SettingSection.qml
+        ui/settingPages/SettingsSidebar.qml
+        ui/settingPages/SettingSwitch.qml
+        ui/settingPages/SettingCombo.qml
+        ui/settingPages/SettingSlider.qml
+        ui/settingPages/MicLevelMeter.qml
+        ui/settingPages/HotkeyCapture.qml
+        ui/settingPages/AudioInputPage.qml
+        ui/settingPages/AdvancePage.qml
+        ui/settingPages/CameraInputPage.qml
+        ui/settingPages/AudioOutputPage.qml
 
     SOURCES
         # just in case
@@ -78,6 +92,7 @@ qt_add_qml_module(appBeanChat
         user.h user.cpp
         soundmanager.h soundmanager.cpp
         database.h database.cpp
+        settingsmanager.h settingsmanager.cpp
 
         # capture
         audiocapture.h audiocapture.cpp
@@ -170,6 +185,46 @@ target_compile_definitions(appBeanChat PRIVATE
     APP_ORGANIZATION="${APP_OrganizationName}"
     APP_NAME="${APP_ApplicationName}"
 )
+
+# app default configs
+target_compile_definitions(appBeanChat PRIVATE
+
+    #audio input default config
+    MIC_DEFAULT_PTT_STATUS=false
+    MIC_DEFAULT_PTT_HOTKEY=47 # slash key as default
+    MIC_DEFAULT_VOLUMEGATE_STATUS=true
+    MIC_DEFAULT_VOLUMEGATE_THRESHOLD=0.0
+    MIC_DEFAULT_RNNOISE_STATUS=false
+    MIC_DEFAULT_RNNOISE_VALUE=0.0
+    MIC_DEFUALT_DEVICE_INDEX=0
+
+        # qsettings group and keys , also these values are inside ui/settingPages/AudioInputPage.qml too
+        MIC_SETTING_DEVICE="AudioInput/Device"
+        MIC_SETTING_RNN_STATUS="AudioInput/NoiseSuppression"
+        MIC_SETTING_RNN_VALUE="AudioInput/NoiseSuppressionValue"
+        MIC_SETTING_VOLUMEGATE="AudioInput/VolumeGate"
+        MIC_SETTING_VOLUMEGATE_THRESHOLD="AudioInput/VolumeGateThreshold"
+        MIC_SETTING_PTT_STATUS="AudioInput/PushToTalk"
+        MIC_SETTING_PTT_HOTKEY="AudioInput/PushToTalkHotkey"
+
+    #audio output default config
+    SPEAKER_DEFAULT_DEVICE_INDEX=0
+    SPEAKER_DEFAULT_EFFECTS_VOLUME=1.0
+
+        # qsettings group and keys , also these values are inside ui/settingPages/AudioOutputPage.qml too
+        SPEAKER_SETTING_DEVICE="AudioOutput/Device"
+        SPEAKER_SETTING_EFFECTS_VOLUME="AudioOutput/EffectsVolume"
+
+
+    #camera input default config
+    CAMERA_DEFAULT_DEVICE_INDEX=0
+
+        # qsettings group and keys , also these values are inside ui/settingPages/CameraInputPage.qml too
+        CAMERA_SETTING_DEVICE="CameraInput/Device"
+)
+
+
+
 
 # debug tool to get sigfault infos.
 target_compile_options(appBeanChat PRIVATE
