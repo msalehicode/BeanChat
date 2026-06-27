@@ -8,6 +8,40 @@ A modern voice, video and text chat application built with **Qt 6.9 (QML/C++)**.
 
 ---
 
+
+## 📥 Releases
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 📦 Latest Release
+
+Download the latest version from GitHub.
+
+**[⬇️ Download Latest](https://github.com/USERNAME/BeanChat/releases/latest)**
+
+or browse
+
+**[📚 All Releases](https://github.com/USERNAME/BeanChat/releases)**
+
+</td>
+
+<td width="50%" valign="top">
+
+### 🖥️ Platforms
+
+| Platform | Status |
+|-----------|--------|
+| 🪟 Windows | ✅ |
+| 🐧 Linux | 🚧 |
+| 🤖 Android | 🚧 |
+
+</td>
+</tr>
+</table>
+
+
 ## 📑 Table of Contents
 
 * [Preview](#-preview)
@@ -98,12 +132,13 @@ sudo apt install \
 
 ### 5. Build BeanChat
 
+build Release then run
 ```bash
-mkdir build
-cd build
-cmake ..
-make -j$(nproc)
+cmake --install "path/to/build/Desktop_Qt_6_9_3-Release" --prefix "path/to/somewhere/deployed"
 ```
+> [!IMPORTANT]
+> operation system version is important
+> e.g you are building project over Ubuntu 24.0 so only users can run your app who has Ubuntu 24+ it means Ubuntu 20.0 will get weird errors such as LibGLX and opengl and .. not found.
 
 ---
 
