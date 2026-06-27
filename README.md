@@ -31,11 +31,13 @@ or browse
 
 ### 🖥️ Platforms
 
-| Platform | Status |
-|-----------|--------|
-| 🪟 Windows | ✅ |
-| 🐧 Linux | 🚧 |
-| 🤖 Android | 🚧 |
+| Platform | Status | Stage | Version |
+|-----------|--------|--------|--------|
+| 🪟 Windows | ✅ | Testing | v0.12.0 |
+| 🐧 Linux | ✅ | Testing | v0.12.0 |
+| 🤖 Android | 🚧 | 🚧 | ? |
+| 🍎 macOS | 🚧 | 🚧 | ? | 
+| 📱 iOS | 🚧 | 🚧 | ? |
 
 </td>
 </tr>
