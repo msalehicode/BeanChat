@@ -12,23 +12,38 @@ set(APP_ApplicationName "appBeanChat")
 find_package(Qt6 REQUIRED COMPONENTS Core Quick Multimedia Network Sql)
 
 # hotkey
-find_package(QHotkey REQUIRED)
+if(UNIX AND NOT APPLE)
+    find_package(QHotkey REQUIRED)
+elseif(WIN32)
+    add_subdirectory(QHotkey)
+endif()
 
 # opus
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(OPUS REQUIRED opus)
+if(UNIX AND NOT APPLE)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(OPUS REQUIRED opus)
+elseif(WIN32)
+    list(APPEND CMAKE_PREFIX_PATH "C:/Libraries/opus")
+    find_package(Opus CONFIG REQUIRED)
+endif()
+
 
 # rnnoise
-pkg_check_modules(RNNOISE REQUIRED IMPORTED_TARGET rnnoise)
+if(UNIX AND NOT APPLE)
+    pkg_check_modules(RNNOISE REQUIRED IMPORTED_TARGET rnnoise)
+endif()
 
 
 # ffmpeg
-pkg_check_modules(FFMPEG REQUIRED
-    libavcodec
-    libavformat
-    libavutil
-    libswscale
-)
+if(UNIX AND NOT APPLE)
+    pkg_check_modules(FFMPEG REQUIRED
+       libavcodec
+       libavformat
+       libavutil
+       libswscale
+    )
+endif()
+
 
 
 qt_standard_project_setup(REQUIRES 6.8)
@@ -161,15 +176,37 @@ target_include_directories(appBeanChat PRIVATE ${CMAKE_SOURCE_DIR}/../BeanChatSe
 
 
 # Opus
-target_include_directories(appBeanChat PRIVATE ${OPUS_INCLUDE_DIRS})
-target_link_libraries(appBeanChat PRIVATE ${OPUS_LIBRARIES})
+if(UNIX AND NOT APPLE)
+    target_include_directories(appBeanChat PRIVATE ${OPUS_INCLUDE_DIRS})
+    target_link_libraries(appBeanChat PRIVATE ${OPUS_LIBRARIES})
+elseif(WIN32)
+    target_link_libraries(appBeanChat PRIVATE Opus::opus)
+endif()
+
 
 # ffmpeg
-target_include_directories(appBeanChat PRIVATE ${FFMPEG_INCLUDE_DIRS})
-target_link_libraries(appBeanChat PRIVATE ${FFMPEG_LIBRARIES})
+if(UNIX AND NOT APPLE)
+    target_include_directories(appBeanChat PRIVATE ${FFMPEG_INCLUDE_DIRS})
+    target_link_libraries(appBeanChat PRIVATE ${FFMPEG_LIBRARIES})
+elseif(WIN32)
+    target_include_directories(appBeanChat PRIVATE C:/Libraries/ffmpeg/include)
+    target_link_directories(appBeanChat PRIVATE C:/Libraries/ffmpeg/lib)
+    target_link_libraries(appBeanChat PRIVATE
+        avcodec
+        avformat
+        avutil
+        swresample
+        swscale
+    )
+endif()
 
 # rnnoise
-target_link_libraries(appBeanChat PRIVATE PkgConfig::RNNOISE)
+if(UNIX AND NOT APPLE)
+    target_link_libraries(appBeanChat PRIVATE PkgConfig::RNNOISE)
+elseif(WIN32)
+    target_include_directories(appBeanChat PRIVATE C:/Libraries/rnnoise/include)
+    target_link_libraries(appBeanChat PRIVATE C:/Libraries/rnnoise/lib/librnnoise.a)
+endif()
 
 # hotkey
 target_link_libraries(appBeanChat PRIVATE
@@ -196,40 +233,42 @@ target_compile_definitions(appBeanChat PRIVATE
     MIC_DEFAULT_RNNOISE_VALUE=0.0
     MIC_DEFUALT_DEVICE_INDEX=0
 
-        # qsettings group and keys , also these values are inside ui/settingPages/AudioInputPage.qml too
-        MIC_SETTING_DEVICE="AudioInput/Device"
-        MIC_SETTING_RNN_STATUS="AudioInput/NoiseSuppression"
-        MIC_SETTING_RNN_VALUE="AudioInput/NoiseSuppressionValue"
-        MIC_SETTING_VOLUMEGATE="AudioInput/VolumeGate"
-        MIC_SETTING_VOLUMEGATE_THRESHOLD="AudioInput/VolumeGateThreshold"
-        MIC_SETTING_PTT_STATUS="AudioInput/PushToTalk"
-        MIC_SETTING_PTT_HOTKEY="AudioInput/PushToTalkHotkey"
+    # qsettings group and keys , also these values are inside ui/settingPages/AudioInputPage.qml too
+    MIC_SETTING_DEVICE="AudioInput/Device"
+    MIC_SETTING_RNN_STATUS="AudioInput/NoiseSuppression"
+    MIC_SETTING_RNN_VALUE="AudioInput/NoiseSuppressionValue"
+    MIC_SETTING_VOLUMEGATE="AudioInput/VolumeGate"
+    MIC_SETTING_VOLUMEGATE_THRESHOLD="AudioInput/VolumeGateThreshold"
+    MIC_SETTING_PTT_STATUS="AudioInput/PushToTalk"
+    MIC_SETTING_PTT_HOTKEY="AudioInput/PushToTalkHotkey"
 
     #audio output default config
     SPEAKER_DEFAULT_DEVICE_INDEX=0
     SPEAKER_DEFAULT_EFFECTS_VOLUME=1.0
 
-        # qsettings group and keys , also these values are inside ui/settingPages/AudioOutputPage.qml too
-        SPEAKER_SETTING_DEVICE="AudioOutput/Device"
-        SPEAKER_SETTING_EFFECTS_VOLUME="AudioOutput/EffectsVolume"
+    # qsettings group and keys , also these values are inside ui/settingPages/AudioOutputPage.qml too
+    SPEAKER_SETTING_DEVICE="AudioOutput/Device"
+    SPEAKER_SETTING_EFFECTS_VOLUME="AudioOutput/EffectsVolume"
 
 
     #camera input default config
     CAMERA_DEFAULT_DEVICE_INDEX=0
 
-        # qsettings group and keys , also these values are inside ui/settingPages/CameraInputPage.qml too
-        CAMERA_SETTING_DEVICE="CameraInput/Device"
+    # qsettings group and keys , also these values are inside ui/settingPages/CameraInputPage.qml too
+    CAMERA_SETTING_DEVICE="CameraInput/Device"
 )
 
 
 
 
 # debug tool to get sigfault infos.
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 target_compile_options(appBeanChat PRIVATE
-    -fsanitize=address
-    -g)
+   -fsanitize=address
+   -g)
 target_link_options(appBeanChat PRIVATE
-    -fsanitize=address)
+   -fsanitize=address)
+endif()
 
 
 target_link_libraries(appBeanChat
@@ -246,6 +285,40 @@ install(TARGETS appBeanChat
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+
+
+
+#copy thridparty libraries for release windows
+if(WIN32)
+    add_custom_command(TARGET appBeanChat POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "C:/Libraries/ffmpeg/bin/avcodec-62.dll"
+        "$<TARGET_FILE_DIR:appBeanChat>"
+
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "C:/Libraries/ffmpeg/bin/avformat-62.dll"
+        "$<TARGET_FILE_DIR:appBeanChat>"
+
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "C:/Libraries/ffmpeg/bin/avutil-60.dll"
+        "$<TARGET_FILE_DIR:appBeanChat>"
+
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "C:/Libraries/ffmpeg/bin/swresample-6.dll"
+        "$<TARGET_FILE_DIR:appBeanChat>"
+
+
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "C:/Libraries/ffmpeg/bin/swscale-9.dll"
+        "$<TARGET_FILE_DIR:appBeanChat>"
+
+
+        #noise
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "C:/Libraries/rnnoise/bin/librnnoise-0.dll"
+        "$<TARGET_FILE_DIR:appBeanChat>"
+    )
+endif()
 
 
 
