@@ -80,6 +80,12 @@ https://github.com/user-attachments/assets/e15b8c5a-4412-4311-97cc-68b4200d40c1
 
 # 🛠 Building
 
+
+> [!IMPORTANT]
+> Install the required dependencies before building.
+
+## Windows
+
 > [!TIP]
 > Building on **Windows**?
 >
@@ -87,8 +93,12 @@ https://github.com/user-attachments/assets/e15b8c5a-4412-4311-97cc-68b4200d40c1
 
 ## Linux
 
-> [!IMPORTANT]
-> Install the required dependencies before building.
+> [!TIP]
+> Building on **Ubuntu**?
+>
+> See gist [How Deploy Qt/QML For Ubuntu](https://gist.github.com/msalehicode/c285afa2ce87536db6492b301e9f4f18) to understand how deploy for Ubuntu
+
+Or follow blow instructions to install requirements on Linux:
 
 ### 1. RNNoise
 
@@ -136,9 +146,6 @@ build Release then run
 ```bash
 cmake --install "path/to/build/Desktop_Qt_6_9_3-Release" --prefix "path/to/somewhere/deployed"
 ```
-> [!IMPORTANT]
-> operation system version is important
-> e.g you are building project over Ubuntu 24.0 so only users can run your app who has Ubuntu 24+ it means Ubuntu 20.0 will get weird errors such as LibGLX and opengl and .. not found.
 
 ---
 
