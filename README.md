@@ -19,11 +19,11 @@ A modern voice, video and text chat application built with **Qt 6.9 (QML/C++)**.
 
 Download the latest version from GitHub.
 
-**[⬇️ Download Latest](https://github.com/USERNAME/BeanChat/releases/latest)**
+**[⬇️ Download Latest](https://github.com/msalehicode/BeanChat/releases/latest)**
 
 or browse
 
-**[📚 All Releases](https://github.com/USERNAME/BeanChat/releases)**
+**[📚 All Releases](https://github.com/msalehicode/BeanChat/releases)**
 
 </td>
 
@@ -33,11 +33,12 @@ or browse
 
 | Platform | Status | Stage | Version |
 |-----------|--------|--------|--------|
-| 🪟 Windows | ✅ | Testing | v0.12.0 |
-| 🐧 Linux | ✅ | Testing | v0.12.0 |
-| 🤖 Android | 🚧 | 🚧 | ? |
-| 🍎 macOS | 🚧 | 🚧 | ? | 
-| 📱 iOS | 🚧 | 🚧 | ? |
+| 🌐 Server | ✅ | Debug | ? |
+| 🪟 Windows Client | ✅ | Release | v0.12.0 |
+| 🐧 Linux Client | ✅ | Debug | v0.12.0 |
+| 🤖 Android Client | 🚧 | 🚧 | ? |
+| 🍎 macOS Client | 🚧 | 🚧 | ? | 
+| 📱 iOS Client | 🚧 | 🚧 | ? |
 
 </td>
 </tr>
