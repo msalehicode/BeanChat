@@ -77,9 +77,10 @@ int main(int argc, char *argv[])
     //---------- camera connection ----------
     QObject::connect(
         &cam,
-        &CameraCapture::jpegReady,
+        &CameraCapture::videoPacketReady,
         &usr,
         &User::sendVideoFrame);
+
 
     //just make fake camera feed for test due to camera can use only once
     // QTimer timer;

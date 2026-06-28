@@ -25,6 +25,23 @@ CameraCapture::CameraCapture(QObject *parent)
                     setCurrentCameraInput(0);
                 }
             });
+
+
+    connect(
+        &m_encoder,
+        &FFmpegEncoder::packetReady,
+        this,
+        [this](const QByteArray &packet, bool keyFrame)
+        {
+            qDebug()
+            << "Encoded packet:"
+            << packet.size()
+            << "Key:"
+            << keyFrame;
+
+            emit videoPacketReady(packet);
+
+        });
 }
 
 void CameraCapture::start()
@@ -96,19 +113,20 @@ void CameraCapture::start()
             QImage img = frame.toImage();
 
 
+
             if (!img.isNull())
             {
-                QByteArray jpgData;
 
-                QBuffer buffer(&jpgData);
-                buffer.open(QIODevice::WriteOnly);
+                //fps limit
+                // static int counter = 0;
+                // counter++;
+                // Send only one frame out of every 30
+                // if (counter % 30 != 0)
+                //     return;
 
-                img.save(
-                    &buffer,
-                    "JPG",
-                    60);
+                qDebug() << "Cameraa frame:" << img.size();
 
-                emit jpegReady(jpgData);
+                m_encoder.encode(img);
 
 #ifdef D_PRINT_CAMERA_INFO
                 qDebug()
@@ -148,6 +166,16 @@ void CameraCapture::start()
 
     session.setCamera(camera);
     session.setVideoSink(sink);
+
+
+    m_encoder.open(
+        640, //width
+        480, //height
+        15, //fps
+        50000, //bitrate -> 100000 / 8 = 12500 bytes/sec ≈ 12.5 KB/sec
+        15);  // keyframe every 15 frames (1 second)
+
+
 
     camera->start();
 

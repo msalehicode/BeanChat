@@ -21,6 +21,30 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
     }
 
 
+    //video decoder
+    m_videoDecoder.open();
+    connect(
+        &m_videoDecoder,
+        &FFmpegDecoder::imageReady,
+        this,
+        [this](const QImage &image)
+        {
+            Participant *sender =
+                m_currentChannelParticipant->findUser(m_lastVideoSender);
+
+            if(!sender)
+                return;
+
+            VideoSink *sink = sender->videoSink();
+
+            if(!sink)
+                return;
+
+            sender->setIsCameraOpen(true);
+
+            sink->setImage(image);
+        });
+
     initOrLoadSettings();
 
 
@@ -999,28 +1023,8 @@ void User::onUdpReadyRead()
             }
 
             //decode.
-            QImage image;
-
-            if(!image.loadFromData(
-                    packet.videoData,
-                    "JPG"))
-            {
-                qDebug() << "Failed to decode jpeg";
-                continue;
-            }
-
-            VideoSink* senderSink = senderParticipant->videoSink();
-            if(senderSink)
-            {
-                senderParticipant->setIsCameraOpen(true);
-                senderSink->setImage(image);
-                // qDebug() << "image set fine to sender's sink..";
-            }
-            else
-            {
-                qDebug() << "fialed to load sender sink.";
-                continue;
-            }
+            m_lastVideoSender = packet.senderId;
+            m_videoDecoder.decode(packet.videoData);
 
             // emit videoReceived(packet.videoData);
             break;
@@ -1059,8 +1063,10 @@ void User::onUdpReadyRead()
     }
 }
 
-void User::sendVideoFrame(const QByteArray &jpegData)
+void User::sendVideoFrame(const QByteArray &videoData)
 {
+    qDebug() << "sendVideoFrame:" << videoData.size();
+
     if(!isConnectedToServer())
         return;
 
@@ -1076,7 +1082,7 @@ void User::sendVideoFrame(const QByteArray &jpegData)
 
     videoPacket.sequence = ++m_videoSequence;
 
-    videoPacket.videoData = jpegData;
+    videoPacket.videoData = videoData;
 
     QByteArray data;
 
@@ -1087,12 +1093,27 @@ void User::sendVideoFrame(const QByteArray &jpegData)
     out << quint16(102);
     out << videoPacket;
 
-    // qDebug() << "Sending Video JPEG bytes:" << jpegData.size();
+    qDebug() << "Sending Video JPEG bytes:" << videoData.size();
+    qDebug() << "Video UDP datagram bytes:" << data.size();
 
-    m_udpSocket.writeDatagram(
+    qDebug()
+        << "VIDEO DEST:"
+        << QHostAddress(m_serverIp)
+        << m_serverPort + 1;
+
+    qint64 sent = m_udpSocket.writeDatagram(
         data,
         QHostAddress(m_serverIp),
         m_serverPort+1);
+
+    qDebug() << "writeDatagram returned:" << sent;
+
+    if (sent == -1)
+    {
+        qDebug() << "Error:"
+                 << m_udpSocket.error()
+                 << m_udpSocket.errorString();
+    }
 }
 
 

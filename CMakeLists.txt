@@ -127,6 +127,8 @@ qt_add_qml_module(appBeanChat
 
         # encode decode
         opuscodec.h opuscodec.cpp
+        ffmpegencoder.h ffmpegencoder.cpp
+        ffmpegdecoder.h ffmpegdecoder.cpp
 
     # icons
     RESOURCES

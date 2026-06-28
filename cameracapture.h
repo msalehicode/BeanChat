@@ -12,6 +12,8 @@
 #include <QByteArray>
 #include <QElapsedTimer>
 
+#include "ffmpegencoder.h"
+
 class CameraCapture : public QObject
 {
     Q_OBJECT
@@ -37,7 +39,8 @@ signals:
     void frameChanged();
     void frameReady(const QVideoFrame &frame);
     void imageReady(const QImage &image);
-    void jpegReady(const QByteArray& jpegData); //send to socket
+
+    void videoPacketReady(const QByteArray &packet);
 
     void cameraInputsChanged();
 
@@ -49,6 +52,8 @@ private:
     QVideoSink *sink = nullptr;
 
     QImage m_frame;
+
+    FFmpegEncoder m_encoder;
 
     int m_currentCameraInput=0; //hold selected input / current
 

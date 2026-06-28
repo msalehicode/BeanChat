@@ -38,6 +38,7 @@
 #include "soundmanager.h"
 #include "database.h"
 #include "opuscodec.h"
+#include "ffmpegdecoder.h"
 
 class User : public QObject
 {
@@ -153,7 +154,7 @@ public slots:
     void onSocketError(QAbstractSocket::SocketError error);
 
     void onUdpReadyRead();
-    void sendVideoFrame(const QByteArray& jpegData);
+    void sendVideoFrame(const QByteArray& videoData);
 
 private:
     QString platformName();
@@ -209,6 +210,8 @@ private:
     quint32 m_videoSequence = 0;
     CameraCapture* m_cam=nullptr;
     bool m_isCameraOpen=false;
+    FFmpegDecoder m_videoDecoder;
+    quint64 m_lastVideoSender = 0;
 
     //speaker
     AudioSpeaker* m_speaker=nullptr;
