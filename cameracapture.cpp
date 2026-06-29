@@ -1,7 +1,5 @@
 #include "cameracapture.h"
 
-// #define D_PRINT_CAMERA_INFO
-
 CameraCapture::CameraCapture(QObject *parent)
     : QObject(parent)
 {
@@ -13,6 +11,7 @@ CameraCapture::CameraCapture(QObject *parent)
     //connect for later changes
     QObject::connect(&m_cameraDevices, &QMediaDevices::videoInputsChanged, this, [this]()
             {
+
                 qDebug() << "Camera hardware change detected!";
 
                 // 1. Refresh your local list
@@ -33,12 +32,14 @@ CameraCapture::CameraCapture(QObject *parent)
         this,
         [this](const QByteArray &packet, bool keyFrame)
         {
+
+#if D_PRINT_CAMERA_INFO
             qDebug()
             << "Encoded packet:"
             << packet.size()
             << "Key:"
             << keyFrame;
-
+#endif
             emit videoPacketReady(packet);
 
         });
@@ -64,7 +65,7 @@ void CameraCapture::start()
     camera = new QCamera(m_cameraInputs[m_currentCameraInput], this);
 
 
-#ifdef D_PRINT_CAMERA_INFO
+#if D_PRINT_CAMERA_INFO
     //test performace
     auto formats = m_cameraInputs[m_currentCameraInput].videoFormats();
     for(const auto &fmt : formats)
@@ -92,7 +93,7 @@ void CameraCapture::start()
                 return;
 
 
-#ifdef D_PRINT_CAMERA_INFO
+#if D_PRINT_CAMERA_INFO
             //test2 performace
             static QElapsedTimer timer;
             static int count = 0;
@@ -128,15 +129,13 @@ void CameraCapture::start()
 
                 m_encoder.encode(img);
 
-#ifdef D_PRINT_CAMERA_INFO
+#if D_PRINT_CAMERA_INFO
                 qDebug()
                     << "Resolution JPEG:"
                     << img.width()
                     << "x"
-                    << img.height()
-                    << "JPEG size:"
-                    << jpgData.size()/1024.0
-                    << "KB";
+                    << img.height();
+                    // << "JPEG size:" << jpgData.size()/1024.0<< "KB";
 #endif
 
                 m_frame = img;
@@ -144,7 +143,7 @@ void CameraCapture::start()
                 emit frameChanged();
                 emit imageReady(img);
 
-#ifdef D_PRINT_CAMERA_INFO
+#if D_PRINT_CAMERA_INFO
                 static int count = 0;
                 count++;
 
@@ -169,17 +168,17 @@ void CameraCapture::start()
 
 
     m_encoder.open(
-        640, //width
-        480, //height
-        15, //fps
-        50000, //bitrate -> 100000 / 8 = 12500 bytes/sec ≈ 12.5 KB/sec
-        15);  // keyframe every 15 frames (1 second)
+        CAMERA_DEFAuLT_WIDTH,
+        CAMERA_DEFAULT_HEIGHT,
+        CAMERA_DEFAULT_FPS,
+        CAMERA_DEFAULT_BITRATE,
+        CAMERA_DEFAULT_KEYFRAME);
 
 
 
     camera->start();
 
-#ifdef D_PRINT_CAMERA_INFO
+#if D_PRINT_CAMERA_INFO
     qDebug()
         << "Camera format:"
         << camera->cameraFormat().resolution();

@@ -11,7 +11,7 @@ ChannelModel::ChannelModel(
         &QTimer::timeout,
         this,
         &ChannelModel::updateTalkingUsers);
-    m_talkingTimer.start(100);
+    m_talkingTimer.start(CHANNEL_MODEL_TALKING_TIMER_INTERAVL);
 }
 
 int ChannelModel::rowCount(
@@ -376,7 +376,7 @@ void ChannelModel::updateTalkingUsers()
 
     for(auto& user : channel->users)
     {
-        if(user.isTalking && user.lastVoicePacket.elapsed() > 100)
+        if(user.isTalking && user.lastVoicePacket.elapsed() > CHANNEL_MODEL_TALKING_TIMEOUT)
         {
             setUserTalking(user.id, false);
             // qDebug() << "not talking..";

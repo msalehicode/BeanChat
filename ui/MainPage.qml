@@ -353,4 +353,14 @@ Item {
         id:showImagePopup
     }
 
+    Connections
+    {
+        target:user
+        onIsConnectedToServerChanged:
+        {
+            //when disconnected/connected, reset right panel index to connected users.
+            rightPanel.currentTab=0
+        }
+
+    }
 }

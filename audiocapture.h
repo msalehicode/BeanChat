@@ -105,7 +105,7 @@ private:
     bool m_pushToTalkStatus=false;
     bool m_pushToTalkPressed=false; //when hotkey pressed/released this flag will turn off/on
     QHotkey* m_pushToTalkHotkey=nullptr;
-    int m_pushToTalkKey = Qt::Key_V; //to hold key
+    int m_pushToTalkKey = MIC_DEFAULT_PTT_HOTKEY; //to hold key
     int m_pushToTalkModifiers = Qt::NoModifier; //to hold combination of key like ALT+V or ..
 
     //volume gate and visual current sound of microhpone

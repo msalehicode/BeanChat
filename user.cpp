@@ -15,7 +15,9 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
 
 
 
-    if (!m_opus.initialize(48000, 1, 32000))
+    if (!m_opus.initialize(OPUS_DEFAULT_SAMPLE_RATE,
+                           OPUS_DEFAULT_CHANNELS,
+                           OPUS_DEFAULT_BITRATE))
     {
         qFatal("Failed to initialize Opus");
     }
@@ -114,7 +116,7 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
     connect(&m_udpConnectionTimeout, &QTimer::timeout,
             this, [&]()
             {
-                qDebug() << "server didn't send ping request for xSeconds so UDP connection has lost.";
+                qDebug() << "server didn't send ping request for a while, so UDP connection has lost.";
 
                 disconnect(); //make sure tcp disconnects and ui show disconnected elemnts
             });
@@ -132,9 +134,9 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
     //get system info to send to server on login stage.
     m_info.appVersion = QCoreApplication::applicationVersion();
     #ifdef QT_NO_DEBUG
-        m_info.buildType = "Release";
+        m_info.buildType = USER_BUILD_TYPE_RELEASE;
     #else
-        m_info.buildType = "Debug";
+        m_info.buildType = USER_BUILD_TYPE_DEBUG;
     #endif
     m_info.osName = platformName();
     m_info.osVersion = QSysInfo::prettyProductName();
@@ -291,7 +293,7 @@ void User::updateSavedServer(quint64 serverId, quint64 dbIndex, const QString& n
 
         //update model data.
         m_myServersModel->updateServer(serverId,name,ip,port);
-        
+
         //update servername on local variable too
         setMyServerName(name);
     }
@@ -349,6 +351,10 @@ void User::disconnect()
     m_me=nullptr;
     m_serverIp.clear();
     m_serverPort=0;
+    setConnectionStatus(UserConnectionStatus::Disconnected);
+    setMyPing(-1);
+    setMyVideoPacketLoss(0.0f);
+    setMyVoicePacketLoss(0.0f);
 
     if(!m_switchingServer) //if we are not switching reset/turn-off all server's indicator status
         m_myServersModel->resetPreviousIsActiveServer();
@@ -401,13 +407,17 @@ void User::sendVoicePcm(
 
     if(muteMicrophone() || muteHeadphone())
     {
-        // qDebug() << "mic or headphone is muted.";
+#if D_PRINT_VOICE_INFO
+        qDebug() << "mic or headphone is muted.";
+#endif
         return;
     }
 
     if(m_myId < 0)
     {
-        // qDebug() << "invalid my id.";
+#if D_PRINT_VOICE_INFO
+        qDebug() << "invalid my id.";
+#endif
         return;
     }
 
@@ -440,9 +450,11 @@ void User::sendVoicePcm(
         if (voice.audioData.isEmpty())
             continue;
 
+#if D_PRINT_VOICE_INFO
         qDebug() << "sending Opus:" << voice.audioData.size()
                  << "frame:" << frame.size()
                  << "pcm raw " << pcm.size();
+#endif
 
         QByteArray data;
 
@@ -450,13 +462,13 @@ void User::sendVoicePcm(
             &data,
             QIODevice::WriteOnly);
 
-        out << quint16(101);
+        out << PacketType::UdpVoiceData;
         out << voice;
 
         m_udpSocket.writeDatagram(
             data,
-            QHostAddress(m_serverIp),
-            m_serverPort + 1);
+            m_serverLookedupAddress,
+            m_serverPort);
 
         sentPacket = true;
     }
@@ -508,12 +520,45 @@ void User::askForServerState()
 
 void User::onTcpReadyRead()
 {
-    QByteArray data =
-        socket.readAll();
+    m_tcpBuffer += socket.readAll();
 
-    Packet packet =
-        Packet::deserialize(data);
+    while (true)
+    {
 
+        // Need at least the header
+        if (m_tcpBuffer.size() < 6)
+            return;
+
+
+        QDataStream in(m_tcpBuffer);
+
+        quint16 type;
+        quint32 payloadSize;
+
+        in >> type;
+        in >> payloadSize;
+
+        // Wait until whole packet arrives
+        if (m_tcpBuffer.size() < 6 + payloadSize)
+        {
+            qDebug() <<"TCP READ WAITING... to packet completes";
+            return;
+        }
+
+        QByteArray payload =
+            m_tcpBuffer.mid(6, payloadSize);
+
+        Packet packet;
+        packet.type = static_cast<PacketType>(type);
+        packet.payload = payload;
+
+        processPacket(packet);
+
+        m_tcpBuffer.remove(0, 6 + payloadSize);
+    }
+}
+void User::processPacket(const Packet& packet)
+{
     qInfo() << "received message: code:" << static_cast<int>(packet.type);
     switch(packet.type)
     {
@@ -766,35 +811,7 @@ void User::onTcpReadyRead()
             qDebug() << "my id is=" << myId();
 
 
-            //----------------udp voice. video login
-            UdpRegisterPacket reg;
-
-            reg.userId = static_cast<quint64>(myId());
-
-            QByteArray data;
-
-            QDataStream out(
-                &data,
-                QIODevice::WriteOnly);
-
-            //for now we dont login for UDP later need token/identity and .. for security
-            //code here
-
-            out << quint16(100); //#100 is known as register on server.
-            out << reg;
-
-
-
-            //start to expect every xSeconds ping request from server otherwise, assuming UDP connection has failed
-            m_udpConnectionTimeout.start(10000); // 10 seconds
-
-
-            m_udpSocket.writeDatagram(
-                data,
-                QHostAddress(m_serverIp),
-                m_serverPort+1);
-            qDebug() << " just sent a register udp message to server.";
-
+            loginToUdpSocket();
 
             //ask for server channels, users, ...
             askForServerState();
@@ -826,6 +843,8 @@ void User::onTcpReadyRead()
         break;
     }
 
+    case PacketType::UserConnectionLost:
+        qInfo () << "user connection lost.";
     case PacketType::UserDisconnected:
     {
         qInfo() << "user disconnected:";
@@ -931,6 +950,54 @@ void User::onTcpReadyRead()
     }
 }
 
+void User::loginToUdpSocket()
+{
+    //lookup for domain's ip, udp doesnt do this automatically. but TCP does.
+    QHostInfo info = QHostInfo::fromName(m_serverIp);
+    if (!info.addresses().isEmpty())
+        m_serverLookedupAddress = info.addresses().first();
+
+
+
+    UdpRegisterPacket reg;
+
+    reg.userId = static_cast<quint64>(myId());
+
+    QByteArray data;
+
+    QDataStream out(
+        &data,
+        QIODevice::WriteOnly);
+
+    //for now we dont login for UDP later need token/identity and .. for security
+    //code here
+
+    out << PacketType::UdpLoginRequest;
+    out << reg;
+
+
+    qDebug() << "just sent a login udp message to server.";
+    qint64 bytes = m_udpSocket.writeDatagram(
+        data,
+        m_serverLookedupAddress,
+        m_serverPort);
+
+    if (bytes == -1)
+    {
+        qDebug() << "UDP send failed:"
+                 << m_udpSocket.errorString();
+    }
+    else
+    {
+        qDebug() << "UDP sent"
+                 << bytes
+                 << "bytes to"
+                 << m_serverIp
+                 << ":"
+                 << m_serverPort;
+    }
+}
+
 void User::onDisconnected()
 {
     qDebug() << "Server disconnected";
@@ -960,9 +1027,17 @@ void User::onUdpReadyRead()
 
         in >> type;
 
-        switch(type)
+        switch(static_cast<PacketType>(type))
         {
-        case 101:  //voice
+        case PacketType::UdpLoginResponse:
+        {
+            qDebug() << "udp logged in successfully.";
+
+            //start to expect every xSeconds ping request from server otherwise, assuming UDP connection has failed
+            m_udpConnectionTimeout.start(UDP_CONNECTION_LOST_TIMER_INTERVAL); // 10 seconds
+            break;
+        }
+        case PacketType::UdpVoiceData:  //voice
         {
             VoicePacket packet;
             in >> packet;
@@ -1001,19 +1076,19 @@ void User::onUdpReadyRead()
             break;
         }
 
-        case 102: //video
+        case PacketType::UdpVideoData: //video
         {
             VideoPacket packet;
 
             in >> packet;
 
-            // qDebug()
-            //     << "Video received from "
-            //     << packet.senderId
-            //     << "seq="
-            //     << packet.sequence
-            //     << "size="
-            //     << packet.videoData.size();
+            qDebug()
+                << "Video received from "
+                << packet.senderId
+                << "seq="
+                << packet.sequence
+                << "size="
+                << packet.videoData.size();
 
             Participant* senderParticipant = m_currentChannelParticipant->findUser(packet.senderId);
             if(!senderParticipant)
@@ -1030,7 +1105,8 @@ void User::onUdpReadyRead()
             break;
         }
 
-        case 103: //ping requst from server.
+        case PacketType::UdpPingRequest: //ping requst from server.
+        {
             PingPacket p;
             in >> p;
 
@@ -1041,7 +1117,7 @@ void User::onUdpReadyRead()
 
 
             //a udp request-ping received, now reset connection timeout to later know is udp connection still alive or not
-            m_udpConnectionTimeout.start(10000);
+            m_udpConnectionTimeout.start(UDP_CONNECTION_LOST_TIMER_INTERVAL);
 
 
             //send back same sequence..
@@ -1051,21 +1127,25 @@ void User::onUdpReadyRead()
                 &data2,
                 QIODevice::WriteOnly);
 
-            out << quint16(104);//response ping
+            out << PacketType::UdpPingResponse;
             out << p;
 
             m_udpSocket.writeDatagram(
                 data2,
-                QHostAddress(m_serverIp),
-                m_serverPort+1);
+                m_serverLookedupAddress,
+                m_serverPort);
+
             break;
-        }        
+            }
+        }
     }
 }
 
 void User::sendVideoFrame(const QByteArray &videoData)
 {
+#if D_PRINT_VIDEO_INFO
     qDebug() << "sendVideoFrame:" << videoData.size();
+#endif
 
     if(!isConnectedToServer())
         return;
@@ -1090,23 +1170,25 @@ void User::sendVideoFrame(const QByteArray &videoData)
         &data,
         QIODevice::WriteOnly);
 
-    out << quint16(102);
+    out << PacketType::UdpVideoData;
     out << videoPacket;
 
+#if D_PRINT_VIDEO_INFO
     qDebug() << "Sending Video JPEG bytes:" << videoData.size();
     qDebug() << "Video UDP datagram bytes:" << data.size();
 
     qDebug()
         << "VIDEO DEST:"
-        << QHostAddress(m_serverIp)
-        << m_serverPort + 1;
+        << QHostAddress(m_serverIp) << m_serverPort;
+#endif
 
     qint64 sent = m_udpSocket.writeDatagram(
         data,
-        QHostAddress(m_serverIp),
-        m_serverPort+1);
+        m_serverLookedupAddress,
+        m_serverPort);
 
-    qDebug() << "writeDatagram returned:" << sent;
+#if D_PRINT_VIDEO_INFO
+    qDebug() << "sending video writeDatagram returned:" << sent;
 
     if (sent == -1)
     {
@@ -1114,6 +1196,7 @@ void User::sendVideoFrame(const QByteArray &videoData)
                  << m_udpSocket.error()
                  << m_udpSocket.errorString();
     }
+#endif
 }
 
 
@@ -1133,6 +1216,19 @@ QString User::platformName()
     #else
         return "Unknown";
     #endif
+}
+
+UserConnectionStatus User::connectionStatus() const
+{
+    return m_connectionStatus;
+}
+
+void User::setConnectionStatus(UserConnectionStatus newConnectionStatus)
+{
+    if (m_connectionStatus == newConnectionStatus)
+        return;
+    m_connectionStatus = newConnectionStatus;
+    emit connectionStatusChanged();
 }
 
 float User::myVideoPacketLoss() const

@@ -65,8 +65,8 @@ bool AudioSpeaker::start()
     }
 
 
-    m_format.setSampleRate(48000);
-    m_format.setChannelCount(1);
+    m_format.setSampleRate(SPEAKER_DEFAULT_SAMPLE_RATE);
+    m_format.setChannelCount(SPEAKER_DEFAULT_CHANNEL);
     m_format.setSampleFormat(QAudioFormat::Int16);
 
     if (!m_format.isValid())

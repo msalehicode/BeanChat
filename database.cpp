@@ -20,7 +20,7 @@ bool Database::open()
 
     QDir().mkpath(location);
 
-    QString dbPath = location + "/BeanChat.db";
+    QString dbPath = location + DATABASE_FILENAME;
 
     m_db = QSqlDatabase::addDatabase("QSQLITE");
     m_db.setDatabaseName(dbPath);

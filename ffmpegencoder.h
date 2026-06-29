@@ -25,9 +25,9 @@ public:
     bool open(
         int width,
         int height,
-        int fps = 30,
-        int bitrate = 500000,
-        int gopSize = 30);
+        int fps = FFMPEG_DECODER_DEFAULT_FPS,
+        int bitrate = FFMPEG_DECODER_DEFAULT_BITRATE,
+        int gopSize = FFMPEG_DECODER_DEFAULT_GOPSIZE);
 
 
 

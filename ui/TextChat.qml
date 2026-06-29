@@ -229,6 +229,13 @@ Item
                         color: "#DBDEE1"
                         text: delegatedItem.makeLinksClickable(model.textMessage)
 
+                        //make sure show end of long messages
+                        onContentHeightChanged:
+                        {
+                            if (chatView.atYEnd)
+                                Qt.callLater(chatView.positionViewAtEnd)
+                        }
+
                         cursorDelegate: null
 
                         MouseArea
@@ -416,6 +423,21 @@ Item
                 }
             }
         }
+    }
+
+    Connections
+    {
+        target: user
+
+        function scrollToBottom()
+        {
+            Qt.callLater(function() {
+                chatView.positionViewAtEnd()
+            })
+        }
+
+        onNewMessage: scrollToBottom()
+        onMessageSent: scrollToBottom()
     }
 
 }

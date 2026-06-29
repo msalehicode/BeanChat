@@ -14,9 +14,9 @@ public:
     ~OpusCodec();
 
     bool initialize(
-        int sampleRate = 48000,
-        int channels = 1,
-        int bitrate = 32000);
+        int sampleRate = OPUS_DEFAULT_SAMPLE_RATE,
+        int channels = OPUS_DEFAULT_CHANNELS,
+        int bitrate = OPUS_DEFAULT_BITRATE);
 
     void shutdown();
 
@@ -37,11 +37,11 @@ private:
     OpusEncoder *m_encoder = nullptr;
     OpusDecoder *m_decoder = nullptr;
 
-    int m_sampleRate = 48000;
-    int m_channels = 1;
+    int m_sampleRate = OPUS_DEFAULT_SAMPLE_RATE;
+    int m_channels = OPUS_DEFAULT_CHANNELS;
 
     // 20 ms @ 48kHz
-    int m_frameSize = 960;
+    int m_frameSize = OPUS_DEFAULT_FRAMESIZE;
 
-    int m_bitrate = 32000;
+    int m_bitrate = OPUS_DEFAULT_BITRATE;
 };

@@ -34,7 +34,7 @@ private:
         int cooldownMs);
 
 private:
-    float m_volume=1.0;
+    float m_volume=USER_DEFAULT_SOUNDEFFECTS_VOLUME;
     QSoundEffect m_message;
     QSoundEffect m_userJoin;
     QSoundEffect m_userLeave;

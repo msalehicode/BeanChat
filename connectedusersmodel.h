@@ -7,6 +7,7 @@
 enum class UserActivityStatus
 {
     Unknown=0,
+    Offline,
     Online,
     Idle
 };

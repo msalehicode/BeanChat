@@ -1,13 +1,10 @@
 #include "myvideoitem.h"
 
 
-
-// #define D_PRINT_MYVIDEOITEM_INFO
-
 MyVideoItem::MyVideoItem()
 {
     setFlag(ItemHasContents, true);
-#ifdef D_PRINT_MYVIDEOITEM_INFO
+#if D_PRINT_MYVIDEOITEM_INFO
     qDebug()
         << "MyVideoItem thread"
         << thread();
@@ -16,14 +13,14 @@ MyVideoItem::MyVideoItem()
 
 void MyVideoItem::releaseResources()
 {
-#ifdef D_PRINT_MYVIDEOITEM_INFO
+#if D_PRINT_MYVIDEOITEM_INFO
     qDebug() << "releaseResources";
 #endif
 }
 
 MyVideoItem::~MyVideoItem()
 {
-#ifdef D_PRINT_MYVIDEOITEM_INFO
+#if D_PRINT_MYVIDEOITEM_INFO
     qDebug() << "~MyVideoItem" << this;
 #endif
 }
@@ -72,7 +69,7 @@ QSGNode *MyVideoItem::updatePaintNode(
     UpdatePaintNodeData *)
 {
 
-#ifdef D_PRINT_MYVIDEOITEM_INFO
+#if D_PRINT_MYVIDEOITEM_INFO
     qDebug()
     << "paint thread"
     << QThread::currentThread();
@@ -97,7 +94,7 @@ QSGNode *MyVideoItem::updatePaintNode(
 
     QImage img = m_sink->image();
 
-#ifdef D_PRINT_MYVIDEOITEM_INFO
+#if D_PRINT_MYVIDEOITEM_INFO
     qDebug() << "videoItem image:"
         << img.size()
         << img.format()

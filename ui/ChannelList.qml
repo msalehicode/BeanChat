@@ -308,7 +308,7 @@ Item
                     {
                         visible: parent.infoVisible
 
-                        width: 160
+                        width: 170
                         height: 100
 
                         radius: 8
@@ -368,13 +368,13 @@ Item
 
                             Text
                             {
-                                text: "Voice Packet Loss: " + user.myVoicePacketLoss + "%"
+                                text: "Voice Packet Loss: " + Number(user.myVoicePacketLoss).toFixed(2) + "%"
                                 color: "#b5bac1"
                             }
 
                             Text
                             {
-                                text: "Video Packet Loss: " + user.myVideoPacketLoss + "%"
+                                text: "Video Packet Loss: " + Number(user.myVideoPacketLoss).toFixed(2) + "%"
                                 color: "#b5bac1"
                             }
                         }

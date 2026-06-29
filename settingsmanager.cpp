@@ -2,7 +2,7 @@
 
 SettingsManager::SettingsManager(QObject *parent)
     : QObject(parent),
-    m_settings("BeanChat", "BeanChat")
+    m_settings(APP_ORGANIZATION, APP_NAME)
 {
 }
 

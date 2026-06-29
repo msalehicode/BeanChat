@@ -4,8 +4,6 @@
 #include <QVideoFrame>
 #include <QMutex>
 
-// #define D_PRINT_VIDEOSINK_INFO
-
 class VideoSink : public QObject
 {
     Q_OBJECT
@@ -14,7 +12,7 @@ public:
     explicit VideoSink(QObject *parent = nullptr)
         : QObject(parent)
     {
-#ifdef D_PRINT_VIDEOSINK_INFO
+#if D_PRINT_VIDEOSINK_INFO
         qDebug()
         << "VideoSink thread"
         << thread();
@@ -24,7 +22,7 @@ public:
     {
         QMutexLocker locker(&m_mutex);
 
-#ifdef D_PRINT_VIDEOSINK_INFO
+#if D_PRINT_VIDEOSINK_INFO
         qDebug() << "returning frame"
                  << m_frame.isValid();
 #endif
@@ -43,7 +41,7 @@ public slots:
     {
         QMutexLocker locker(&m_mutex);
 
-#ifdef D_PRINT_VIDEOSINK_INFO
+#if D_PRINT_VIDEOSINK_INFO
         qDebug() << "setFrame"
                  << frame.isValid();
 #endif
@@ -54,7 +52,7 @@ public slots:
     }
     void setImage(const QImage &image)
     {
-#ifdef D_PRINT_VIDEOSINK_INFO
+#if D_PRINT_VIDEOSINK_INFO
         qDebug() << "setImage: "
         << image.size()
         << image.format()

@@ -10,7 +10,7 @@
 #include <QRandomGenerator> //to get a random number for default username
 #include <QSysInfo>
 #include <QTimer>
-
+#include <QHostInfo>
 
 // include from BeanChatServer to server and client speak one language and undrestand packets
 #include "network/packet.h"
@@ -39,6 +39,18 @@
 #include "database.h"
 #include "opuscodec.h"
 #include "ffmpegdecoder.h"
+
+
+enum class UserConnectionStatus
+{
+    Unknown,
+    Connecting,
+    Connected,
+    ConnectionLost,
+    Rejected,
+    Error,
+    Disconnected
+};
 
 class User : public QObject
 {
@@ -109,6 +121,9 @@ public:
 
     void initOrLoadSettings();
     QString myAppVersion() const;
+    UserConnectionStatus connectionStatus() const;
+    void setConnectionStatus(UserConnectionStatus newConnectionStatus);
+
 signals:
 
     void myIdChanged();
@@ -148,6 +163,8 @@ signals:
 
     void myVideoPacketLossChanged();
 
+    void connectionStatusChanged();
+
 public slots:
     void onTcpReadyRead();
     void onDisconnected();
@@ -158,6 +175,8 @@ public slots:
 
 private:
     QString platformName();
+    void processPacket(const Packet& packet);
+    void loginToUdpSocket();
 
     Database m_database;
     SoundManager* m_soundManager;
@@ -165,8 +184,8 @@ private:
     OpusCodec m_opus;
 
     //user can modify
-    QString m_myUsername = "";
-    QString m_myIdentity = "identity";
+    QString m_myUsername = USER_DEFAULT_USERNAME;
+    QString m_myIdentity = USER_DEFAULT_IDENTITY;
 
 
     //user cant modify, would receive from target server
@@ -176,20 +195,23 @@ private:
     QString m_myServerName= ""; //current server connected to
     UserModel m_info; //to store system info such as appVersio and ..
     Participant* m_me=nullptr; //hold this user info and update it when channel switched, to connect with cameraCapture and show images as local preview
+    UserConnectionStatus m_connectionStatus=UserConnectionStatus::Unknown;
 
+    //connect and switch servers.
     bool m_isConnectedToServer=false;
     bool m_switchingServer = false;
 
     //TCP connection
     QTcpSocket socket;
     int m_myPing=-1;
+    QByteArray m_tcpBuffer;
 
     //UDP connection
     QUdpSocket m_udpSocket;
     float m_myVoicePacketLoss=0.0f;
     float m_myVideoPacketLoss=0.0f;
     QTimer m_udpConnectionTimeout;
-
+    QHostAddress m_serverLookedupAddress; //when user enter domain.com, TCP would lookup automatically but UDP doesnt lookup, so at begin of connection we resolve/lookup that domain's ip store here and use it for udp send packets.
 
     //chat notification
     bool m_isChatOpen=false;//a flag to know is chatTab is active or not
@@ -197,8 +219,8 @@ private:
 
 
     //to hold ip and ports for different parts of app such as sendVoice, sendVideo
-    QString m_serverIp = "10.89.46.137";
-    quint64 m_serverPort=9987; //udp port is this value+1
+    QString m_serverIp = USER_DEFAULT_SERVER_IP;
+    quint64 m_serverPort= USER_DEFAULT_SERVER_PORT; //udp port is this value+1
 
     //voice
     quint32 m_sequence = 0;
@@ -211,7 +233,7 @@ private:
     CameraCapture* m_cam=nullptr;
     bool m_isCameraOpen=false;
     FFmpegDecoder m_videoDecoder;
-    quint64 m_lastVideoSender = 0;
+    quint64 m_lastVideoSender = 0; //temporary, need to be REPLACED --------------
 
     //speaker
     AudioSpeaker* m_speaker=nullptr;
@@ -240,6 +262,7 @@ private:
     Q_PROPERTY(float myVoicePacketLoss READ myVoicePacketLoss WRITE setMyVoicePacketLoss NOTIFY myVoicePacketLossChanged FINAL)
     Q_PROPERTY(float myVideoPacketLoss READ myVideoPacketLoss WRITE setMyVideoPacketLoss NOTIFY myVideoPacketLossChanged FINAL)
     Q_PROPERTY(QString myAppVersion READ myAppVersion)
+    Q_PROPERTY(UserConnectionStatus connectionStatus READ connectionStatus WRITE setConnectionStatus NOTIFY connectionStatusChanged FINAL)
 };
 
 #endif // USER_H

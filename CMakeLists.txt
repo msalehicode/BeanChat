@@ -152,7 +152,7 @@ qt_add_qml_module(appBeanChat
 
     # from Server. later move these into a library
     SOURCES
-        ../BeanChatServer/src/network/packet.h ../BeanChatServer/src/network/packet.cpp
+        ../BeanChatServer/src/network/packet.h
         ../BeanChatServer/src/network/packets.h
         ../BeanChatServer/src/network/packethelpers.h
 
@@ -223,7 +223,63 @@ target_compile_definitions(appBeanChat PRIVATE
     APP_NAME="${APP_ApplicationName}"
 )
 
-# app default configs
+
+target_compile_definitions(appBeanChat PRIVATE
+
+    #user configs
+    USER_DEFAULT_SOUNDEFFECTS_VOLUME=1.0
+    USER_DEFAULT_USERNAME="beanChatUser"
+    USER_DEFAULT_IDENTITY="beanChatIdentity"
+    USER_DEFAULT_SERVER_IP="localhost"
+    USER_DEFAULT_SERVER_PORT=9987
+    USER_DEFAULT_SERVER_PORT_STR="9987" #this also hardcoded in QML's add server popup
+    USER_BUILD_TYPE_DEBUG="Beta"
+    USER_BUILD_TYPE_RELEASE="Alpha"
+
+    #timers
+    CHANNEL_MODEL_TALKING_TIMER_INTERAVL=100 #check last time of user talk time then update their isTalking status
+    CHANNEL_MODEL_TALKING_TIMEOUT=100 #If no voice packet has been received for more than 100 milliseconds, consider the user no longer talking
+    UDP_CONNECTION_LOST_TIMER_INTERVAL=10000 #10s, when udp conneted would start this and on each udp request-ping received from server, reset connection timeout to later know is udp connection still alive or not
+
+    #files
+    DATABASE_FILENAME="/BeanChat.db"
+
+    #debug prints
+    D_PRINT_VIDEOSINK_INFO=false
+    D_PRINT_CAMERA_INFO=false
+    D_PRINT_MYVIDEOITEM_INFO=false
+    D_PRINT_VOICE_INFO=false
+    D_PRINT_VIDEO_INFO=false
+
+    # opus
+    OPUS_DEFAULT_SAMPLE_RATE=48000
+    OPUS_DEFAULT_CHANNELS=1
+    OPUS_DEFAULT_BITRATE=32000
+    OPUS_DEFAULT_FRAMESIZE=960
+
+    #speaker
+    SPEAKER_DEFAULT_SAMPLE_RATE=48000
+    SPEAKER_DEFAULT_CHANNEL=1
+
+    # ffmpeg
+    FFMPEG_DECODER_DEFAULT_FPS=30
+    FFMPEG_DECODER_DEFAULT_BITRATE=500000
+    FFMPEG_DECODER_DEFAULT_GOPSIZE=30
+
+
+
+    # camera
+    CAMERA_DEFAuLT_WIDTH=640
+    CAMERA_DEFAULT_HEIGHT=480
+    CAMERA_DEFAULT_FPS=15
+    CAMERA_DEFAULT_BITRATE=50000 #bitrate -> 100000 / 8 = 12500 bytes/sec ≈ 12.5 KB/sec
+    CAMERA_DEFAULT_KEYFRAME=15 #keyframe every 15 frames (1 second)
+
+)
+
+
+
+# app default configs for devices such as mic,camera,speaker
 target_compile_definitions(appBeanChat PRIVATE
 
     #audio input default config

@@ -17,7 +17,7 @@ struct ServerInfo
     bool isActive=false;
     QString name;
     QString ip;
-    QString port="9987";
+    QString port=USER_DEFAULT_SERVER_PORT_STR;
     ServerStatus status=ServerStatus::Normal;
 };
 
