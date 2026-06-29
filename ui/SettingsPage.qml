@@ -12,6 +12,7 @@ Page
     Material.accent: "#5865F2"
 
     property int currentPage: 0
+    property bool weOpenedMic:false;
 
     background: Rectangle
     {
@@ -211,6 +212,23 @@ Page
                 }
             }
         }
+    }
+
+
+    Component.onCompleted:
+    {
+        //check if mic is open (because of microhpone test/capture we need to know if mic is not open open it)
+        if(!microphone.started())
+        {
+            //start mic
+            microphone.start() //to capture and show received sound from microphone for audio level visual
+            weOpenedMic=true
+        }
+    }
+    Component.onDestruction:
+    {
+        if(root.weOpenedMic)
+            microphone.stop()
     }
 
 }

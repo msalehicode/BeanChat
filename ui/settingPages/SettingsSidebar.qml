@@ -194,9 +194,10 @@ Item
 
             text: user.myAppVersion
 
-            color: "#777C85"
+            color: "#B5BAC1"
 
             font.pixelSize: 11
+            font.bold: true
         }
     }
 }

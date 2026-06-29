@@ -69,7 +69,7 @@ public:
     Q_INVOKABLE void deleteSavedServer(quint64 serverId, quint64 serverDbIndex=-1);
     Q_INVOKABLE void switchOrConnectToServer(const QString& serverIp, const QString& str_serverPort, int serverId);
     Q_INVOKABLE void disconnect();
-    Q_INVOKABLE void createChannel(QString channelName, QString password);
+    Q_INVOKABLE void createChannel(QString channelName, QString password, bool saveMessages);
     Q_INVOKABLE void sendMessage(QString message);
 
     void askForServerState();

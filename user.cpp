@@ -385,12 +385,12 @@ void User::disconnect()
 
 }
 
-void User::createChannel(QString channelName, QString password)
+void User::createChannel(QString channelName, QString password, bool saveMessages)
 {
     CreateChannelPacket cc;
-    cc.name = "Gaming"+QString::number(QRandomGenerator::global()->bounded(100));
-    cc.password="123";
-    cc.saveChats=false;
+    cc.name = channelName;
+    cc.password= password;
+    cc.saveChats=saveMessages;
 
     Packet p;
     p.type = PacketType::CreateChannel;

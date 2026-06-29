@@ -21,16 +21,55 @@ Item
         anchors.fill: parent
         Rectangle
         {
-            id:serverTitle
-            color: bg2
-            width:parent.width
-            visible: user.isConnectedToServer
+            id: serverTitle
+
+            width: parent.width
             height: 60
+            visible: user.isConnectedToServer
+            color: bg2
+
+            property bool opened: false
+
             Text
             {
                 text: user.myServerName
-                anchors.centerIn: parent
-                color:"white"
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.left: parent.left
+                anchors.leftMargin: 16
+                color: "white"
+            }
+
+            Image
+            {
+                id: arrow
+
+                width: 18
+                height: 18
+
+                anchors.right: parent.right
+                anchors.rightMargin: 16
+                anchors.verticalCenter: parent.verticalCenter
+
+                source: "icons/arrow-right.png"
+
+                rotation: serverTitle.opened ? 90 : 0
+
+                transformOrigin: Item.Center
+
+                Behavior on rotation
+                {
+                    NumberAnimation
+                    {
+                        duration: 150
+                        easing.type: Easing.OutCubic
+                    }
+                }
+            }
+
+            MouseArea
+            {
+                anchors.fill: parent
+                onClicked: serverTitle.opened = !serverTitle.opened
             }
         }
 
@@ -241,6 +280,8 @@ Item
 
             }
         }
+
+
 
         Rectangle
         {
@@ -679,6 +720,45 @@ Item
             }
         }
 
+    }
+
+
+    Rectangle
+    {
+        id:bgServerMenuClickToClose
+        anchors.fill: parent
+        z: 998
+        visible: serverTitle.opened
+        color:"black"
+        opacity: 0.3
+        MouseArea
+        {
+            anchors.fill: parent
+            onClicked: serverTitle.opened = false
+        }
+    }
+
+    ServerMenu
+    {
+        id: serverMenu
+
+        width: parent.width
+        y: serverTitle.height
+        z: 999
+
+        opened: serverTitle.opened
+
+        onCreateChannelClicked:
+        {
+            serverTitle.opened = false
+            createChannelPopup.open()
+        }
+
+        onSettingsClicked:
+        {
+            serverTitle.opened = false
+            console.log("Settings")
+        }
     }
 
 }

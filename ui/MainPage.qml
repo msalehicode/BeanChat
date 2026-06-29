@@ -353,6 +353,12 @@ Item {
         id:showImagePopup
     }
 
+    CreateChannelPopup
+    {
+        id:createChannelPopup
+        onCreateClicked: user.createChannel(channelName,channelPassword,saveChats)
+    }
+
     Connections
     {
         target:user

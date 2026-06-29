@@ -19,9 +19,9 @@ class AudioCapture : public QObject
 public:
     explicit AudioCapture(QObject *parent = nullptr);
     ~AudioCapture();
-    void start();
+    Q_INVOKABLE void start();
 
-    void stop();
+    Q_INVOKABLE void stop();
 
     QStringList audioInputNames() const;
 
@@ -59,7 +59,7 @@ public:
     Q_INVOKABLE bool initialPushToTalkHotkey(); //to later after change modifier and key call this from QML
 
     QString pushToTalkKeyString() const;
-    bool started() const;
+    Q_INVOKABLE bool started() const;
 
 
     int devicesCount() const; //to know how many devices found.
