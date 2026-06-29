@@ -85,6 +85,10 @@ public:
     {
         beginInsertRows(QModelIndex(), m_users.size(), m_users.size());
 
+        //check if user exists then ignore
+        if(findUser(id))
+            return;
+
         m_users.append(new Participant(id,name,isTalking,isMuted,isDeafened,isCameraOpen,this));
 
         endInsertRows();

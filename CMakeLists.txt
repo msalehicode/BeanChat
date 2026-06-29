@@ -141,6 +141,7 @@ qt_add_qml_module(appBeanChat
     ui/icons/down.png
     ui/icons/voice.png
     ui/icons/settings.png
+    ui/icons/save.png
     ui/icons/endcall.png ui/icons/endcall-red.png
     ui/icons/camera.png ui/icons/camera-closed.png ui/icons/camera-red.png
     ui/icons/disconnect.png ui/icons/disconnect-red.png

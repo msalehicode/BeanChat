@@ -29,6 +29,9 @@ QVariant ChatModel::data(
     case SenderIdRole:
         return QVariant::fromValue(msg.senderId);
 
+    case SenderNameRole:
+        return msg.senderName;
+
     case TextRole:
         return msg.text;
 
@@ -52,6 +55,7 @@ ChatModel::roleNames() const
         {
             { MessageIdRole, "messageId" },
             { SenderIdRole, "senderId" },
+            { SenderNameRole, "senderName"},
             { TextRole, "textMessage" },
             { TypeRole, "messageType" },
             { MediaPathRole, "mediaPath" },

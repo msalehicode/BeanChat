@@ -38,6 +38,9 @@ QVariant ChannelModel::data(
     case NameRole:
         return channel.name;
 
+    case SaveChatsRole:
+        return channel.saveChats;
+
     case IsLcokedRole:
         return channel.isLocked;
 
@@ -85,6 +88,7 @@ ChannelModel::roleNames() const
         {
             { IdRole, "channelId" },
             { NameRole, "channelName" },
+            { SaveChatsRole, "saveChats"},
             { IsLcokedRole, "isLocked"},
             { UsersRole, "users" }
         };
@@ -101,7 +105,7 @@ void ChannelModel::clear()
 
 void ChannelModel::addChannel(
     quint64 id,
-    const QString& name, bool isLocked)
+    const QString& name, bool isLocked, bool saveChat)
 {
     beginInsertRows(
         QModelIndex(),
@@ -113,6 +117,7 @@ void ChannelModel::addChannel(
     channel.id = id;
     channel.name = name;
     channel.isLocked = isLocked;
+    channel.saveChats = saveChat;
 
     m_channels.push_back(
         channel);
@@ -279,6 +284,16 @@ QString ChannelModel::getChannelName(quint64 channelId)
         return channel->name;
     return "";
 }
+
+bool ChannelModel::getChannelSaveChats(quint64 channelId)
+{
+    ChannelItem* channel = findChannel(channelId);
+    if(channel)
+        return channel->saveChats;
+    return "";
+}
+
+
 
 void ChannelModel::removeUser(
     quint64 userId)

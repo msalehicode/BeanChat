@@ -28,17 +28,34 @@ Item
 
         height: 60
         color: "#222427"
+        clip: true
 
-        Text
+        Row
         {
-            anchors.centerIn: parent
-
-            text: "Chat in " + user.myChannelName
-
-            color: "white"
-            font.pixelSize: 18
-            font.bold: true
+            width: implicitWidth
+            height: parent.height
+            anchors.horizontalCenter: parent.horizontalCenter
+            spacing:7
+            Text
+            {
+                text: "Chat in " + user.myChannelName
+                color: "white"
+                font.pixelSize: 18
+                font.bold: true
+                anchors.verticalCenter: parent.verticalCenter
+            }
+            Image
+            {
+                width:30
+                height: width
+                source: "icons/save.png"
+                visible: user.myChannelSavesChat
+                anchors.verticalCenter: parent.verticalCenter
+            }
         }
+
+
+
     }
 
     ListView
@@ -157,7 +174,7 @@ Item
 
                         Text
                         {
-                            text: model.senderId
+                            text: model.senderName + "("+model.senderId+")"
                             color: "white"
                             font.bold: true
                             font.pixelSize: 15

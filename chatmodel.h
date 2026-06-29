@@ -15,6 +15,7 @@ public:
     {
         MessageIdRole = Qt::UserRole + 1,
         SenderIdRole,
+        SenderNameRole,
         TextRole,
         TypeRole,
         MediaPathRole,

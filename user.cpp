@@ -347,6 +347,7 @@ void User::disconnect()
     //reset variables
     setMyServerName("");
     setMyChannelName("");
+    setMyChannelSavesChat(false);
     setIsConnectedToServer(false);
     m_me=nullptr;
     m_serverIp.clear();
@@ -389,8 +390,7 @@ void User::createChannel(QString channelName, QString password)
     CreateChannelPacket cc;
     cc.name = "Gaming"+QString::number(QRandomGenerator::global()->bounded(100));
     cc.password="123";
-    cc.permanentChat=true;
-    cc.temporaryChat=false;
+    cc.saveChats=false;
 
     Packet p;
     p.type = PacketType::CreateChannel;
@@ -570,7 +570,7 @@ void User::processPacket(const Packet& packet)
             PacketHelpers::unpack<ChannelCreatedPacket>(
                 packet.payload);
 
-        m_channelModel->addChannel(resp.id,resp.name,resp.isLocked);
+        m_channelModel->addChannel(resp.id,resp.name,resp.isLocked, resp.saveChats);
     }break;
 
     case PacketType::UserCameraClosed:
@@ -684,7 +684,7 @@ void User::processPacket(const Packet& packet)
             PacketHelpers::unpack<UserJoinedChannelPacket>(
                 packet.payload);
 
-        //update position of user on channelModel (do it before process, because in code won't see user's change on that channel..
+        //update position of user on channelModel, because in next codes we won't see user's change on that channel..
         m_channelModel->moveUser(resp.userId,resp.channelId);
 
 
@@ -699,7 +699,7 @@ void User::processPacket(const Packet& packet)
                                     user->muted,user->deafened,user->hasVideo);
         }
 
-
+        //check if user was me?
         if(resp.userId == static_cast<quint64>(myId()))
         {
             qDebug() << "voice: channel switched.";
@@ -719,7 +719,7 @@ void User::processPacket(const Packet& packet)
             m_myChannelId = resp.channelId;
             m_channelModel->setCurrentChannelId(m_myChannelId); //for update isTalking status users
             setMyChannelName(m_channelModel->getChannelName(m_myChannelId)); //to show on top of Chat also on userConnectedServer.
-
+            setMyChannelSavesChat(m_channelModel->getChannelSaveChats(m_myChannelId)); //to show on top of Chat
 
             if(!m_me) //if this user is not inside participantModel, reset model comepletely.
                 m_currentChannelParticipant->clear();
@@ -750,6 +750,8 @@ void User::processPacket(const Packet& packet)
             else
                 qDebug() << "could not find channel id:" << resp.channelId;
         }
+
+        //check did user join into my channel?
         else if(resp.channelId == m_myChannelId)
         {
             qDebug() << "voice: user joined to your channel.";
@@ -772,6 +774,7 @@ void User::processPacket(const Packet& packet)
             emit userJoined();
         }
 
+        //check did user left my channel?
         else if(resp.oldChannelId==m_myChannelId)
         {
             qDebug() << "voice: user left your channel.";
@@ -785,10 +788,12 @@ void User::processPacket(const Packet& packet)
             //for soundmanager to play effect
             emit userLeft();
         }
-        else
+
+        else //user's action is not my concern, no sound effect or additional actions
             qInfo () << "user (" << resp.userId << ") has left " << resp.oldChannelId << " and joined to " << resp.channelId ;
 
-    }break;
+        break;
+    }
 
     case PacketType::LoginResponse:
     {
@@ -848,15 +853,13 @@ void User::processPacket(const Packet& packet)
     case PacketType::UserDisconnected:
     {
         qInfo() << "user disconnected:";
-        auto user =
-            PacketHelpers::unpack<UserConnectedPacket>(
+        auto resp =
+            PacketHelpers::unpack<UserDisconnectedPacket>(
                 packet.payload);
 
-        qDebug()
-            << "User disconnected:"
-            << user.username;
+        qDebug()<< "User disconnected:" << resp.id << " wasConnectinLost?" << resp.wasConnectionLost;
 
-        ChannelItem* channel = m_channelModel->findChannelOfUser(user.id);
+        ChannelItem* channel = m_channelModel->findChannelOfUser(resp.id);
         if(channel)
         {
             //check whether user was on our channel, if was play sound effect
@@ -864,6 +867,9 @@ void User::processPacket(const Packet& packet)
             {
                 qDebug() << "play user left.";
                 emit userLeft();
+
+                //try to remove him from participantmodel of our channel
+                m_currentChannelParticipant->removeUser(resp.id);
             }
         }
         else
@@ -871,13 +877,10 @@ void User::processPacket(const Packet& packet)
 
 
         //remove user from connected users list
-        m_connectedUsersModel->removeUser(user.id);
-
-        //we dont know if user was inside our channel or not but anyway try to remove him from participantmodel.
-        m_currentChannelParticipant->removeUser(user.id);
+        m_connectedUsersModel->removeUser(resp.id);
 
         //also dont know if user was inside a channel or not anyway try to remove him from model
-        m_channelModel->removeUser(user.id);
+        m_channelModel->removeUser(resp.id);
 
         break;
     }
@@ -919,7 +922,8 @@ void User::processPacket(const Packet& packet)
             m_channelModel->addChannel(
                 c.id,
                 c.name,
-                c.isLocked);
+                c.isLocked,
+                c.saveChats);
         }
 
         for(auto& u : state.users)
@@ -998,6 +1002,19 @@ void User::loginToUdpSocket()
     }
 }
 
+bool User::myChannelSavesChat() const
+{
+    return m_myChannelSavesChat;
+}
+
+void User::setMyChannelSavesChat(bool newMyChannelSavesChat)
+{
+    if (m_myChannelSavesChat == newMyChannelSavesChat)
+        return;
+    m_myChannelSavesChat = newMyChannelSavesChat;
+    emit myChannelSavesChatChanged();
+}
+
 void User::onDisconnected()
 {
     qDebug() << "Server disconnected";
@@ -1061,7 +1078,9 @@ void User::onUdpReadyRead()
 
                 //decode
                 QByteArray pcm = m_opus.decode(packet.audioData);
+#if D_PRINT_VOICE_INFO
                 qDebug() << "received opus=" << pcm.size() << " raw pcm=" << packet.audioData.size();
+#endif
                 if (!pcm.isEmpty())
                     emit voiceReceived(pcm);
             }

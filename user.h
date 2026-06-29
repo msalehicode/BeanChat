@@ -124,6 +124,9 @@ public:
     UserConnectionStatus connectionStatus() const;
     void setConnectionStatus(UserConnectionStatus newConnectionStatus);
 
+    bool myChannelSavesChat() const;
+    void setMyChannelSavesChat(bool newMyChannelSavesChat);
+
 signals:
 
     void myIdChanged();
@@ -165,6 +168,8 @@ signals:
 
     void connectionStatusChanged();
 
+    void myChannelSavesChatChanged();
+
 public slots:
     void onTcpReadyRead();
     void onDisconnected();
@@ -192,6 +197,7 @@ private:
     int m_myId =-1;
     quint64 m_myChannelId=-2; //channelId -1 is default value for those users didn't connect to any channel just connected to server.
     QString m_myChannelName = ""; //current channel
+    bool m_myChannelSavesChat=false;
     QString m_myServerName= ""; //current server connected to
     UserModel m_info; //to store system info such as appVersio and ..
     Participant* m_me=nullptr; //hold this user info and update it when channel switched, to connect with cameraCapture and show images as local preview
@@ -263,6 +269,7 @@ private:
     Q_PROPERTY(float myVideoPacketLoss READ myVideoPacketLoss WRITE setMyVideoPacketLoss NOTIFY myVideoPacketLossChanged FINAL)
     Q_PROPERTY(QString myAppVersion READ myAppVersion)
     Q_PROPERTY(UserConnectionStatus connectionStatus READ connectionStatus WRITE setConnectionStatus NOTIFY connectionStatusChanged FINAL)
+    Q_PROPERTY(bool myChannelSavesChat READ myChannelSavesChat WRITE setMyChannelSavesChat NOTIFY myChannelSavesChatChanged FINAL)
 };
 
 #endif // USER_H

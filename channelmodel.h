@@ -28,6 +28,7 @@ struct ChannelItem
     quint64 id;
     QString name;
     bool isLocked=false;
+    bool saveChats=false;
 
     QList<UserItem> users;
 };
@@ -43,6 +44,7 @@ public:
         IdRole = Qt::UserRole + 1,
         NameRole,
         IsLcokedRole,
+        SaveChatsRole,
         UsersRole
     };
 
@@ -64,7 +66,7 @@ public:
 
     void addChannel(
         quint64 id,
-        const QString& name, bool isLocked);
+        const QString& name, bool isLocked, bool saveChat);
 
     void addUser(
         quint64 channelId,
@@ -95,6 +97,7 @@ public:
     void setUserDeafened(quint64 userId, bool deafened);
     void setUserHasVideo(quint64 userId, bool hasVideo);
     void resetChannelTalkingStatus(quint64 channelId);
+    bool getChannelSaveChats(quint64 channelId);
 signals:
     void userTalkingStatus(quint64 userId,bool status);
 
