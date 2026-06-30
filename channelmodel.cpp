@@ -184,6 +184,51 @@ void ChannelModel::updateUserStatus(quint64 userId, bool isTalking, bool isMuted
         index(row));
 }
 
+void ChannelModel::updateChannel(quint64 id, const QString &name, bool isLocked, bool saveChats)
+{
+    for (int row = 0; row < m_channels.size(); ++row)
+    {
+        ChannelItem &channel = m_channels[row];
+
+        if (channel.id == id)
+        {
+            channel.name = name;
+            channel.isLocked = isLocked;
+            channel.saveChats = saveChats;
+
+            QModelIndex index = createIndex(row, 0);
+            emit dataChanged(index, index,
+                             {
+                                 NameRole,
+                                 IsLcokedRole,
+                                 SaveChatsRole
+                             });
+
+            return;
+        }
+    }
+}
+
+void ChannelModel::removeChannel(quint64 channelId)
+{
+    for (int row = 0; row < m_channels.size(); ++row)
+    {
+        if (m_channels[row].id != channelId)
+            continue;
+
+        beginRemoveRows({}, row, row);
+
+        //delete channel.
+        m_channels.removeAt(row);
+        endRemoveRows();
+
+        if (m_currentChannelId == channelId)
+            m_currentChannelId = 0;
+
+        return;
+    }
+}
+
 
 void ChannelModel::resetChannelTalkingStatus(quint64 channelId)
 {

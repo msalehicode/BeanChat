@@ -16,27 +16,33 @@ Popup
 
     anchors.centerIn: Overlay.overlay
 
-    background: Rectangle
-    {
-        color: "#313338"
-        radius: 8
-        border.color: "#1e1f22"
-    }
-
-    onClosed: clear()
+    property int targetChannelId:-1;
+    property string initialChannelName: ""
+    property string initialChannelPassword: ""
+    property bool initialSaveChats: true
 
     property alias channelName: channelNameField.text
     property alias channelPassword: passwordField.text
     property alias saveChats: saveChatsCheck.checked
 
-    function clear()
+    signal saveClicked()
+    signal deleteClicked()
+
+    background: Rectangle
     {
-        channelNameField.clear()
-        passwordField.clear()
-        channelNameField.focus=true
+        color: "#313338"
+        radius: 8
+        border.color: "#1E1F22"
     }
 
-    signal createClicked()
+    onOpened:
+    {
+        channelNameField.text = initialChannelName
+        passwordField.text = initialChannelPassword
+        saveChatsCheck.checked = initialSaveChats
+
+        channelNameField.forceActiveFocus()
+    }
 
     enter: Transition
     {
@@ -92,7 +98,7 @@ Popup
 
                 Text
                 {
-                    text: "Create Channel"
+                    text: "Channel Settings"
                     color: "white"
                     font.pixelSize: 22
                     font.bold: true
@@ -100,7 +106,7 @@ Popup
 
                 Text
                 {
-                    text: "Create a new voice channel."
+                    text: "Edit your voice channel settings."
                     color: "#B5BAC1"
                     font.pixelSize: 13
                 }
@@ -139,7 +145,8 @@ Popup
 
                     Layout.fillWidth: true
                     height: 40
-                    onAccepted: createButton.clicked()
+                    onAccepted: saveButton.clicked()
+
                     color: "white"
                     placeholderText: "General"
 
@@ -157,7 +164,7 @@ Popup
 
                 Label
                 {
-                    text: "CHANNEL PASSWORD (OPTIONAL)"
+                    text: "CHANNEL PASSWORD"
                     color: "#B5BAC1"
                     font.bold: true
                     font.pixelSize: 11
@@ -169,12 +176,18 @@ Popup
 
                     Layout.fillWidth: true
                     height: 40
-                    onAccepted: createButton.clicked()
+                    onAccepted: saveButton.clicked()
 
                     color: "white"
-                    placeholderText: "Leave empty for an unlocked channel"
+
+                    placeholderText: "Leave empty to keep current password"
 
                     echoMode: TextInput.Password
+                    onFocusChanged:
+                    {
+                        if(focus)
+                            text=""
+                    }
 
                     background: Rectangle
                     {
@@ -192,9 +205,7 @@ Popup
                 {
                     id: saveChatsCheck
 
-                    checked: true
-
-                    indicator: Item {}    // Hide the default indicator
+                    indicator: Item {}
 
                     contentItem: Row
                     {
@@ -225,13 +236,13 @@ Popup
                         Text
                         {
                             anchors.verticalCenter: parent.verticalCenter
-
                             text: "Save chat history"
                             color: "white"
                             font.pixelSize: 14
                         }
                     }
                 }
+
                 Item
                 {
                     Layout.fillHeight: true
@@ -246,7 +257,6 @@ Popup
         {
             Layout.fillWidth: true
             height: 64
-
             color: "#2B2D31"
 
             RowLayout
@@ -258,6 +268,43 @@ Popup
                 {
                     Layout.fillWidth: true
                 }
+
+
+
+                Button
+                {
+                    id: deleteButton
+
+                    text: "Delete"
+
+                    onClicked:
+                    {
+                        root.deleteClicked()
+                        root.close()
+                    }
+
+                    background: Rectangle
+                    {
+                        radius: 4
+
+                        color: deleteButton.down
+                               ? "darkred"
+                               : "red"
+
+                        border.width: 1
+                        border.color: "#555"
+                    }
+
+                    contentItem: Text
+                    {
+                        text: parent.text
+                        color: "white"
+
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                }
+
 
                 Button
                 {
@@ -291,15 +338,15 @@ Popup
 
                 Button
                 {
-                    id: createButton
+                    id: saveButton
 
-                    text: "Create"
+                    text: "Save"
 
                     enabled: channelNameField.text.trim().length > 0
 
                     onClicked:
                     {
-                        root.createClicked()
+                        root.saveClicked()
                         root.close()
                     }
 
@@ -307,9 +354,9 @@ Popup
                     {
                         radius: 4
 
-                        color: !createButton.enabled
+                        color: !saveButton.enabled
                                ? "#444"
-                               : createButton.down
+                               : saveButton.down
                                  ? "#4752C4"
                                  : "#5865F2"
                     }

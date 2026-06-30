@@ -78,6 +78,13 @@ public:
 
     void updateUserStatus(quint64 userId, bool isTalking, bool isMuted, bool isDefened, bool hasVideo=false);
 
+    void updateChannel(quint64 id,
+                       const QString &name,
+                       bool isLocked,
+                       bool saveChats);
+
+    void removeChannel(quint64 channelId);
+
     UserItem* getUser(quint64 channelId, quint64 userId);
     QString getChannelName(quint64 channelId);
 

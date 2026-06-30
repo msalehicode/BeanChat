@@ -149,9 +149,13 @@ Item
                         }
                     }
 
+
                     MouseArea
                     {
+                        id:channelMouseArea
                         anchors.fill: parent
+                        hoverEnabled: true
+
                         onDoubleClicked:
                         {
                             console.log("try to join channel id:" , channelId, " name=", channelName)
@@ -164,6 +168,36 @@ Item
                             }
                             else
                                 user.joinChannel(channelId,"") //non locked passwords default password is empty ""
+                        }
+                    }
+                    Row
+                    {
+                        id: actionButtons
+                        anchors.right: parent.right
+                        anchors.rightMargin: 10
+                        anchors.verticalCenter: parent.verticalCenter
+                        opacity: channelMouseArea.containsMouse ? 1 : 0
+                        visible: opacity > 0
+                        spacing: 7
+                        Image {
+                            source: "icons/settings.png"
+                            width: 20
+                            height: width
+
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked:
+                                {
+                                    modifyChannelPopup.initialChannelName=model.channelName
+                                    modifyChannelPopup.initialChannelPassword= model.isLocked ? "***" : ""
+                                    modifyChannelPopup.initialSaveChats=model.saveChats
+                                    modifyChannelPopup.targetChannelId=model.channelId
+                                    modifyChannelPopup.open()
+                                }
+                            }
+                        }
+                        Behavior on opacity {
+                            NumberAnimation { duration: 120 }
                         }
                     }
                 }

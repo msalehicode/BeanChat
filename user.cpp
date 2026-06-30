@@ -145,7 +145,7 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
 }
 
 
-void User::joinChannel(int channelId, const QString& password)
+void User::joinChannel(quint64 channelId, const QString& password)
 {
     JoinChannelPacket join;
 
@@ -506,6 +506,33 @@ void User::sendMessage(QString message)
     socket.write(p.serialize());
 }
 
+void User::updateChannel(quint64 channelId, const QString &name, const QString &pass, bool saveMessages)
+{
+    UpdateChannelPacket uc;
+    uc.channelId =channelId;
+    uc.name = name;
+    uc.password = pass;
+    uc.saveChats = saveMessages;
+
+    Packet p;
+    p.type = PacketType::UpdateChannel;
+    p.payload = PacketHelpers::pack(uc);
+
+    socket.write(p.serialize());
+}
+
+void User::deleteChannel(quint64 channelId)
+{
+    DeleteChannelPacket d;
+    d.channelId = channelId;
+
+    Packet p;
+    p.type = PacketType::DeleteChannel;
+    p.payload = PacketHelpers::pack(d);
+
+    socket.write(p.serialize());
+}
+
 void User::askForServerState()
 {
     qDebug() << "asking for server State packet..";
@@ -563,6 +590,44 @@ void User::processPacket(const Packet& packet)
     switch(packet.type)
     {
 
+    case PacketType::ChannelUpdated:
+    {
+        qDebug() << " a channel updated";
+        auto resp =
+            PacketHelpers::unpack<ChannelUpdatedPacket>(
+                packet.payload);
+
+        m_channelModel->updateChannel(resp.channelId, resp.name, resp.isLocked, resp.saveChats);
+
+        if(resp.channelId == m_myChannelId)
+        {
+            qDebug() << "my current channel updated.";
+            setMyChannelName(resp.name);
+            setMyChannelSavesChat(resp.saveChats);
+        }
+        break;
+    }
+
+    case PacketType::ChannelDeleted:
+    {
+        qDebug() << " a channel deleted";
+        auto resp =
+            PacketHelpers::unpack<DeleteChannelPacket>(
+                packet.payload);
+
+        m_channelModel->removeChannel(resp.channelId);
+
+        if(resp.channelId == m_myChannelId)
+        {
+            qDebug() << "oh no i became homeless";
+            m_currentChannelParticipant->clear();
+            setMyChannelName("");
+            m_myChannelId=-1; //default vlaue for homeless users :D
+            setMyChannelSavesChat(false);
+            setChatUnreadMessages(0);
+        }
+        break;
+    }
     case PacketType::ChannelCreated:
     {
         qDebug() <<"a channel created";

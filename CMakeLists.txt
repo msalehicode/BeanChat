@@ -85,6 +85,7 @@ qt_add_qml_module(appBeanChat
         ui/MyServersItemMenu.qml
         ui/CreateChannelPopup.qml
         ui/ServerMenu.qml
+        ui/ModifyChannelPopup.qml
 
         # settingsPage pages/components
         ui/settingPages/SettingSection.qml

@@ -63,14 +63,25 @@ public:
                   CameraCapture* cam, AudioCapture* mic, AudioSpeaker* speaker,
                   QObject *parent = nullptr);
 
-    Q_INVOKABLE void joinChannel(int channelId, const QString& password="");
-    Q_INVOKABLE void connectToServer(bool saveThisConnection, const QString& serverIp, const QString& str_serverPort);
-    Q_INVOKABLE void updateSavedServer(quint64 serverId, quint64 dbIndex, const QString &name, const QString &ip, const QString &port);
-    Q_INVOKABLE void deleteSavedServer(quint64 serverId, quint64 serverDbIndex=-1);
-    Q_INVOKABLE void switchOrConnectToServer(const QString& serverIp, const QString& str_serverPort, int serverId);
-    Q_INVOKABLE void disconnect();
+
+
+    //server actions
+    Q_INVOKABLE void joinChannel(quint64 channelId, const QString& password="");
     Q_INVOKABLE void createChannel(QString channelName, QString password, bool saveMessages);
     Q_INVOKABLE void sendMessage(QString message);
+    Q_INVOKABLE void updateChannel(quint64 channelId, const QString& name,
+                                    const QString& pass, bool saveMessages);
+    Q_INVOKABLE void deleteChannel(quint64 channelId);
+
+
+    //connect,disconnect
+    Q_INVOKABLE void connectToServer(bool saveThisConnection, const QString& serverIp, const QString& str_serverPort);
+    Q_INVOKABLE void switchOrConnectToServer(const QString& serverIp, const QString& str_serverPort, int serverId);
+    Q_INVOKABLE void disconnect();
+
+    //myServers actions
+    Q_INVOKABLE void updateSavedServer(quint64 serverId, quint64 dbIndex, const QString &name, const QString &ip, const QString &port);
+    Q_INVOKABLE void deleteSavedServer(quint64 serverId, quint64 serverDbIndex=-1);
 
     void askForServerState();
 

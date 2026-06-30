@@ -359,6 +359,13 @@ Item {
         onCreateClicked: user.createChannel(channelName,channelPassword,saveChats)
     }
 
+    ModifyChannelPopup
+    {
+        id:modifyChannelPopup
+        onSaveClicked: user.updateChannel(targetChannelId, channelName, channelPassword, saveChats)
+        onDeleteClicked: user.deleteChannel(targetChannelId)
+    }
+
     Connections
     {
         target:user
@@ -366,6 +373,11 @@ Item {
         {
             //when disconnected/connected, reset right panel index to connected users.
             rightPanel.currentTab=0
+        }
+        onMyChannelNameChanged:
+        {
+            if(user.myChannelName==="") //channel not exists or deleted.
+                rightPanel.currentTab=0
         }
 
     }

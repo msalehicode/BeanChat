@@ -113,8 +113,7 @@ Page
 
                         Material.background: "#5865F2"
 
-                        onClicked:
-                            user.createChannel("dota2", "123456")
+                        onClicked: console.log("seomthing")
                     }
                 }
             }
