@@ -41,6 +41,12 @@
 #include "ffmpegdecoder.h"
 
 
+#include "avatarmanager.h"
+#include <QStandardPaths>
+#define SAVE_AVATAR_PATH QStandardPaths::writableLocation(QStandardPaths::CacheLocation)+"/servers/"
+
+
+
 enum class UserConnectionStatus
 {
     Unknown,
@@ -84,6 +90,13 @@ public:
     Q_INVOKABLE void deleteSavedServer(quint64 serverId, quint64 serverDbIndex=-1);
 
     void askForServerState();
+    void askForNotFoundAvatars();
+
+    void newAvatarArrived(quint64 userId,
+                          const QString& avatarHash,
+                          const QString& oldAvatarHash,
+                          const QByteArray& avatarData);
+
 
     int myId() const;
     void setMyId(int newMyId);
@@ -141,6 +154,19 @@ public:
 
     QString appTitle() const;
 
+
+    Q_INVOKABLE void updateMyProfile(const QString &username, const QString &identity, const QString &avatarPath="");
+    QString checkAvatar(quint64 userId, const QString& avatarHash); //if file avatar (hash.extention) found in server's directory returns QML like path otherwise would reutrn null
+
+
+
+    QString myAvatarPath() const;
+    void setMyAvatarPath(const QString &newMyAvatarPath);
+
+    int connectedServerId() const;
+    void setConnectedServerId(int newConnectedServerId);
+
+
 signals:
 
     void myIdChanged();
@@ -184,6 +210,10 @@ signals:
 
     void myChannelSavesChatChanged();
 
+    void myAvatarPathChanged();
+
+    void connectedServerIdChanged();
+
 public slots:
     void onTcpReadyRead();
     void onDisconnected();
@@ -202,10 +232,16 @@ private:
     SettingsManager* m_settingsManager;
     OpusCodec m_opus;
 
+
+    //avatar
+    AvatarManager m_avatarManager;
+    QList<quint64> m_notFoundAvatars; //a list to when user connected to server check for user's cached avatar pics if not found then add that id here to ask server for their avatars.
+
+
     //user can modify
     QString m_myUsername = USER_DEFAULT_USERNAME;
     QString m_myIdentity = USER_DEFAULT_IDENTITY;
-
+    QString m_myAvatarPath = ""; //used to set when server connects to server, server responses a avatarHash and we know it ours so set it here to load in different parts of app, such as modifyProfile, userStuff's avatar
 
     //user cant modify, would receive from target server
     int m_myId =-1;
@@ -216,6 +252,7 @@ private:
     UserModel m_info; //to store system info such as appVersio and ..
     Participant* m_me=nullptr; //hold this user info and update it when channel switched, to connect with cameraCapture and show images as local preview
     UserConnectionStatus m_connectionStatus=UserConnectionStatus::Unknown;
+    int  m_connectedServerId=-1; //(serverDbIndex) to use for path of avatars. e.g path/to/Cached/avatars/0  <- this 0 is server id (directory to hold that server user's avatar files)
 
     //connect and switch servers.
     bool m_isConnectedToServer=false;
@@ -285,6 +322,8 @@ private:
     Q_PROPERTY(UserConnectionStatus connectionStatus READ connectionStatus WRITE setConnectionStatus NOTIFY connectionStatusChanged FINAL)
     Q_PROPERTY(bool myChannelSavesChat READ myChannelSavesChat WRITE setMyChannelSavesChat NOTIFY myChannelSavesChatChanged FINAL)
     Q_PROPERTY(QString appTitle READ appTitle)
+    Q_PROPERTY(QString myAvatarPath READ myAvatarPath WRITE setMyAvatarPath NOTIFY myAvatarPathChanged FINAL)
+    Q_PROPERTY(int connectedServerId READ connectedServerId WRITE setConnectedServerId NOTIFY connectedServerIdChanged FINAL)
 };
 
 #endif // USER_H

@@ -59,6 +59,9 @@ QVariant ChannelModel::data(
             map["username"] =
                 user.username;
 
+            map["avatarPath"] =
+                user.avatarPath;
+
             map["muted"] =
                 user.muted;
 
@@ -129,6 +132,7 @@ void ChannelModel::addUser(
     quint64 channelId,
     quint64 userId,
     const QString& username,
+    const QString& avatarPath,
     bool muted,
     bool deafened, bool hasVideo)
 {
@@ -142,6 +146,7 @@ void ChannelModel::addUser(
 
     user.id = userId;
     user.username = username;
+    user.avatarPath = avatarPath;
 
     user.muted = muted;
     user.deafened = deafened;
@@ -308,6 +313,23 @@ void ChannelModel::setUserHasVideo(quint64 userId, bool hasVideo)
     user->hasVideo = hasVideo;
 
     int row = &(*channel) - m_channels.data();
+
+    emit dataChanged(index(row), index(row));
+}
+
+void ChannelModel::setUserAvatarPath(quint64 userId, const QString &avatarPath)
+{
+    auto channel = findChannelOfUser(userId);
+    if (!channel)
+        return;
+
+    UserItem *user = findUserInChannel(channel, userId);
+    if (!user || user->avatarPath == avatarPath)
+        return;
+
+    user->avatarPath = avatarPath;
+
+    int row = channel - m_channels.data();
 
     emit dataChanged(index(row), index(row));
 }

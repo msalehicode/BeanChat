@@ -9,6 +9,7 @@ struct UserItem
 {
     quint64 id;
     QString username;
+    QString avatarPath;
 
     bool isTalking = false;
     bool muted = false;
@@ -71,7 +72,7 @@ public:
     void addUser(
         quint64 channelId,
         quint64 userId,
-        const QString& username,
+        const QString& username, const QString &avatarPath,
         bool muted = false,
         bool deafened = false,
         bool hasVideo = false);
@@ -103,6 +104,7 @@ public:
     void setUserMuted(quint64 userId, bool muted);
     void setUserDeafened(quint64 userId, bool deafened);
     void setUserHasVideo(quint64 userId, bool hasVideo);
+    void setUserAvatarPath(quint64 userId, const QString& avatarPath);
     void resetChannelTalkingStatus(quint64 channelId);
     bool getChannelSaveChats(quint64 channelId);
 signals:

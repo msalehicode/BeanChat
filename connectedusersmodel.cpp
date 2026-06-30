@@ -34,6 +34,9 @@ QVariant ConnectedUsersModel::data(
     case UserNameRole:
         return usr.username;
 
+    case UserAvatarPathRole:
+        return usr.avatarPath;
+
     case UserStatusRole:
         return static_cast<int>(usr.status);
 
@@ -64,6 +67,7 @@ ConnectedUsersModel::roleNames() const
         {
             { UserIdRole, "userId" },
             { UserNameRole, "userName" },
+            { UserAvatarPathRole, "userAvatarPath"},
             { UserStatusRole, "userStatus" },
             { UserIconsRole, "userIcons"},
             { UserOsVersionRole, "userOsVersion"},
@@ -82,7 +86,7 @@ void ConnectedUsersModel::clear()
     endResetModel();
 }
 
-void ConnectedUsersModel::addUser(quint64 id, QString username, QString iconsId,
+void ConnectedUsersModel::addUser(quint64 id, QString username, QString avatarPath, QString iconsId,
                                   bool talking, bool muted, bool deafened, bool camera,
                                   QString version, QString buildType, QString osName, QString osVersion,
                                   UserActivityStatus status)
@@ -95,6 +99,7 @@ void ConnectedUsersModel::addUser(quint64 id, QString username, QString iconsId,
     ConnectedUser user;
     user.id=id;
     user.username=username;
+    user.avatarPath = avatarPath;
     user.iconsId=iconsId;
     user.isTalking=talking;
     user.muted=muted;
@@ -112,6 +117,21 @@ void ConnectedUsersModel::addUser(quint64 id, QString username, QString iconsId,
     endInsertRows();
 
     emit countChanged();
+}
+
+void ConnectedUsersModel::setUserAvatarPath(quint64 userId, const QString &path)
+{
+    int row = findRowById(userId);
+
+    if (row < 0)
+        return;
+
+    m_connectedUsers[row].avatarPath = path;
+
+    emit dataChanged(
+        index(row),
+        index(row),
+        { UserAvatarPathRole });
 }
 
 void ConnectedUsersModel::removeUser(quint64 userId)

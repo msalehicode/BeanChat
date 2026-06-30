@@ -11,6 +11,7 @@ public:
     enum Roles
     {
         UsernameRole = Qt::UserRole + 1,
+        UserAvatarPathRole,
         VideoSinkRole,
         IsTalkingRole,
         IsCameraOpenRole,
@@ -42,6 +43,9 @@ public:
         case UsernameRole:
             return user->username();
 
+        case UserAvatarPathRole:
+            return user->avatarPath();
+
         case IsTalkingRole:
             return user->isTalking();
 
@@ -71,6 +75,7 @@ public:
     {
         return {
             {UsernameRole,"username"},
+            {UserAvatarPathRole, "avatarPath"},
             {IsTalkingRole,"isTalking"},
             {IsCameraOpenRole,"isCameraOpen"},
             {VideoSinkRole,"videoSink"},
@@ -80,7 +85,8 @@ public:
         };
     }
 
-    void addUser(quint64 id, const QString &name, bool isTalking=false, bool isMuted=false,
+    void addUser(quint64 id, const QString &name, const QString& avatarPath,
+                 bool isTalking=false, bool isMuted=false,
                  bool isDeafened=false, bool isCameraOpen=false)
     {
         beginInsertRows(QModelIndex(), m_users.size(), m_users.size());
@@ -89,7 +95,7 @@ public:
         if(findUser(id))
             return;
 
-        m_users.append(new Participant(id,name,isTalking,isMuted,isDeafened,isCameraOpen,this));
+        m_users.append(new Participant(id,name,avatarPath, isTalking,isMuted,isDeafened,isCameraOpen,this));
 
         endInsertRows();
     }
@@ -234,6 +240,26 @@ public:
                     index(i),
                     index(i),
                     { IsDeafened });
+
+                return;
+            }
+        }
+    }
+
+    void setAvatarPath(
+        quint64 userId,
+        const QString& path)
+    {
+        for(int i = 0; i < m_users.size(); ++i)
+        {
+            if(m_users[i]->id() == userId)
+            {
+                m_users[i]->setAvatarPath(path);
+
+                emit dataChanged(
+                    index(i),
+                    index(i),
+                    { UserAvatarPathRole });
 
                 return;
             }

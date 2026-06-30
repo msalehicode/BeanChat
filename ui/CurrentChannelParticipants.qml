@@ -107,10 +107,23 @@ Item
                         id:userAvatarCenterParticipant
                         width: 50
                         height: 50
-                        color: "white"
                         radius: 30
                         visible: !model.isCameraOpen
                         anchors.centerIn: parent
+                        color: "#1E1F22"
+                        Text
+                        {
+                            anchors.centerIn: parent
+                            visible: model.avatarPath === ""
+                            text: "?"
+                            color: "white"
+                            font.pixelSize: 16
+                        }
+                        Image
+                        {
+                            anchors.fill: parent
+                            source: model.avatarPath
+                        }
                     }
                     Rectangle
                     {

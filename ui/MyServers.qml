@@ -115,7 +115,14 @@ Item
                     onExited: delegateRoot.scale = 1.0
 
                     acceptedButtons: Qt.LeftButton | Qt.RightButton
-                    onDoubleClicked: user.switchOrConnectToServer(model.ip, model.port, model.id)
+                    onDoubleClicked:
+                    {
+                        //update server id, to know which server is connecting to (for avatars path)
+                        user.connectedServerId=model.dbIndex
+
+                        //connect
+                        user.switchOrConnectToServer(model.ip, model.port, model.id)
+                    }
                     onClicked: function(mouse)
                     {
                         if (mouse.button === Qt.RightButton)

@@ -16,6 +16,8 @@ struct ConnectedUser
 {
     quint64 id;
     QString username;
+    QString avatarPath;
+
     QString iconsId="";
 
     bool isTalking = false;
@@ -49,6 +51,7 @@ public:
     {
         UserIdRole = Qt::UserRole + 1,
         UserNameRole,
+        UserAvatarPathRole,
         UserStatusRole,
         UserIconsRole,
         UserOsVersionRole,
@@ -74,7 +77,7 @@ public:
 
     void clear();
 
-    void addUser(quint64 id, QString username, QString iconsId,
+    void addUser(quint64 id, QString username, QString avatarPath, QString iconsId,
                  bool talking, bool muted, bool deafened, bool camera,
                  QString version, QString buildType, QString osName, QString osVersion,
                  UserActivityStatus status=UserActivityStatus::Online);
@@ -82,6 +85,8 @@ public:
     void removeUser(quint64 userId);
 
     void setUsername(quint64 userId, const QString& username);
+
+    void setUserAvatarPath(quint64 userId, const QString& path);
 
     void setStatus(quint64 userId, UserActivityStatus status);
 

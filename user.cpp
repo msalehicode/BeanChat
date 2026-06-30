@@ -167,6 +167,12 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
         disconnect();
 
 
+    //check is server saved or is temporary?
+    if(m_connectedServerId==-1) //server is temporary
+    {
+        qDebug() << "server connection is termporary. connectedServerId DB=" << m_connectedServerId;
+    }
+
     //convert ports to quint64
     bool ok = false;
     quint64 serverPort = str_serverPort.toULongLong(&ok);
@@ -307,7 +313,21 @@ void User::deleteSavedServer(quint64 serverId, quint64 serverDbIndex)
     {
         bool res = m_database.remove("MyServers",serverDbIndex);
         if(res)
+        {
             qDebug() << "server deleted from MyServers.";
+
+            //delete saved avatars in that server's avatar directory
+            qDebug() << "trying to delete avatars of that server: target path = " << SAVE_AVATAR_PATH+QString::number(m_connectedServerId);
+
+            QDir dir(SAVE_AVATAR_PATH+QString::number(m_connectedServerId));
+            if (dir.exists())
+            {
+                if (!dir.removeRecursively())
+                    qDebug() << "Failed to remove avatar.";
+            }
+            else
+                qDebug() << "that path avatar doesn't exists.";
+        }
         else
             qDebug() << "faield to delete server from MyServers.";
     }
@@ -350,12 +370,15 @@ void User::disconnect()
     setMyChannelSavesChat(false);
     setIsConnectedToServer(false);
     m_me=nullptr;
+    setConnectedServerId(-1); //this is serverIndexDb which would use in saving user's avatar in each server's directory
     m_serverIp.clear();
     m_serverPort=0;
     setConnectionStatus(UserConnectionStatus::Disconnected);
     setMyPing(-1);
     setMyVideoPacketLoss(0.0f);
     setMyVoicePacketLoss(0.0f);
+    m_notFoundAvatars.clear(); //clear list for next connection
+    setMyAvatarPath("");
 
     if(!m_switchingServer) //if we are not switching reset/turn-off all server's indicator status
         m_myServersModel->resetPreviousIsActiveServer();
@@ -545,6 +568,56 @@ void User::askForServerState()
     socket.write(p.serialize());
 }
 
+void User::askForNotFoundAvatars()
+{
+    qDebug() << "asking for not found avatars... not found avatars count=" << m_notFoundAvatars.count();
+    RequestAvatarsPacket ra;
+    ra.notFoundIds = m_notFoundAvatars;
+
+    Packet p;
+    p.type = PacketType::RequestAvatars;
+    p.payload = PacketHelpers::pack(ra);
+
+    socket.write(p.serialize());
+}
+
+void User::newAvatarArrived(quint64 userId,
+                            const QString& avatarHash,
+                            const QString& oldAvatarHash,
+                            const QByteArray& avatarData)
+{
+    if(m_avatarManager.saveAvatar(SAVE_AVATAR_PATH+QString::number(m_connectedServerId)
+                                   ,avatarHash,avatarData))
+    {
+        qDebug() << "avatar saved for that user, hash=" << avatarHash;
+
+
+        //delete old avatar to protect privacy and decrease cache avatars size
+        m_avatarManager.deleteAvatar(SAVE_AVATAR_PATH+QString::number(m_connectedServerId)
+                                     ,oldAvatarHash);
+
+        //check and get that avatar path.
+        QString avatarPath = checkAvatar(userId, avatarHash);
+
+        //check if its me, set this to my variable to later load different parts like modifyProfile, userStuff's avatar
+        if(userId == myId())
+            setMyAvatarPath(avatarPath);
+
+        //notify models to update..
+        m_connectedUsersModel->setUserAvatarPath(userId, avatarPath);
+        m_channelModel->setUserAvatarPath(userId, avatarPath);
+
+        //check if user is me OR is he my channel? then apply on current channel participant model
+        if(userId == myId()
+            || m_channelModel->findChannelOfUser(userId)->id == m_myChannelId)
+        {
+            m_currentChannelParticipant->setAvatarPath(userId, avatarPath);
+        }
+    }
+    else
+        qDebug() << "failed to save avatar for that user...";
+}
+
 void User::onTcpReadyRead()
 {
     m_tcpBuffer += socket.readAll();
@@ -590,6 +663,48 @@ void User::processPacket(const Packet& packet)
     switch(packet.type)
     {
 
+    case PacketType::UserInfoChanged: //when users change their profile stuff, name,identtiy,avatar,...
+    {
+        auto info =
+            PacketHelpers::unpack<UserInfoChangedPacket>(
+                packet.payload);
+
+        switch (info.updateType)
+        {
+            case UpdateUserInfoType::Avatar:
+            {
+                qDebug() << "received avatar: hash="  << info.payloadValue << " avatar size=" << info.payloadData.size();
+                //save this new avatar``
+
+                newAvatarArrived(info.userId, info.payloadValue, info.payloadSecondValue, info.payloadData);
+
+               break;
+            }
+            default:
+                qDebug() << "unkown UpdateUserInfoType received.";
+        }
+    }break;
+
+
+    case PacketType::ResponseAvatars:
+    {
+        qDebug() << "response avatars received lets update users' avatars";
+
+        //clear list for next connection
+        m_notFoundAvatars.clear();
+
+        auto resp =
+            PacketHelpers::unpack<ResponseAvatarsPacket>(
+                packet.payload);
+
+
+        for(UserAvatar& avatar : resp.avatars)
+        {
+            //save avatars and apply into models
+            newAvatarArrived(avatar.userId, avatar.avatarHash, avatar.oldHash, avatar.imageData);
+        }
+        break;
+    }
     case PacketType::ChannelUpdated:
     {
         qDebug() << " a channel updated";
@@ -760,7 +875,7 @@ void User::processPacket(const Packet& packet)
             ConnectedUser* user = m_connectedUsersModel->findUser(resp.userId);
 
             //add user to channemodel
-            m_channelModel->addUser(resp.channelId,user->id,user->username,
+            m_channelModel->addUser(resp.channelId,user->id,user->username, user->avatarPath,
                                     user->muted,user->deafened,user->hasVideo);
         }
 
@@ -805,7 +920,8 @@ void User::processPacket(const Packet& packet)
                             continue;
                     }
 
-                    m_currentChannelParticipant->addUser(user.id,user.username,user.isTalking,user.muted,
+                    m_currentChannelParticipant->addUser(user.id,user.username,user.avatarPath,
+                                                         user.isTalking,user.muted,
                                                          user.deafened,user.hasVideo);
                 }
 
@@ -827,7 +943,8 @@ void User::processPacket(const Packet& packet)
             {
                 UserItem* jointUser = m_channelModel->findUserInChannel(channel,resp.userId);
                 if(jointUser)
-                    m_currentChannelParticipant->addUser(jointUser->id,jointUser->username,jointUser->isTalking,jointUser->muted,
+                    m_currentChannelParticipant->addUser(jointUser->id,jointUser->username,jointUser->avatarPath,
+                                                         jointUser->isTalking,jointUser->muted,
                                                          jointUser->deafened,jointUser->hasVideo);
                 else
                     qDebug() << "user joined could not find user inside channel id:" << resp.channelId << " userid=" << resp.userId;
@@ -902,8 +1019,13 @@ void User::processPacket(const Packet& packet)
             << "User joined:"
             << u.username;
 
+
+        QString avatarPath = checkAvatar(u.id, u.avatarHash);
+
+
         m_connectedUsersModel->addUser(u.id,
                                        u.username,
+                                       avatarPath,
                                        "",false,//server doesnt send these right now.
                                        u.muted,
                                        u.deafened,
@@ -993,9 +1115,24 @@ void User::processPacket(const Packet& packet)
 
         for(auto& u : state.users)
         {
-            qDebug() << "add user to connected: " <<  u.appVersion << "-" << u.buildType << "-" << u.osName << "-" << u.osVersion;
+            QString avatarPath = checkAvatar(u.id, u.avatarHash);
+
+            qDebug() << "add user to connected: " <<  u.appVersion << "-"
+                     << u.buildType << "-" << u.osName
+                     << "-" << u.osVersion << "- avatar hash= " << u.avatarHash
+                     << "avatar path=" << avatarPath;
+
+
+            //if user is me set myAvatarPath
+            if(u.id == myId())
+            {
+                qDebug() << "statereceived, this user is me: ";
+                setMyAvatarPath(avatarPath);
+            }
+
             m_connectedUsersModel->addUser(u.id,
                                            u.username,
+                                           avatarPath,
                                            "",false,//server doesnt send these right now.
                                            u.muted,
                                            u.deafened,
@@ -1006,8 +1143,12 @@ void User::processPacket(const Packet& packet)
 
             //add those users are in channels to our channel model
             if(u.channelId!=-1)
-                m_channelModel->addUser(u.channelId,u.id,u.username,u.muted,u.deafened,u.camera);
+                m_channelModel->addUser(u.channelId, u.id, u.username, avatarPath,
+                                        u.muted, u.deafened, u.camera);
         }
+
+        //send request to server for all not found avatars
+        askForNotFoundAvatars();
 
         qInfo() << "voice: connected to server.";
     }
@@ -1067,6 +1208,32 @@ void User::loginToUdpSocket()
     }
 }
 
+int User::connectedServerId() const
+{
+    return m_connectedServerId;
+}
+
+void User::setConnectedServerId(int newConnectedServerId)
+{
+    if (m_connectedServerId == newConnectedServerId)
+        return;
+    m_connectedServerId = newConnectedServerId;
+    emit connectedServerIdChanged();
+}
+
+QString User::myAvatarPath() const
+{
+    return m_myAvatarPath;
+}
+
+void User::setMyAvatarPath(const QString &newMyAvatarPath)
+{
+    if (m_myAvatarPath == newMyAvatarPath)
+        return;
+    m_myAvatarPath = newMyAvatarPath;
+    emit myAvatarPathChanged();
+}
+
 bool User::myChannelSavesChat() const
 {
     return m_myChannelSavesChat;
@@ -1084,6 +1251,82 @@ QString User::appTitle() const
 {
     return QString::fromUtf8(APP_TITLE) + " v" + QString::fromUtf8(APP_VERSION);
 }
+
+void User::updateMyProfile(const QString &username, const QString &identity, const QString &avatarPath)
+{
+    qDebug()<< "update my profile username to " << username << " udentity to" << identity << "avatarpath to " << avatarPath;
+
+    //save locally in files of myServers..
+
+    //check is username changed?
+    // if(username != myUsername())
+    // {
+    //     //send request updaet to server.
+    //     UpdateUserInfoPacket uu;
+
+    //     uu.updateType = UpdateUserInfoType::Username;
+    //     uu.payloadValue = username;
+
+    //     Packet p;
+    //     p.type = PacketType::UpdateUserInfo;
+    //     p.payload = PacketHelpers::pack(uu);
+    //     socket.write(p.serialize());
+    // }
+
+
+    //check is identity changed?
+    // if(identity != myIdentity())
+    // {
+    //     //send request updaet to server.
+    //     UpdateUserInfoPacket uu;
+    //     uu.updateType = UpdateUserInfoType::Identity;
+    //     uu.payloadValue = identity;
+
+    //     Packet p;
+    //     p.type = PacketType::UpdateUserInfo;
+    //     p.payload = PacketHelpers::pack(uu);
+
+    //     socket.write(p.serialize());
+    // }
+
+
+    if(!avatarPath.isEmpty())
+    {
+        //send request update to server
+        UpdateUserInfoPacket uu;
+        uu.updateType = UpdateUserInfoType::Avatar;
+        uu.paylaodData = m_avatarManager.imageFileToBytes(avatarPath);
+        qDebug() << "avatar size=" << uu.paylaodData.size();
+
+        Packet p;
+
+        p.type = PacketType::UpdateUserInfo;
+        p.payload = PacketHelpers::pack(uu);
+        socket.write(p.serialize());
+    }
+
+}
+
+
+QString User::checkAvatar(quint64 userId, const QString &avatarHash)
+{
+    //check for user's avatar sotred in cache or not.
+    if(!avatarHash.isEmpty())
+    {
+        //check cache folder
+        if(m_avatarManager.avatarExists(SAVE_AVATAR_PATH+QString::number(m_connectedServerId),avatarHash)) //this method will append / at end path and .png at end of filename
+        {
+            QString avatarPath = "file://"+SAVE_AVATAR_PATH+QString::number(m_connectedServerId)+"/"+avatarHash+".png";
+            qDebug() << "avatar found = " << avatarPath;
+            return avatarPath;
+        }
+    }
+
+    qDebug() << "avatar not found for hash " << avatarHash << "would send request for this.";
+    m_notFoundAvatars.append(userId);
+    return "";
+}
+
 
 void User::onDisconnected()
 {

@@ -89,7 +89,23 @@ Item
                         height: width
                         radius: width / 2
 
-                        color: "grey"
+                        color: "#1E1F22"
+
+                        Text
+                        {
+                            anchors.centerIn: parent
+                            visible: model.userAvatarPath === ""
+                            text: "?"
+                            color: "white"
+                            font.pixelSize: 16
+                        }
+
+                        Image
+                        {
+                            source: model.userAvatarPath
+                            anchors.fill: parent
+                        }
+
 
                         MouseArea
                         {

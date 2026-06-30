@@ -11,6 +11,10 @@ class Participant : public QObject
                    READ id
                        CONSTANT)
 
+    Q_PROPERTY(QString avatarPath
+                        READ avatarPath
+                            CONSTANT)
+
     Q_PROPERTY(QString username
                    READ username
                        CONSTANT)
@@ -39,10 +43,11 @@ class Participant : public QObject
 
 public:
     explicit Participant(quint64 id,
-        const QString &username, bool isTalking, bool isMuted, bool isDeafened, bool isCameraOpen,
+        const QString &username, const QString& avatarPath,
+                         bool isTalking, bool isMuted, bool isDeafened, bool isCameraOpen,
         QObject *parent = nullptr)
         : QObject(parent),
-        m_id(id), m_username(username), m_isCameraOpen(isCameraOpen),
+        m_id(id), m_username(username), m_isCameraOpen(isCameraOpen), m_avatarPath(avatarPath),
         m_isTalking(isTalking), m_isMuted(isMuted), m_isDeafened(isDeafened)
     {
         m_videoSink = new VideoSink(this);
@@ -64,6 +69,11 @@ public:
     quint64 id() const
     {
         return m_id;
+    }
+
+    QString avatarPath() const
+    {
+        return m_avatarPath;
     }
 
     VideoSink *videoSink()
@@ -91,6 +101,15 @@ public:
 
         m_isTalking=status;
     }
+
+    void setAvatarPath(const QString& path)
+    {
+        if(m_avatarPath==path)
+            return;
+
+        m_avatarPath=path;
+    }
+
     bool isTalking() const
     {
         return m_isTalking;
@@ -124,6 +143,7 @@ public:
 private:
     quint64 m_id;
     QString m_username;
+    QString m_avatarPath;
     bool m_isTalking;
     bool m_isMuted;
     bool m_isDeafened;

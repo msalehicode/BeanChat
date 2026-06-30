@@ -235,7 +235,22 @@ Item
                                     Layout.preferredHeight: 27
 
                                     radius: width / 2
-                                    color: "black"
+                                    color: "#1E1F22"
+
+                                    Text
+                                    {
+                                        anchors.centerIn: parent
+                                        visible: modelData.avatarPath === ""
+                                        text: "?"
+                                        color: "white"
+                                        font.pixelSize: 16
+                                    }
+
+                                    Image {
+                                        id: avatar
+                                        anchors.fill: parent
+                                        source: modelData.avatarPath
+                                    }
 
                                     Rectangle
                                     {
@@ -594,18 +609,34 @@ Item
 
                 Rectangle
                 {
-                    id: avatar
-
+                    id:myAvatar
                     width: 35
                     height: width
                     radius: width / 2
 
-                    color: "grey"
+                    color: "#1E1F22"
+                    Text
+                    {
+                        anchors.centerIn: parent
+                        visible: user.myAvatarPath === ""
+                        text: "?"
+                        color: "white"
+                        font.pixelSize: 16
+                    }
 
+                    Image
+                    {
+                        source: user.myAvatarPath
+                        anchors.fill: parent
+                    }
                     MouseArea
                     {
                         anchors.fill: parent
-                        onClicked: console.log("prof")
+                        onClicked:
+                        {
+                            modifyProfilePopup.avatarSource=user.myAvatarPath
+                            modifyProfilePopup.open()
+                        }
                     }
 
                     // Status indicator
@@ -627,6 +658,11 @@ Item
                         border.color: bg2   // same as panel background
 
                         color: "lime"      // Online
+                        MouseArea
+                        {
+                            anchors.fill: parent
+                            onClicked: console.log("clicked on my status indicator")
+                        }
                     }
                 }
 
@@ -636,6 +672,15 @@ Item
                     text: user.myUsername
                     color: "white"
                     anchors.verticalCenter: parent.verticalCenter
+                    MouseArea
+                    {
+                        anchors.fill: parent
+                        onClicked:
+                        {
+                            modifyProfilePopup.avatarSource=user.myAvatarPath
+                            modifyProfilePopup.open()
+                        }
+                    }
                 }
             }
 

@@ -86,6 +86,7 @@ qt_add_qml_module(appBeanChat
         ui/CreateChannelPopup.qml
         ui/ServerMenu.qml
         ui/ModifyChannelPopup.qml
+        ui/ModifyProfilePopup.qml
 
         # settingsPage pages/components
         ui/settingPages/SettingSection.qml
@@ -111,6 +112,7 @@ qt_add_qml_module(appBeanChat
         soundmanager.h soundmanager.cpp
         database.h database.cpp
         settingsmanager.h settingsmanager.cpp
+        avatarmanager.h avatarmanager.cpp
 
         # capture
         audiocapture.h audiocapture.cpp

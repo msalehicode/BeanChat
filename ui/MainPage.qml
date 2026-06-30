@@ -31,6 +31,7 @@ Item {
         {
             id:importantNotifierBar
             width: parent.width
+            visible: false
             height:25
             Rectangle
             {
@@ -288,6 +289,10 @@ Item {
         id:myServersItemMenu
         connectButton.onClicked:
         {
+            //update server id, to know which server is connecting to (for avatars path)
+            user.connectedServerId=dbIndex
+
+            //connect
             user.switchOrConnectToServer(ip,
                                          port,
                                          id)
@@ -364,6 +369,11 @@ Item {
         id:modifyChannelPopup
         onSaveClicked: user.updateChannel(targetChannelId, channelName, channelPassword, saveChats)
         onDeleteClicked: user.deleteChannel(targetChannelId)
+    }
+
+    ModifyProfilePopup
+    {
+        id:modifyProfilePopup
     }
 
     Connections
