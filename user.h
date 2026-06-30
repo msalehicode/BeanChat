@@ -138,6 +138,9 @@ public:
     bool myChannelSavesChat() const;
     void setMyChannelSavesChat(bool newMyChannelSavesChat);
 
+
+    QString appTitle() const;
+
 signals:
 
     void myIdChanged();
@@ -281,6 +284,7 @@ private:
     Q_PROPERTY(QString myAppVersion READ myAppVersion)
     Q_PROPERTY(UserConnectionStatus connectionStatus READ connectionStatus WRITE setConnectionStatus NOTIFY connectionStatusChanged FINAL)
     Q_PROPERTY(bool myChannelSavesChat READ myChannelSavesChat WRITE setMyChannelSavesChat NOTIFY myChannelSavesChatChanged FINAL)
+    Q_PROPERTY(QString appTitle READ appTitle)
 };
 
 #endif // USER_H

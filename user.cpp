@@ -1080,6 +1080,11 @@ void User::setMyChannelSavesChat(bool newMyChannelSavesChat)
     emit myChannelSavesChatChanged();
 }
 
+QString User::appTitle() const
+{
+    return QString::fromUtf8(APP_TITLE) + " v" + QString::fromUtf8(APP_VERSION);
+}
+
 void User::onDisconnected()
 {
     qDebug() << "Server disconnected";

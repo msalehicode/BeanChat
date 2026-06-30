@@ -8,7 +8,7 @@ Window {
     minimumWidth: 310
     minimumHeight: 439
     visible: true
-    title: qsTr("Bean Chat")
+    title: user.appTitle
 
     Rectangle
     {
