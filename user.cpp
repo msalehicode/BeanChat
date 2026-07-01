@@ -1358,7 +1358,11 @@ QString User::checkAvatar(quint64 userId, const QString &avatarHash)
         //check cache folder
         if(m_avatarManager.avatarExists(SAVE_AVATAR_PATH+QString::number(m_connectedServerId),avatarHash)) //this method will append / at end path and .png at end of filename
         {
-            QString avatarPath = "file://"+SAVE_AVATAR_PATH+QString::number(m_connectedServerId)+"/"+avatarHash+".png";
+            QString avatarPath = SAVE_AVATAR_PATH
+                                 +QString::number(m_connectedServerId)
+                                 +"/"+avatarHash
+                                 +".png";
+            avatarPath = QUrl::fromLocalFile(avatarPath).toString();
             qDebug() << "avatar found = " << avatarPath;
             return avatarPath;
         }

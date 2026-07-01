@@ -9,7 +9,7 @@ set(APP_TitleName "Bean Chat")
 set(APP_OrganizationName "orgBeanChat")
 set(APP_ApplicationName "appBeanChat")
 
-find_package(Qt6 REQUIRED COMPONENTS Core Quick Multimedia Network Sql)
+find_package(Qt6 REQUIRED COMPONENTS Core Quick Multimedia Network Sql QuickDialogs2)
 
 # hotkey
 if(UNIX AND NOT APPLE)
@@ -309,7 +309,7 @@ target_compile_definitions(appBeanChat PRIVATE
 
     #audio output default config
     SPEAKER_DEFAULT_DEVICE_INDEX=0
-    SPEAKER_DEFAULT_EFFECTS_VOLUME=1.0
+    SPEAKER_DEFAULT_EFFECTS_VOLUME=0.5
 
     # qsettings group and keys , also these values are inside ui/settingPages/AudioOutputPage.qml too
     SPEAKER_SETTING_DEVICE="AudioOutput/Device"
@@ -342,6 +342,8 @@ target_link_libraries(appBeanChat
     Qt6::Core
     Qt6::Network
     Qt6::Sql
+    Qt6::QuickDialogs2
+
 )
 
 include(GNUInstallDirs)
@@ -382,8 +384,24 @@ if(WIN32)
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "C:/Libraries/rnnoise/bin/librnnoise-0.dll"
         "$<TARGET_FILE_DIR:appBeanChat>"
+
+
+        #qtquick dialogs
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${QT6_INSTALL_PREFIX}/qml/QtQuick/Dialogs/qmldir"
+            "$<TARGET_FILE_DIR:appBeanChat>/qml/QtQuick/Dialogs"
+
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${QT6_INSTALL_PREFIX}/qml/QtQuick/Dialogs/plugins.qmltypes"
+            "$<TARGET_FILE_DIR:appBeanChat>/qml/QtQuick/Dialogs"
+
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${QT6_INSTALL_PREFIX}/qml/QtQuick/Dialogs/qtquickdialogsplugin.dll"
+            "$<TARGET_FILE_DIR:appBeanChat>/qml/QtQuick/Dialogs"
+
     )
 endif()
+
 
 
 
