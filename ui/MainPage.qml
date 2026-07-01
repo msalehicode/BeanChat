@@ -10,7 +10,7 @@ Item {
     property int widthBase: 250 //uses for userlist and chanenlist
 
 
-    property color bg1 : "#4a4c51"
+    property color bg1 : "#414247"
     property color bg2: "#121315"
 
     property int iconH: 20
@@ -351,6 +351,11 @@ Item {
         {
             user.joinChannel(channelId, password)
         }
+    }
+
+    EnterChannelPasswordPopup
+    {
+        id: channelPasswordForMoveUserPopup
     }
 
     ShowImagePopup

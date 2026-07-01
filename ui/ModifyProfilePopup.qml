@@ -8,28 +8,57 @@ Popup
 {
     id: profilePopup
 
-
     modal: true
     focus: true
+    closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
     width: 520
     height: 620
 
     anchors.centerIn: Overlay.overlay
 
-    Material.theme: Material.Dark
-
     background: Rectangle
     {
-        radius: 12
         color: "#313338"
-
-        border.width: 1
+        radius: 8
         border.color: "#1E1F22"
     }
 
-    property string avatarSource: ""
+    enter: Transition
+    {
+        ParallelAnimation
+        {
+            NumberAnimation
+            {
+                property: "opacity"
+                from: 0
+                to: 1
+                duration: 120
+            }
 
+            NumberAnimation
+            {
+                property: "scale"
+                from: 0.97
+                to: 1.0
+                duration: 120
+            }
+        }
+    }
+
+    exit: Transition
+    {
+        NumberAnimation
+        {
+            property: "opacity"
+            to: 0
+            duration: 100
+        }
+    }
+
+    property string avatarSource: ""
+    property string usernameText: ""
+    property string identityText: ""
 
     // local usage
     property bool hasAvatar: avatarSource !== ""
@@ -58,26 +87,263 @@ Popup
     ColumnLayout
     {
         anchors.fill: parent
-        anchors.margins: 24
+        spacing: 0
 
-        spacing: 18
-
-        Label
-        {
-            text: "User Profile"
-
-            font.pixelSize: 24
-            font.bold: true
-
-            color: "white"
-        }
-
+        //
+        // Header
+        //
         Rectangle
         {
             Layout.fillWidth: true
-            Layout.preferredHeight: 140
+            height: 82
 
-            radius: 10
+            color: "#313338"
+
+            Column
+            {
+                anchors.fill: parent
+                anchors.margins: 20
+
+                spacing: 6
+
+                Text
+                {
+                    text: "User Profile"
+
+                    color: "white"
+
+                    font.pixelSize: 22
+                    font.bold: true
+                }
+
+                Text
+                {
+                    text: "Update your username, identity and avatar."
+
+                    color: "#B5BAC1"
+
+                    font.pixelSize: 13
+                }
+            }
+        }
+
+        //
+        // Body
+        //
+        Item
+        {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            ColumnLayout
+            {
+                id: bodyLayout
+
+                anchors.fill: parent
+
+                anchors.leftMargin: 20
+                anchors.rightMargin: 20
+                anchors.topMargin: 10
+                anchors.bottomMargin: 16
+
+                spacing: 16
+
+                Rectangle
+                {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 140
+
+                    radius: 10
+                    color: "#2B2D31"
+
+                    RowLayout
+                    {
+                        anchors.fill: parent
+                        anchors.margins: 16
+
+                        spacing: 16
+
+                        Rectangle
+                        {
+                            width: 96
+                            height: 96
+
+                            radius: width / 2
+
+                            color: "#1E1F22"
+
+                            clip: true
+
+                            Image
+                            {
+                                anchors.fill: parent
+
+                                source: profilePopup.avatarSource
+
+                                fillMode: Image.PreserveAspectCrop
+
+                                visible:
+                                    profilePopup.avatarSource !== ""
+                            }
+
+                            Text
+                            {
+                                anchors.centerIn: parent
+
+                                visible:
+                                    profilePopup.avatarSource === ""
+
+                                text: "?"
+                                color: "white"
+
+                                font.pixelSize: 36
+                            }
+
+                        }
+
+                        ColumnLayout
+                        {
+                            Layout.fillWidth: true
+
+                            Button
+                            {
+                                id: changeAvatarButton
+                                text: "Change Avatar"
+
+                                onClicked: avatarDialog.open()
+
+
+                                background: Rectangle
+                                {
+                                    radius: 4
+
+                                    color: changeAvatarButton.down
+                                           ? "#3F4147"
+                                           : "transparent"
+
+                                    border.width: 1
+                                    border.color: "#555"
+                                }
+
+                                contentItem: Text
+                                {
+                                    text: parent.text
+                                    color: "white"
+
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                }
+                            }
+
+                            Button
+                            {
+                                id:removeAvatarButton
+                                text: "Remove Avatar"
+
+                                enabled: profilePopup.hasAvatar
+
+                                onClicked:
+                                {
+                                    profilePopup.avatarSource = ""
+
+                                    // tell backend
+                                    // profileManager.removeAvatar()
+                                }
+
+                                background: Rectangle
+                                {
+                                    radius: 4
+
+                                    color: removeAvatarButton.enabled ? "red" :
+                                            removeAvatarButton.down? "darkred" : "transparent"
+
+                                    border.width: 1
+                                    border.color: "#555"
+                                }
+
+                                contentItem: Text
+                                {
+                                    text: parent.text
+                                    color: "white"
+
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Label
+                {
+                    text: "USERNAME"
+                    color: "#B5BAC1"
+                    font.bold: true
+                }
+
+                TextField
+                {
+                    id: usernameField
+
+                    Layout.fillWidth: true
+
+                    placeholderText: "Username"
+                    placeholderTextColor: "white"
+
+                    text: user.myUsername
+                    color: "white"
+
+                    background: Rectangle
+                    {
+                        radius: 6
+                        color: "#1E1F22"
+                    }
+                }
+
+                Label
+                {
+                    text: "IDENTITY"
+                    color: "#B5BAC1"
+                    font.bold: true
+                }
+
+                TextField
+                {
+                    id: identityField
+
+                    Layout.fillWidth: true
+
+                    placeholderText: "Identity"
+                    placeholderTextColor: "white"
+                    text:user.myIdentity
+
+                    color: "white"
+
+                    background: Rectangle
+                    {
+                        radius: 6
+                        color: "#1E1F22"
+                    }
+                }
+
+
+                Item
+                {
+                    Layout.fillHeight: true
+                }
+
+            }
+
+        }
+
+        //
+        // Footer
+        //
+        Rectangle
+        {
+            Layout.fillWidth: true
+            height: 64
+
             color: "#2B2D31"
 
             RowLayout
@@ -85,176 +351,101 @@ Popup
                 anchors.fill: parent
                 anchors.margins: 16
 
-                spacing: 16
-
-                Rectangle
-                {
-                    width: 96
-                    height: 96
-
-                    radius: width / 2
-
-                    color: "#1E1F22"
-
-                    clip: true
-
-                    Image
-                    {
-                        anchors.fill: parent
-
-                        source: profilePopup.avatarSource
-
-                        fillMode: Image.PreserveAspectCrop
-
-                        visible:
-                            profilePopup.avatarSource !== ""
-                    }
-
-                    Text
-                    {
-                        anchors.centerIn: parent
-
-                        visible:
-                            profilePopup.avatarSource === ""
-
-                        text: "?"
-                        color: "white"
-
-                        font.pixelSize: 36
-                    }
-                }
-
-                ColumnLayout
+                Item
                 {
                     Layout.fillWidth: true
+                }
 
-                    Button
+                Button
+                {
+                    id: cancelButton
+
+                    text: "Cancel"
+
+                    onClicked: profilePopup.close()
+
+                    background: Rectangle
                     {
-                        text: "Change Avatar"
+                        radius: 4
 
-                        onClicked: avatarDialog.open()
+                        color: cancelButton.down
+                               ? "#3F4147"
+                               : "transparent"
+
+                        border.width: 1
+                        border.color: "#555"
                     }
 
-                    Button
+                    contentItem: Text
                     {
-                        text: "Remove Avatar"
+                        text: parent.text
 
-                        enabled: profilePopup.hasAvatar
+                        color: "white"
 
-                        onClicked:
-                        {
-                            profilePopup.avatarSource = ""
-
-                            // tell backend
-                            // profileManager.removeAvatar()
-                        }
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
                     }
                 }
-            }
-        }
 
-        Label
-        {
-            text: "USERNAME"
-            color: "#B5BAC1"
-            font.bold: true
-        }
-
-        TextField
-        {
-            id: usernameField
-
-            Layout.fillWidth: true
-
-            placeholderText: "Username"
-
-            text: user.myUsername
-            color: "white"
-
-            background: Rectangle
-            {
-                radius: 6
-                color: "#1E1F22"
-            }
-        }
-
-        Label
-        {
-            text: "IDENTITY"
-            color: "#B5BAC1"
-            font.bold: true
-        }
-
-        TextField
-        {
-            id: identityField
-
-            Layout.fillWidth: true
-
-            placeholderText: "Identity"
-            text:user.myIdentity
-
-            color: "white"
-
-            background: Rectangle
-            {
-                radius: 6
-                color: "#1E1F22"
-            }
-        }
-
-        Item
-        {
-            Layout.fillHeight: true
-        }
-
-        RowLayout
-        {
-            Layout.alignment: Qt.AlignRight
-
-            spacing: 12
-
-            Button
-            {
-                text: "Cancel"
-
-                onClicked:
-                    profilePopup.close()
-            }
-
-            Button
-            {
-                text: "Save"
-
-                highlighted: true
-
-                onClicked:
+                Button
                 {
-                    // backend call:
-                    //
-                    // profileManager.saveProfile(
-                    //     usernameField.text,
-                    //     identityField.text,
-                    //     profilePopup.avatarSource
-                    // )
+                    id: saveButton
 
-                    //check if image modified
-                    if(profilePopup.imageHasChanged)
-                        user.updateMyProfile(usernameField.text, identityField.text, profilePopup.avatarSource);
-                    else
-                        user.updateMyProfile(usernameField.text, identityField.text);
+                    text: "Save"
 
-                    console.log( "update user info: " , usernameField.text," " , identityField.text, " " ,profilePopup.avatarSource)
+                    highlighted: true
 
-                    //reset for later use.
-                    profilePopup.imageHasChanged=false;
-                    profilePopup.avatarSource="";
+                    onClicked:
+                    {
+                        // backend call:
+                        //
+                        // profileManager.saveProfile(
+                        //     usernameField.text,
+                        //     identityField.text,
+                        //     profilePopup.avatarSource
+                        // )
 
-                    profilePopup.close()
+
+                        if(profilePopup.imageHasChanged)
+                            user.updateMyProfile(
+                                        usernameField.text,
+                                        identityField.text,
+                                        profilePopup.avatarSource)
+                        else
+                            user.updateMyProfile(
+                                        usernameField.text,
+                                        identityField.text)
+
+                        //reset for later use.
+                        profilePopup.imageHasChanged = false
+                        profilePopup.avatarSource = ""
+
+                        profilePopup.close()
+                    }
+
+                    background: Rectangle
+                    {
+                        radius: 4
+
+                        color: saveButton.down
+                               ? "#4752C4"
+                               : "#5865F2"
+                    }
+
+                    contentItem: Text
+                    {
+                        text: parent.text
+
+                        color: "white"
+
+                        font.bold: true
+
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
                 }
             }
         }
     }
-
-
 }
+

@@ -89,6 +89,7 @@ Popup
                     color: "white"
                     font.pixelSize: 15
                     font.bold: true
+                    width: implicitWidth>root.width/1.50 ? root.width/1.50 : implicitWidth
                     elide: Text.ElideRight
                 }
 
@@ -97,6 +98,8 @@ Popup
                     text: root.ip + ":" + root.port
                     color: "#949ba4"
                     font.pixelSize: 12
+                    width: implicitWidth>root.width/1.50 ? root.width/1.50 : implicitWidth
+                    elide: Text.ElideMiddle
                 }
             }
         }

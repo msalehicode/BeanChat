@@ -35,16 +35,6 @@ Popup
 
     signal saveClicked()
 
-    // background: Rectangle
-    // {
-    //     radius: 10
-    //     color: "#313338"
-    //     border.color: "#1E1F22"
-    //     border.width: 1
-    // }
-
-
-
 
     enter: Transition
     {
@@ -150,6 +140,7 @@ Popup
 
                     color: "white"
                     placeholderText: "BeanChat Server"
+                    placeholderTextColor: "white"
                     text:currentName
 
                     background: Rectangle

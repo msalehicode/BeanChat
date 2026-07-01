@@ -43,6 +43,8 @@ Item
                 font.pixelSize: 18
                 font.bold: true
                 anchors.verticalCenter: parent.verticalCenter
+                width: implicitWidth>root.width/1.50 ? root.width/1.50 : implicitWidth
+                elide: Text.ElideRight
             }
             Image
             {
@@ -77,6 +79,21 @@ Item
         ScrollBar.vertical: ScrollBar
         {
             policy: ScrollBar.AsNeeded
+            opacity:0.8
+            width: 8
+            visible: chatView.contentHeight > chatView.height
+
+            contentItem: Rectangle
+            {
+                width: 4
+                radius: width / 2
+                color: "#66676a"
+            }
+
+            background: Rectangle
+            {
+                color: bg2
+            }
         }
 
         boundsBehavior: Flickable.StopAtBounds
@@ -153,11 +170,16 @@ Item
                     {
                         anchors.centerIn: parent
 
-                        text: model.senderId.toString().charAt(0)
+                        text: model.senderName.charAt(0)
 
                         color: "white"
                         font.bold: true
                     }
+                    // Image
+                    // {
+                        // anchors.fill: parent
+                        // source:
+                    // }
                 }
 
                 Column

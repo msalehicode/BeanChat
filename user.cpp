@@ -160,6 +160,31 @@ void User::joinChannel(quint64 channelId, const QString& password)
     socket.write(p.serialize());
 }
 
+int User::isChannelLocked(quint64 channelId)
+{
+    ChannelItem* channel = m_channelModel->findChannel(channelId);
+    if(channel)
+        return channel->isLocked;
+    else
+        qDebug() << "invalid channel id.";
+    return -1;
+}
+
+void User::moveUser(quint64 userId, quint64 channelId, const QString& password)
+{
+    MoveUserPacket mv;
+    mv.channelId=channelId;
+    mv.userId=userId;
+    mv.channelPassword=password;
+
+    Packet p;
+
+    p.type = PacketType::MoveUser;
+    p.payload = PacketHelpers::pack(mv);
+
+    socket.write(p.serialize());
+}
+
 void User::connectToServer(bool saveThisConnection, const QString& serverIp, const QString& str_serverPort)
 {
     //if user is connected to somewhere, disconnect before new connection
@@ -608,8 +633,12 @@ void User::newAvatarArrived(quint64 userId,
         m_channelModel->setUserAvatarPath(userId, avatarPath);
 
         //check if user is me OR is he my channel? then apply on current channel participant model
-        if(userId == myId()
-            || m_channelModel->findChannelOfUser(userId)->id == m_myChannelId)
+        ChannelItem* channel = m_channelModel->findChannelOfUser(userId);
+        bool isInMyChannel=false;
+        if(channel)
+            isInMyChannel = (channel->id == m_myChannelId);
+
+        if(userId == myId() || isInMyChannel)
         {
             m_currentChannelParticipant->setAvatarPath(userId, avatarPath);
         }
@@ -740,6 +769,7 @@ void User::processPacket(const Packet& packet)
             m_myChannelId=-1; //default vlaue for homeless users :D
             setMyChannelSavesChat(false);
             setChatUnreadMessages(0);
+            m_me=nullptr;
         }
         break;
     }
@@ -858,6 +888,8 @@ void User::processPacket(const Packet& packet)
         m_currentChannelParticipant->setDeafened(resp.userId,resp.status);
     }break;
 
+
+    case PacketType::UserMoved:
     case PacketType::UserJoinedChannel:
     {
         auto resp =
@@ -882,7 +914,10 @@ void User::processPacket(const Packet& packet)
         //check if user was me?
         if(resp.userId == static_cast<quint64>(myId()))
         {
-            qDebug() << "voice: channel switched.";
+            if(packet.type==PacketType::UserMoved)
+                qDebug() << "voice: you are moved.";
+            else
+                qDebug() << "voice: channel switched.";
 
 
             //open mic and speaker
@@ -935,7 +970,10 @@ void User::processPacket(const Packet& packet)
         //check did user join into my channel?
         else if(resp.channelId == m_myChannelId)
         {
-            qDebug() << "voice: user joined to your channel.";
+            if(packet.type==PacketType::UserMoved)
+                qDebug() << "voice: user moved into your channel.";
+            else
+                qDebug() << "voice: user joined to your channel.";
 
             //find channel and that user info and add into participantModel
             ChannelItem* channel = m_channelModel->findChannel(resp.channelId);
@@ -959,7 +997,11 @@ void User::processPacket(const Packet& packet)
         //check did user left my channel?
         else if(resp.oldChannelId==m_myChannelId)
         {
-            qDebug() << "voice: user left your channel.";
+            if(packet.type==PacketType::UserMoved)
+                qDebug() << "voice: user moved from your channel.";
+            else
+                qDebug() << "voice: user left your channel.";
+
 
             //remove that user from participant model
             m_currentChannelParticipant->removeUser(resp.userId);

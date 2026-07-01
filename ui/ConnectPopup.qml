@@ -13,6 +13,7 @@ Popup
     height: 480
 
     anchors.centerIn: Overlay.overlay
+    closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
     background: Rectangle
     {
@@ -64,8 +65,9 @@ Popup
             id: serverIp
             Layout.fillWidth: true
             placeholderText: "127.0.0.1"
+            placeholderTextColor: "white"
             color: "white"
-            text:"localhost" //for tests
+            text:""
             onAccepted: buttonConnect.clicked()
 
             background: Rectangle
@@ -73,14 +75,6 @@ Popup
                 radius: 4
                 color: "#1e1f22"
                 border.color: parent.activeFocus ? "#5865f2" : "#111214"
-            }
-
-            Button
-            {
-                text:"clear"
-                onClicked: serverIp.clear()
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
             }
         }
 
@@ -98,7 +92,8 @@ Popup
 
             Layout.fillWidth: true
 
-            placeholderText: "9987"
+            // placeholderText: "9987"
+            // placeholderTextColor: "white"
             text: "9987"
 
             validator: IntValidator
@@ -117,21 +112,52 @@ Popup
             }
         }
 
-        RowLayout
+
+        CheckBox
         {
-            Text
+            id: saveThisServerStatus
+
+            checked: true
+
+            indicator: Item {}    // Hide the default indicator
+
+            contentItem: Row
             {
-                text: "ADD TO MY SERVERS"
-                color: "#b5bac1"
-                font.bold: true
-                font.pixelSize: 12
-            }
-            CheckBox
-            {
-                id:saveThisServerStatus
-                checked: true
+                spacing: 10
+
+                Rectangle
+                {
+                    width: 18
+                    height: 18
+                    radius: 4
+
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    color: saveThisServerStatus.checked ? "#5865F2" : "#1E1F22"
+                    border.color: "#5865F2"
+
+                    Text
+                    {
+                        anchors.centerIn: parent
+                        text: "✓"
+                        visible: saveThisServerStatus.checked
+                        color: "white"
+                        font.bold: true
+                        font.pixelSize: 12
+                    }
+                }
+
+                Text
+                {
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    text: "ADD TO MY SERVERS"
+                    color: "white"
+                    font.pixelSize: 14
+                }
             }
         }
+
 
         Item { Layout.fillHeight: true }
 
@@ -147,6 +173,27 @@ Popup
                 Layout.fillWidth: true
 
                 onClicked: root.close()
+
+                background: Rectangle
+                {
+                    radius: 4
+
+                    color: buttonCancel.down
+                           ? "#3F4147"
+                           : "transparent"
+
+                    border.width: 1
+                    border.color: "#555"
+                }
+
+                contentItem: Text
+                {
+                    text: parent.text
+                    color: "white"
+
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
             }
 
             Button
@@ -160,6 +207,27 @@ Popup
                 {
                     user.connectToServer( saveThisServerStatus.checked, serverIp.text, serverPort.text)
                     root.close()
+                }
+
+                background: Rectangle
+                {
+                    radius: 4
+
+                    color: !buttonConnect.enabled
+                           ? "#444"
+                           : buttonConnect.down
+                             ? "#4752C4"
+                             : "#5865F2"
+                }
+
+                contentItem: Text
+                {
+                    text: parent.text
+                    color: "white"
+                    font.bold: true
+
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
                 }
             }
         }

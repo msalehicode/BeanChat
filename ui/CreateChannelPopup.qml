@@ -142,6 +142,7 @@ Popup
                     onAccepted: createButton.clicked()
                     color: "white"
                     placeholderText: "General"
+                    placeholderTextColor: "white"
 
                     background: Rectangle
                     {
@@ -173,6 +174,7 @@ Popup
 
                     color: "white"
                     placeholderText: "Leave empty for an unlocked channel"
+                    placeholderTextColor: "white"
 
                     echoMode: TextInput.Password
 
@@ -232,6 +234,7 @@ Popup
                         }
                     }
                 }
+
                 Item
                 {
                     Layout.fillHeight: true
@@ -299,8 +302,11 @@ Popup
 
                     onClicked:
                     {
-                        root.createClicked()
-                        root.close()
+                        if(enabled)
+                        {
+                            root.createClicked()
+                            root.close()
+                        }
                     }
 
                     background: Rectangle

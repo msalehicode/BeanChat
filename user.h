@@ -73,6 +73,7 @@ public:
 
     //server actions
     Q_INVOKABLE void joinChannel(quint64 channelId, const QString& password="");
+    Q_INVOKABLE void moveUser(quint64 userId, quint64 channelId, const QString& password);
     Q_INVOKABLE void createChannel(QString channelName, QString password, bool saveMessages);
     Q_INVOKABLE void sendMessage(QString message);
     Q_INVOKABLE void updateChannel(quint64 channelId, const QString& name,
@@ -167,6 +168,7 @@ public:
     void setConnectedServerId(int newConnectedServerId);
 
 
+    Q_INVOKABLE int isChannelLocked(quint64 channelId);
 signals:
 
     void myIdChanged();

@@ -12,7 +12,7 @@ Popup
 
     width: Overlay.overlay.width
     height: Overlay.overlay.height
-
+    closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
     modal: true
 
     padding: 0

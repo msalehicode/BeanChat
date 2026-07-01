@@ -5,8 +5,8 @@ Window {
     id:rootWindow
     width: 980
     height: 700
-    minimumWidth: 310
-    minimumHeight: 439
+    minimumWidth: 1143
+    minimumHeight: 646
     visible: true
     title: user.appTitle
 

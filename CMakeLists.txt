@@ -4,7 +4,7 @@ project(BeanChat VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(APP_CURRENT_VERSION "0.14.0")
+set(APP_CURRENT_VERSION "0.15.3")
 set(APP_TitleName "Bean Chat")
 set(APP_OrganizationName "orgBeanChat")
 set(APP_ApplicationName "appBeanChat")

@@ -7,9 +7,15 @@ import QtQuick.Layouts
 Item
 {
     id:channelList
-    width: widthBase
+
+    readonly property int handleMinimumWidth: 450
+    readonly property int handleMaximumWidth: 550
+    readonly property int handleWidth: 8 //to tell others i've handle with this width
+
+
+    width: handleMinimumWidth
     height: parent.height
-    property int handleWidth: 10 //to tell others i've handle with this width
+
 
     Rectangle
     {
@@ -37,6 +43,8 @@ Item
                 anchors.left: parent.left
                 anchors.leftMargin: 16
                 color: "white"
+                width: implicitWidth>300 ? 300 : implicitWidth
+                elide: Text.ElideRight
             }
 
             Image
@@ -73,6 +81,7 @@ Item
             }
         }
 
+
         ListView
         {
             id:channelView
@@ -83,23 +92,26 @@ Item
             clip: true
             model: channelModel
             spacing: 10
+            flickableDirection: Flickable.VerticalFlick
+            acceptedButtons: Qt.NoButton // Disable drag/flick with the mouse
+            boundsMovement: Flickable.StopAtBounds
             ScrollBar.vertical: ScrollBar
             {
                 policy: ScrollBar.AsNeeded
                 opacity:0.8
-                width: 12
+                width: 8
                 visible: channelView.contentHeight > channelView.height
 
                 contentItem: Rectangle
                 {
-                    implicitWidth: 8
+                    width: 4
                     radius: width / 2
-                    color: "#72767d"
+                    color: "#66676a"
                 }
 
                 background: Rectangle
                 {
-                    color: "#202225"
+                    color: bg2
                 }
             }
             delegate: Column
@@ -111,17 +123,16 @@ Item
                 Rectangle
                 {
                     id:theChannel
-                    width: parent.width/1.05
-                    height: 45
+                    width: parent.width/1.02
+                    height: 43
                     radius: height
-                    color:"#2f3136"
                     anchors.horizontalCenter: parent.horizontalCenter
                     Row
                     {
                         anchors.fill: parent
                         anchors.left: parent.left
                         anchors.leftMargin: 10
-                        spacing: 5
+                        spacing: 7
                         Image {
                             id:theChannelTypeIcon
                             width: 20
@@ -136,6 +147,8 @@ Item
                             text: channelName
                             font.pixelSize: 15
                             color:"white"
+                            width: implicitWidth>250 ? 250 : implicitWidth
+                            elide: Text.ElideRight
                         }
 
                         Image
@@ -148,7 +161,6 @@ Item
                             anchors.verticalCenter: parent.verticalCenter
                         }
                     }
-
 
                     MouseArea
                     {
@@ -170,34 +182,80 @@ Item
                                 user.joinChannel(channelId,"") //non locked passwords default password is empty ""
                         }
                     }
-                    Row
-                    {
-                        id: actionButtons
-                        anchors.right: parent.right
-                        anchors.rightMargin: 10
-                        anchors.verticalCenter: parent.verticalCenter
-                        opacity: channelMouseArea.containsMouse ? 1 : 0
-                        visible: opacity > 0
-                        spacing: 7
-                        Image {
-                            source: "icons/settings.png"
-                            width: 20
-                            height: width
 
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked:
-                                {
-                                    modifyChannelPopup.initialChannelName=model.channelName
-                                    modifyChannelPopup.initialChannelPassword= model.isLocked ? "***" : ""
-                                    modifyChannelPopup.initialSaveChats=model.saveChats
-                                    modifyChannelPopup.targetChannelId=model.channelId
-                                    modifyChannelPopup.open()
-                                }
-                            }
+
+                    property bool dragHover: false
+
+                    color: dragHover
+                           ? "#4f545c"
+                           : (channelMouseArea.containsMouse ? "#222427" : "#2f3136")
+
+                    DropArea
+                    {
+                        anchors.fill: parent
+
+                        onEntered:
+                        {
+                            theChannel.dragHover = true
                         }
-                        Behavior on opacity {
-                            NumberAnimation { duration: 120 }
+
+                        onExited:
+                        {
+                            theChannel.dragHover = false
+                        }
+
+                        onDropped: function(drop)
+                        {
+                            theChannel.dragHover = false
+
+                            console.log("Move user",
+                                        drop.source.draggedUserId,
+                                        "to channel",
+                                        channelId)
+
+                            if(user.isChannelLocked(channelId))
+                            {
+                                channelPasswordForMoveUserPopup.channelId = channelId
+                                channelPasswordForMoveUserPopup.channelName = channelName
+
+                                let draggedId = drop.source.draggedUserId
+                                let targetChannel = channelId
+
+                                channelPasswordForMoveUserPopup.onOk = function(password)
+                                {
+                                    user.moveUser(draggedId, targetChannel, password)
+                                }
+
+                                channelPasswordForMoveUserPopup.open()
+                            }
+                            else
+                                user.moveUser(drop.source.draggedUserId
+                                              ,channelId, "")
+                        }
+                    }
+                    Image
+                    {
+                        source: "icons/settings.png"
+                        width: 20
+                        visible: channelMouseArea.containsMouse ? 1 : 0
+                        height: width
+                        anchors
+                        {
+                            right:parent.right
+                            rightMargin: 10
+                            verticalCenter:parent.verticalCenter
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked:
+                            {
+                                modifyChannelPopup.initialChannelName=model.channelName
+                                modifyChannelPopup.initialChannelPassword= model.isLocked ? "***" : ""
+                                modifyChannelPopup.initialSaveChats=model.saveChats
+                                modifyChannelPopup.targetChannelId=model.channelId
+                                modifyChannelPopup.open()
+                            }
                         }
                     }
                 }
@@ -209,23 +267,35 @@ Item
                     delegate: Rectangle
                     {
                         id:userBase
+                        property int draggedUserId: modelData.userid
+
+                        Drag.active: dragHandler.active
+                        Drag.dragType: Drag.Automatic
+                        Drag.hotSpot.x: width / 2
+                        Drag.hotSpot.y: height / 2
+
                         width: parent.width
                         anchors.left:parent.left
                         anchors.leftMargin: 25
                         height: 40
                         color:"transparent"
+
+                        DragHandler
+                        {
+                            id: dragHandler
+                        }
                         Rectangle
                         {
-                            width: parent.width/1.20
-                            height: 40
+                            width: parent.width-35
+                            height: parent.height
                             radius: height
-                            color: "#808185"
+                            color: userMouseArea.containsMouse ? "#525356":"#66676a"
                             RowLayout
                             {
                                 anchors.fill: parent
-                                anchors.leftMargin: 10
+                                anchors.leftMargin: 15
                                 anchors.rightMargin: 10
-                                spacing: 5
+                                spacing: 10
 
                                 Rectangle
                                 {
@@ -246,7 +316,8 @@ Item
                                         font.pixelSize: 16
                                     }
 
-                                    Image {
+                                    Image
+                                    {
                                         id: avatar
                                         anchors.fill: parent
                                         source: modelData.avatarPath
@@ -275,10 +346,12 @@ Item
                                 {
                                     id: userName
                                     text: "(" + modelData.userid + ") " + modelData.username
-                                    font.pixelSize: 15
+                                    font.pixelSize: 13
                                     color: "white"
                                     font.bold:modelData.userid === user.myId
                                     Layout.alignment: Qt.AlignVCenter
+                                    Layout.preferredWidth: implicitWidth>200 ? 200 : implicitWidth
+                                    elide: Text.ElideRight
                                 }
 
                                 Item
@@ -321,6 +394,14 @@ Item
                                     }
                                 }
                             }
+
+                            MouseArea
+                            {
+                                id:userMouseArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: console.log("clicked on user.")
+                            }
                         }
 
 
@@ -329,6 +410,7 @@ Item
 
             }
         }
+
 
 
 
@@ -482,6 +564,8 @@ Item
                         color: "white"
                         font.bold: true
                         font.pixelSize: 14
+                        width: implicitWidth>250 ? 250 : implicitWidth
+                        elide: Text.ElideRight
                     }
 
                     Item
@@ -511,6 +595,8 @@ Item
                                 color: "#dadce0"
                                 font.pixelSize: 12
                                 anchors.verticalCenter: parent.verticalCenter
+                                width: implicitWidth>250 ? 250 : implicitWidth
+                                elide: Text.ElideRight
                             }
                         }
                     }
@@ -764,9 +850,9 @@ Item
     Rectangle
     {
         id: handle
-        width: parent.handleWidth
+        width: channelList.handleWidth
         height: parent.height
-        x: parent.width - width+10
+        x: parent.width - width+channelList.handleWidth
         y: 0
         color: "grey"
 
@@ -789,10 +875,10 @@ Item
                 {
                     let dx = mouse.x - startX
                     let pos = Math.max(50, startWidth + dx);
-                    if(pos <250) //minimum with is 250
-                        pos=250
-                    else if(pos>800) //max width is 800
-                        pos=800
+                    if(pos <channelList.handleMinimumWidth) //minimum with
+                        pos=channelList.handleMinimumWidth
+                    else if(pos>channelList.handleMaximumWidth) //max width
+                        pos=channelList.handleMaximumWidth
 
                     channelList.width = pos
                 }

@@ -21,6 +21,10 @@ Popup
 
     signal passwordEntered(int channelId, string password)
 
+    //to assign function to action
+    property var onOk: null
+
+
     background: Rectangle
     {
         color: "#313338"
@@ -50,13 +54,17 @@ Popup
             Layout.alignment: Qt.AlignHCenter
         }
 
+
         Text
         {
             text: root.channelName
             color: "#5865f2"
             font.bold: true
             font.pixelSize: 18
+
             Layout.alignment: Qt.AlignHCenter
+            Layout.maximumWidth: 250
+            elide: Text.ElideRight
         }
 
         Item { Layout.fillHeight: true }
@@ -77,6 +85,7 @@ Popup
 
             echoMode: TextInput.Password
             placeholderText: "Enter channel password"
+            placeholderTextColor: "white"
 
             color: "white"
 
@@ -98,10 +107,32 @@ Popup
 
             Button
             {
+                id:cancelButton
                 text: "Cancel"
                 Layout.fillWidth: true
 
                 onClicked: root.close()
+
+                background: Rectangle
+                {
+                    radius: 4
+
+                    color: cancelButton.down
+                           ? "#3F4147"
+                           : "transparent"
+
+                    border.width: 1
+                    border.color: "#555"
+                }
+
+                contentItem: Text
+                {
+                    text: parent.text
+                    color: "white"
+
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
             }
 
             Button
@@ -118,7 +149,31 @@ Popup
                         passwordField.text
                     )
 
+                    if (onOk)
+                        onOk(passwordField.text)
+
                     root.close()
+                }
+
+                background: Rectangle
+                {
+                    radius: 4
+
+                    color: joinButton.down
+                           ?  "#4752C4"
+                           : "#5865F2"
+
+                    border.width: 1
+                    border.color: "#555"
+                }
+
+                contentItem: Text
+                {
+                    text: parent.text
+                    color: "white"
+
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
                 }
             }
         }

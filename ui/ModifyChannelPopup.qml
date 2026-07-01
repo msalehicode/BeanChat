@@ -149,6 +149,7 @@ Popup
 
                     color: "white"
                     placeholderText: "General"
+                    placeholderTextColor: "white"
 
                     background: Rectangle
                     {
@@ -181,6 +182,7 @@ Popup
                     color: "white"
 
                     placeholderText: "Leave empty to keep current password"
+                    placeholderTextColor: "white"
 
                     echoMode: TextInput.Password
                     onFocusChanged:
@@ -346,8 +348,11 @@ Popup
 
                     onClicked:
                     {
-                        root.saveClicked()
-                        root.close()
+                        if(enabled)
+                        {
+                            root.saveClicked()
+                            root.close()
+                        }
                     }
 
                     background: Rectangle
