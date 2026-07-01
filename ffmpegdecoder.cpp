@@ -140,14 +140,13 @@ void FFmpegDecoder::decode(const QByteArray &packetData)
                 m_codec,
                 m_frame);
 
-        qDebug()
-            << "Decoded frame"
-            << m_frame->width
-            << m_frame->height
-            << "format"
-            << m_frame->format
-            << "key"
-            << m_frame->key_frame;
+        // qDebug()
+        //     << "Decoded frame"
+        //     << m_frame->width
+        //     << m_frame->height
+        //     << "format"
+        //     << m_frame->format
+        ////     << "key"  << m_frame->key_frame; //this line doesnt exist on windows fmpeg api's verson
 
         if (ret == AVERROR(EAGAIN))
             break;

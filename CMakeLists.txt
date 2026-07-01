@@ -4,7 +4,7 @@ project(BeanChat VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(APP_CURRENT_VERSION "0.15.3")
+set(APP_CURRENT_VERSION "0.15.5")
 set(APP_TitleName "Bean Chat")
 set(APP_OrganizationName "orgBeanChat")
 set(APP_ApplicationName "appBeanChat")
@@ -384,20 +384,6 @@ if(WIN32)
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "C:/Libraries/rnnoise/bin/librnnoise-0.dll"
         "$<TARGET_FILE_DIR:appBeanChat>"
-
-
-        #qtquick dialogs
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${QT6_INSTALL_PREFIX}/qml/QtQuick/Dialogs/qmldir"
-            "$<TARGET_FILE_DIR:appBeanChat>/qml/QtQuick/Dialogs"
-
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${QT6_INSTALL_PREFIX}/qml/QtQuick/Dialogs/plugins.qmltypes"
-            "$<TARGET_FILE_DIR:appBeanChat>/qml/QtQuick/Dialogs"
-
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${QT6_INSTALL_PREFIX}/qml/QtQuick/Dialogs/qtquickdialogsplugin.dll"
-            "$<TARGET_FILE_DIR:appBeanChat>/qml/QtQuick/Dialogs"
 
     )
 endif()
