@@ -33,9 +33,9 @@ or browse
 
 | Platform | Status | Stage | Version |
 |-----------|--------|--------|--------|
-| 🌐 Server | ✅ | Debug | ? |
-| 🪟 Windows Client | ✅ | Release | v0.12.0 |
-| 🐧 Linux Client | ✅ | Debug | v0.12.0 |
+| 🌐 Server | ✅ | Debug | 0.15.0 |
+| 🪟 Windows Client | ✅ | Release | v0.15.5 |
+| 🐧 Linux Client | ✅ | Debug | v0.15.5 |
 | 🤖 Android Client | 🚧 | 🚧 | ? |
 | 🍎 macOS Client | 🚧 | 🚧 | ? | 
 | 📱 iOS Client | 🚧 | 🚧 | ? |
