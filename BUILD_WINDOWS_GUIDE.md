@@ -397,6 +397,12 @@ After you have got **Release** from project do run this command.
 C:\Qt\6.9.3\mingw_64\bin\windeployqt.exe --release "C:\path\to\your\project\Desktop....-release\appBeanChat.exe"
 ```
 
+or
+
+```bash
+C:\Qt\6.9.3\mingw_64\bin\windeployqt6.exe --release --qmldir "C:\Users\vboxuser\BeanChat"  "C:\path\to\your\project\Desktop....-release\appBeanChat.exe"
+```
+
 Then `windeployqt` will copy all of the required Qt DLLs and plugins.
 
 ---
