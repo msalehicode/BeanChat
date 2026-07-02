@@ -58,6 +58,43 @@ enum class UserConnectionStatus
     Disconnected
 };
 
+
+//this should matches with ui/constants/NotificationTypes.qml
+enum class NotificationType
+{
+    Info=0,
+    Success,
+    Warning,
+    Error
+};
+
+//make those messages we dont show after each other. \
+    also to remember which id is for which message
+
+//e.g user connection lost then would disconnect trigger so we use \
+    same id for them to block second to avoid print connectionlost, disconnected.
+enum class NotificationId : int
+{
+    None=-1,
+
+    //we dont want show these at the same time, they may push at same time.
+    ConnectionLost=0,
+    ConnectionRejected=0,
+    Disconnected=0,
+
+    Message=1,
+};
+
+enum class NotificationDuration : int
+{
+    Quick = 500,
+    Short = 1000,
+    Normal = 2500,
+    Long = 3500,
+    VeryLong = 5000,
+    VeryVeryLong = 10000
+};
+
 class User : public QObject
 {
     Q_OBJECT
@@ -215,6 +252,22 @@ signals:
     void myAvatarPathChanged();
 
     void connectedServerIdChanged();
+
+
+
+    /* notificationRequested's ID NOTE:
+     *
+       id=NotificicationId::None means not defined and show it anyway,
+
+       e.g: id=NotificicationId::Message, would ignore duplicate notifications with the same id (1)
+                if there is a notification with that id and not shown yet.
+    */
+    void notificationRequested(
+        NotificationType type,
+        QString text,
+        NotificationId id=NotificationId::None,
+        NotificationDuration duration=NotificationDuration::Normal);
+
 
 public slots:
     void onTcpReadyRead();

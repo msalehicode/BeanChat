@@ -284,6 +284,8 @@ Item {
 
     }
 
+
+    // ================================= MENU =================================
     MyServersItemMenu
     {
         id:myServersItemMenu
@@ -324,6 +326,11 @@ Item {
         }
     }
 
+
+
+
+
+    // ================================= POP UP =================================
     ModifySavedServerPopup
     {
         id:modifySavedServerPopup
@@ -394,6 +401,5 @@ Item {
             if(user.myChannelName==="") //channel not exists or deleted.
                 rightPanel.currentTab=0
         }
-
     }
 }

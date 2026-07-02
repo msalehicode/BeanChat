@@ -117,6 +117,10 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
             this, [&]()
             {
                 qDebug() << "server didn't send ping request for a while, so UDP connection has lost.";
+                emit notificationRequested(NotificationType::Error,
+                                           "connection lost",
+                                           NotificationId::ConnectionLost,
+                                           NotificationDuration::Long);
 
                 disconnect(); //make sure tcp disconnects and ui show disconnected elemnts
             });
@@ -378,6 +382,9 @@ void User::disconnect()
     if(!isConnectedToServer()) //to prevent double run this function, first user do disconnect manually/switched to antoher server, then QTCPSocket::Disconnect would run this again..
         return;
 
+    emit notificationRequested(NotificationType::Error,
+                               "Disconnected",
+                               NotificationId::Disconnected);
 
     //disocnnect sockets.
     socket.disconnectFromHost();
@@ -626,7 +633,11 @@ void User::newAvatarArrived(quint64 userId,
 
         //check if its me, set this to my variable to later load different parts like modifyProfile, userStuff's avatar
         if(userId == myId())
+        {
             setMyAvatarPath(avatarPath);
+            emit notificationRequested(NotificationType::Success,
+                                       "Avatar has updated successfully.");
+        }
 
         //notify models to update..
         m_connectedUsersModel->setUserAvatarPath(userId, avatarPath);
@@ -746,6 +757,8 @@ void User::processPacket(const Packet& packet)
         if(resp.channelId == m_myChannelId)
         {
             qDebug() << "my current channel updated.";
+            emit notificationRequested(NotificationType::Info,
+                                       "Your channel has been updated.");
             setMyChannelName(resp.name);
             setMyChannelSavesChat(resp.saveChats);
         }
@@ -764,6 +777,8 @@ void User::processPacket(const Packet& packet)
         if(resp.channelId == m_myChannelId)
         {
             qDebug() << "oh no i became homeless";
+            emit notificationRequested(NotificationType::Warning,
+                                       "Your channel has been deleted.");
             m_currentChannelParticipant->clear();
             setMyChannelName("");
             m_myChannelId=-1; //default vlaue for homeless users :D
@@ -1021,19 +1036,18 @@ void User::processPacket(const Packet& packet)
 
     case PacketType::LoginResponse:
     {
-        qInfo() << "login response:";
         auto resp =
             PacketHelpers::unpack<LoginResponsePacket>(
                 packet.payload);
 
-        qDebug()
-            << "-------------------------- Login:"
-            << resp.accepted
-            << resp.message;
-
-
         if(!resp.accepted)
-            qInfo() << "login.. failed" ;
+        {
+            emit notificationRequested(NotificationType::Error,
+                                       "Connection Rejected. ("+resp.message+")",
+                                       NotificationId::ConnectionRejected,
+                                       NotificationDuration::Long);
+            disconnect();
+        }
         else
         {
             setMyId(resp.id); //server just told us our name, to know when e.g: user connected to that channel is that same channel as us? what is my id? so here is it.
@@ -1046,7 +1060,6 @@ void User::processPacket(const Packet& packet)
             askForServerState();
         }
 
-        qDebug() << "LOGIN MESSAGE= " << resp.message;
         break;
     }
 
@@ -1057,9 +1070,7 @@ void User::processPacket(const Packet& packet)
             PacketHelpers::unpack<UserConnectedPacket>(
                 packet.payload);
 
-        qDebug()
-            << "User joined:"
-            << u.username;
+        qDebug() << "User joined:" << u.username;
 
 
         QString avatarPath = checkAvatar(u.id, u.avatarHash);
@@ -1116,7 +1127,6 @@ void User::processPacket(const Packet& packet)
 
     case PacketType::ChatMessage:
     {
-        qInfo() << "chat message:";
         auto msg = PacketHelpers::unpack<ChatMessagePacket>(packet.payload);
 
         //show notification dot near chat indicator when chat isn't open
@@ -1126,7 +1136,18 @@ void User::processPacket(const Packet& packet)
         if(msg.senderId==myId())
             emit messageSent(); //play message sent effect.
         else
-            emit newMessage(); //play message recevied effect.
+        {
+            //check if chat is not open (user is in connectedUsersList), show notification and play effect
+            if(!isChatOpen())
+            {
+                emit notificationRequested(NotificationType::Info,
+                                           "New Message received.",
+                                           NotificationId::Message,
+                                           NotificationDuration::Short);
+
+                emit newMessage(); //play message recevied effect.
+            }
+        }
 
         m_chatModel->addMessage(msg);
     }
@@ -1408,6 +1429,8 @@ void User::onUdpReadyRead()
         case PacketType::UdpLoginResponse:
         {
             qDebug() << "udp logged in successfully.";
+            emit notificationRequested(NotificationType::Success,
+                                       "Connected to "+myServerName());
 
             //start to expect every xSeconds ping request from server otherwise, assuming UDP connection has failed
             m_udpConnectionTimeout.start(UDP_CONNECTION_LOST_TIMER_INTERVAL); // 10 seconds

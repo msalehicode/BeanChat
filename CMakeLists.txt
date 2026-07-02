@@ -4,7 +4,7 @@ project(BeanChat VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(APP_CURRENT_VERSION "0.15.5")
+set(APP_CURRENT_VERSION "0.16.2")
 set(APP_TitleName "Bean Chat")
 set(APP_OrganizationName "orgBeanChat")
 set(APP_ApplicationName "appBeanChat")
@@ -61,6 +61,13 @@ qt_add_resources(appBeanChat resources
         ui/soundeffects/message-back.wav
 )
 
+#introduce notification singltones to qml
+set_source_files_properties(
+    ui/managers/NotificationManager.qml
+    ui/constants/NotificationTypes.qml
+    PROPERTIES QT_QML_SINGLETON_TYPE TRUE
+)
+
 qt_add_qml_module(appBeanChat
     URI BeanChat
     VERSION 1.0
@@ -75,6 +82,13 @@ qt_add_qml_module(appBeanChat
         ui/ChannelList.qml
         ui/CurrentChannelParticipants.qml
         ui/MyServers.qml
+
+
+        # notification system (overlays, components, managers)
+        ui/constants/NotificationTypes.qml
+        ui/managers/NotificationManager.qml
+        ui/overlays/NotificationOverlay.qml
+        ui/components/NotificationCard.qml
 
 
         #pop up dialogs
@@ -234,10 +248,10 @@ target_compile_definitions(appBeanChat PRIVATE
 target_compile_definitions(appBeanChat PRIVATE
 
     #user configs
-    USER_DEFAULT_SOUNDEFFECTS_VOLUME=1.0
+    USER_DEFAULT_SOUNDEFFECTS_VOLUME=0.5
     USER_DEFAULT_USERNAME="beanChatUser"
     USER_DEFAULT_IDENTITY="beanChatIdentity"
-    USER_DEFAULT_SERVER_IP="localhost"
+    USER_DEFAULT_SERVER_IP=""
     USER_DEFAULT_SERVER_PORT=9987
     USER_DEFAULT_SERVER_PORT_STR="9987" #this also hardcoded in QML's add server popup
     USER_BUILD_TYPE_DEBUG="Beta"
