@@ -36,15 +36,28 @@ Item
 
             property bool opened: false
 
-            Text
-            {
-                text: user.myServerName
-                anchors.verticalCenter: parent.verticalCenter
+            Column {
                 anchors.left: parent.left
-                anchors.leftMargin: 16
-                color: "white"
-                width: implicitWidth>300 ? 300 : implicitWidth
-                elide: Text.ElideRight
+                anchors.right: parent.right
+                anchors.margins: 16
+                anchors.verticalCenter: parent.verticalCenter
+
+                Text {
+                    text: "(" + user.myServerName + ")"
+                    width: parent.width-34
+                    font.bold: true
+                    elide: Text.ElideRight
+                    wrapMode: Text.NoWrap
+                    color: "white"
+                }
+
+                Text {
+                    text: user.serverName + " [" + user.serverVersion + "] Uptime: " + user.serverUptime
+                    width: parent.width-34
+                    elide: Text.ElideRight
+                    wrapMode: Text.NoWrap
+                    color: "white"
+                }
             }
 
             Image
@@ -481,7 +494,7 @@ Item
                         visible: parent.infoVisible
 
                         width: 170
-                        height: 100
+                        height: 111
 
                         radius: 8
 
@@ -497,24 +510,41 @@ Item
 
                         Rectangle
                         {
-                            id:closeUserConnectionInfo
-                            width:10
-                            height:10
-                            color:"red"
+                            id: closeButton
+                            width: 18
+                            height: 18
+                            radius: 14
                             anchors
                             {
-                                top:parent.top
-                                topMargin:10
                                 right:parent.right
                                 rightMargin:10
+                                top:parent.top
+                                topMargin:10
+                            }
+
+                            color: mAreaCloseConnectionInfo.containsMouse ? "red" : "#3b3d43"
+
+                            Text
+                            {
+                                anchors.centerIn: parent
+
+                                text: "✕"
+
+                                color: mAreaCloseConnectionInfo.containsMouse ? "white" : "#b9bbbe"
+
+                                font.pixelSize: 15
                             }
 
                             MouseArea
                             {
+                                id: mAreaCloseConnectionInfo
                                 anchors.fill: parent
-                                onClicked: signalBase.infoVisible=false
-                            }
 
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+
+                                onClicked:  signalBase.infoVisible=false
+                            }
                         }
 
                         Column
@@ -560,7 +590,7 @@ Item
 
                     Text
                     {
-                        text: user.myServerName
+                        text: user.serverName
                         color: "white"
                         font.bold: true
                         font.pixelSize: 14
@@ -615,7 +645,6 @@ Item
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 10
 
-
                 Rectangle
                 {
                     width: iconW
@@ -640,7 +669,6 @@ Item
                     width: iconW
                     height: iconW
                     color: "transparent"
-
                     Image
                     {
                         anchors.fill: parent
@@ -670,6 +698,25 @@ Item
                     {
                         anchors.fill: parent
                         onClicked: user.disconnect();
+                    }
+                }
+
+                Rectangle
+                {
+                    width: iconW
+                    height: iconW
+                    color: "transparent"
+                    visible: user.serverWebsite.length>0
+                    Image
+                    {
+                        anchors.fill: parent
+                        source: "icons/web.png"
+                    }
+
+                    MouseArea
+                    {
+                        anchors.fill: parent
+                        onClicked: Qt.openUrlExternally(user.serverWebsite)
                     }
                 }
 
@@ -786,6 +833,7 @@ Item
                     width: iconW
                     height: iconW
                     color: "transparent"
+                    visible: user.isConnectedToServer
 
                     Image
                     {
@@ -807,6 +855,7 @@ Item
                     width: iconW
                     height: iconW
                     color: "transparent"
+                    visible: user.isConnectedToServer
 
                     Image
                     {

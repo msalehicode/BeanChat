@@ -7,14 +7,14 @@ import QtQuick.Layouts
 
 Item {
     anchors.fill: parent
-    property int widthBase: 250 //uses for userlist and chanenlist
+    readonly property int widthBase: 250 //uses for userlist and chanenlist
 
 
-    property color bg1 : "#414247"
-    property color bg2: "#121315"
+    readonly property color bg1 : "#414247"
+    readonly property color bg2: "#121315"
 
-    property int iconH: 20
-    property int iconW: 20
+    readonly property int iconH: 22
+    readonly property int iconW: 22
 
     Rectangle
     {
@@ -390,13 +390,15 @@ Item {
 
     Connections
     {
-        target:user
-        onIsConnectedToServerChanged:
+        target: user
+
+        function onIsConnectedToServerChanged()
         {
             //when disconnected/connected, reset right panel index to connected users.
-            rightPanel.currentTab=0
+            rightPanel.currentTab = 0
         }
-        onMyChannelNameChanged:
+
+        function onMyChannelNameChanged()
         {
             if(user.myChannelName==="") //channel not exists or deleted.
                 rightPanel.currentTab=0

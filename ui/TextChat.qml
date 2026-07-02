@@ -475,8 +475,15 @@ Item
             })
         }
 
-        onNewMessage: scrollToBottom()
-        onMessageSent: scrollToBottom()
+        function onNewMessage()
+        {
+            scrollToBottom()
+        }
+
+        function onMessageSent()
+        {
+            scrollToBottom()
+        }
     }
 
 }

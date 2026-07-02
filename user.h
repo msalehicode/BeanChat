@@ -80,6 +80,7 @@ enum class NotificationId : int
     //we dont want show these at the same time, they may push at same time.
     ConnectionLost=0,
     ConnectionRejected=0,
+    ConnectionError=0,
     Disconnected=0,
 
     Message=1,
@@ -194,7 +195,7 @@ public:
 
 
     Q_INVOKABLE void updateMyProfile(const QString &username, const QString &identity, const QString &avatarPath="");
-    QString checkAvatar(quint64 userId, const QString& avatarHash); //if file avatar (hash.extention) found in server's directory returns QML like path otherwise would reutrn null
+    QString checkAvatar(quint64 userId, const QString& avatarHash, bool askForAvatar=true); //if file avatar (hash.extention) found in server's directory returns QML like path otherwise would reutrn null
 
 
 
@@ -205,7 +206,20 @@ public:
     void setConnectedServerId(int newConnectedServerId);
 
 
+    //to check is channel locked or not \
+        usage: when wanna move a user into a locked channel would check then if channel is locked then show enter password popup
     Q_INVOKABLE int isChannelLocked(quint64 channelId);
+
+
+
+    //server info for QML
+    QString serverName() const;
+    QString serverWebsite() const;
+    QString serverAvatarHash() const;
+    QString serverVersion() const;
+    QString serverUptime() const;
+
+
 signals:
 
     void myIdChanged();
@@ -269,6 +283,8 @@ signals:
         NotificationDuration duration=NotificationDuration::Normal);
 
 
+    void receivedServerInfoChanged();
+
 public slots:
     void onTcpReadyRead();
     void onDisconnected();
@@ -279,6 +295,7 @@ public slots:
 
 private:
     QString platformName();
+    void resetVariables(); //when wanna disconnect and get ready for next connection
     void processPacket(const Packet& packet);
     void loginToUdpSocket();
 
@@ -303,11 +320,21 @@ private:
     quint64 m_myChannelId=-2; //channelId -1 is default value for those users didn't connect to any channel just connected to server.
     QString m_myChannelName = ""; //current channel
     bool m_myChannelSavesChat=false;
-    QString m_myServerName= ""; //current server connected to
+    QString m_myServerName= ""; //current server connected to (name that saved by user inside myServers, can be modified, only shown to this user)
     UserModel m_info; //to store system info such as appVersio and ..
     Participant* m_me=nullptr; //hold this user info and update it when channel switched, to connect with cameraCapture and show images as local preview
     UserConnectionStatus m_connectionStatus=UserConnectionStatus::Unknown;
-    int  m_connectedServerId=-1; //(serverDbIndex) to use for path of avatars. e.g path/to/Cached/avatars/0  <- this 0 is server id (directory to hold that server user's avatar files)
+    int m_connectedServerId_onDb=-1; //(serverDbIndex) to use for path of avatars. e.g path/to/Cached/avatars/0  <- this 0 is server id (directory to hold that server user's avatar files)
+
+
+    //store connected server info received from Server, then feed to QML
+    ServerInfo m_receivedServerInfo;
+    Q_PROPERTY(QString serverName READ serverName NOTIFY receivedServerInfoChanged)
+    Q_PROPERTY(QString serverWebsite READ serverWebsite NOTIFY receivedServerInfoChanged)
+    Q_PROPERTY(QString serverAvatarHash READ serverAvatarHash NOTIFY receivedServerInfoChanged)
+    Q_PROPERTY(QString serverVersion READ serverVersion NOTIFY receivedServerInfoChanged)
+    Q_PROPERTY(QString serverUptime READ serverUptime NOTIFY receivedServerInfoChanged)
+
 
     //connect and switch servers.
     bool m_isConnectedToServer=false;
@@ -373,12 +400,13 @@ private:
     Q_PROPERTY(int myPing READ myPing WRITE setMyPing NOTIFY myPingChanged FINAL)
     Q_PROPERTY(float myVoicePacketLoss READ myVoicePacketLoss WRITE setMyVoicePacketLoss NOTIFY myVoicePacketLossChanged FINAL)
     Q_PROPERTY(float myVideoPacketLoss READ myVideoPacketLoss WRITE setMyVideoPacketLoss NOTIFY myVideoPacketLossChanged FINAL)
-    Q_PROPERTY(QString myAppVersion READ myAppVersion)
     Q_PROPERTY(UserConnectionStatus connectionStatus READ connectionStatus WRITE setConnectionStatus NOTIFY connectionStatusChanged FINAL)
     Q_PROPERTY(bool myChannelSavesChat READ myChannelSavesChat WRITE setMyChannelSavesChat NOTIFY myChannelSavesChatChanged FINAL)
-    Q_PROPERTY(QString appTitle READ appTitle)
+    Q_PROPERTY(int connectedServerId READ connectedServerId WRITE setConnectedServerId NOTIFY connectedServerIdChanged FINAL) //using m_connectedServerId_onDb
     Q_PROPERTY(QString myAvatarPath READ myAvatarPath WRITE setMyAvatarPath NOTIFY myAvatarPathChanged FINAL)
-    Q_PROPERTY(int connectedServerId READ connectedServerId WRITE setConnectedServerId NOTIFY connectedServerIdChanged FINAL)
+
+    Q_PROPERTY(QString myAppVersion READ myAppVersion CONSTANT)
+    Q_PROPERTY(QString appTitle READ appTitle CONSTANT)
 };
 
 #endif // USER_H

@@ -57,6 +57,7 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
         (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
+            avatarPath TEXT,
             ip TEXT,
             port TEXT
         )
@@ -74,11 +75,13 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
         qDebug()
             << row["id"]
             << row["name"]
+            << row["avatarPath"]
             << row["ip"]
             << row["port"];
 
         //add to myServers model
         m_myServersModel->addServer(row["name"].toString(),
+                                    row["avatarPath"].toString(),
                                     row["ip"].toString(),
                                     row["port"].toString(),
                                     false, //set IsActive FALSE
@@ -116,12 +119,17 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
     connect(&m_udpConnectionTimeout, &QTimer::timeout,
             this, [&]()
             {
-                qDebug() << "server didn't send ping request for a while, so UDP connection has lost.";
-                emit notificationRequested(NotificationType::Error,
-                                           "connection lost",
-                                           NotificationId::ConnectionLost,
-                                           NotificationDuration::Long);
+                if(isConnectedToServer())
+                {
+                    qDebug() << "server didn't send ping request for a while, so UDP connection has lost.";
+                    emit notificationRequested(NotificationType::Error,
+                                               "Connection Lost",
+                                               NotificationId::ConnectionLost,
+                                               NotificationDuration::Long);
+                }
 
+                //close connection, sometimes user may stuck in middle of connecting and connection lost
+                //so here we make sure close connection even we dont show connection lost messag to them
                 disconnect(); //make sure tcp disconnects and ui show disconnected elemnts
             });
 
@@ -174,6 +182,54 @@ int User::isChannelLocked(quint64 channelId)
     return -1;
 }
 
+QString User::serverName() const
+{
+    return m_receivedServerInfo.name;
+}
+
+QString User::serverWebsite() const
+{
+    return m_receivedServerInfo.website;
+}
+
+QString User::serverAvatarHash() const
+{
+    return m_receivedServerInfo.avatarHash;
+}
+
+QString User::serverVersion() const
+{
+    return m_receivedServerInfo.version;
+}
+
+QString User::serverUptime() const
+{
+    qint64 seconds = m_receivedServerInfo.startTime.secsTo(QDateTime::currentDateTimeUtc());
+
+    qint64 days = seconds / 86400;
+    seconds %= 86400;
+
+    if (days > 0)
+        return QString("%1 day%2").arg(days).arg(days == 1 ? "" : "s");
+
+    qint64 hours = seconds / 3600;
+    seconds %= 3600;
+
+    if (hours > 0)
+        return QString("%1 hour%2").arg(hours).arg(hours == 1 ? "" : "s");
+
+    qint64 minutes = seconds / 60;
+    seconds %= 60;
+
+    if (minutes > 0)
+        return QString("%1 minute%2").arg(minutes).arg(minutes == 1 ? "" : "s");
+
+    if (seconds > 0)
+        return QString("%1 second%2").arg(seconds).arg(seconds == 1 ? "" : "s");
+
+    return QString();
+}
+
 void User::moveUser(quint64 userId, quint64 channelId, const QString& password)
 {
     MoveUserPacket mv;
@@ -197,9 +253,9 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
 
 
     //check is server saved or is temporary?
-    if(m_connectedServerId==-1) //server is temporary
+    if(m_connectedServerId_onDb==-1) //server is temporary
     {
-        qDebug() << "server connection is termporary. connectedServerId DB=" << m_connectedServerId;
+        qDebug() << "server connection is termporary. connectedServerId DB=" << m_connectedServerId_onDb;
     }
 
     //convert ports to quint64
@@ -208,6 +264,8 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
     if(!ok)
     {
         qDebug() << "Invalid port number!";
+        emit notificationRequested(NotificationType::Error,
+                                   "Invalid port number.");
         return;
     }
 
@@ -244,6 +302,7 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
                 }
 
                 serverDbIndex = serverInfo["id"].toInt();
+                m_connectedServerId_onDb =serverDbIndex;
                 serverName = serverInfo["name"].toString();
                 setMyServerName(serverName);
             }
@@ -252,7 +311,12 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
         }
 
         //add to myServers model and set isActive to TRUE
-        m_myServersModel->addServer(serverName, serverIp, str_serverPort,true,serverDbIndex);
+        m_myServersModel->addServer(serverName,
+                                    "", //avatarPath, we haven't server's avatar
+                                    serverIp,
+                                    str_serverPort,
+                                    true, //is Active
+                                    serverDbIndex);
     }
     else //server exists, so just set server active
         m_myServersModel->setIsActive(serverId);
@@ -324,7 +388,8 @@ void User::updateSavedServer(quint64 serverId, quint64 dbIndex, const QString& n
 
     if(res)
     {
-        qDebug() << "success to update saved server.";
+        emit notificationRequested(NotificationType::Success,
+                                   "MyServer updated.");
 
         //update model data.
         m_myServersModel->updateServer(serverId,name,ip,port);
@@ -333,7 +398,10 @@ void User::updateSavedServer(quint64 serverId, quint64 dbIndex, const QString& n
         setMyServerName(name);
     }
     else
-        qDebug() << "failed to update saved server.";
+    {
+        emit notificationRequested(NotificationType::Error,
+                                   "Failed to update MyServer.");
+    }
 }
 
 void User::deleteSavedServer(quint64 serverId, quint64 serverDbIndex)
@@ -344,11 +412,13 @@ void User::deleteSavedServer(quint64 serverId, quint64 serverDbIndex)
         if(res)
         {
             qDebug() << "server deleted from MyServers.";
+            emit notificationRequested(NotificationType::Success,
+                                       "Server deleted from MyServers.");
 
             //delete saved avatars in that server's avatar directory
-            qDebug() << "trying to delete avatars of that server: target path = " << SAVE_AVATAR_PATH+QString::number(m_connectedServerId);
+            qDebug() << "trying to delete avatars of that server: target path = " << SAVE_AVATAR_PATH+QString::number(serverDbIndex);
 
-            QDir dir(SAVE_AVATAR_PATH+QString::number(m_connectedServerId));
+            QDir dir(SAVE_AVATAR_PATH+QString::number(serverDbIndex));
             if (dir.exists())
             {
                 if (!dir.removeRecursively())
@@ -358,7 +428,10 @@ void User::deleteSavedServer(quint64 serverId, quint64 serverDbIndex)
                 qDebug() << "that path avatar doesn't exists.";
         }
         else
-            qDebug() << "faield to delete server from MyServers.";
+        {
+            emit notificationRequested(NotificationType::Error,
+                                       "Failed to delete server from MyServers.");
+        }
     }
 
     //anyway delete from model
@@ -367,7 +440,7 @@ void User::deleteSavedServer(quint64 serverId, quint64 serverDbIndex)
 
 void User::switchOrConnectToServer(const QString &serverIp, const QString &str_serverPort, int serverId)
 {
-    qDebug() << "connectToServer server id, called ";
+    qDebug() << "connectToServer server " << serverId << " called ";
     //tell myServers model im connected to this server.
     m_myServersModel->setIsActive(serverId);
 
@@ -384,59 +457,14 @@ void User::disconnect()
 
     emit notificationRequested(NotificationType::Error,
                                "Disconnected",
-                               NotificationId::Disconnected);
+                               NotificationId::Disconnected,
+                               NotificationDuration::Short);
 
     //disocnnect sockets.
     socket.disconnectFromHost();
     m_udpSocket.disconnectFromHost();
 
-    //clear models
-    m_channelModel->clear();
-    m_currentChannelParticipant->clear();
-    m_connectedUsersModel->clear();
-    m_chatModel->clear();
-
-    //reset variables
-    setMyServerName("");
-    setMyChannelName("");
-    setMyChannelSavesChat(false);
-    setIsConnectedToServer(false);
-    m_me=nullptr;
-    setConnectedServerId(-1); //this is serverIndexDb which would use in saving user's avatar in each server's directory
-    m_serverIp.clear();
-    m_serverPort=0;
-    setConnectionStatus(UserConnectionStatus::Disconnected);
-    setMyPing(-1);
-    setMyVideoPacketLoss(0.0f);
-    setMyVoicePacketLoss(0.0f);
-    m_notFoundAvatars.clear(); //clear list for next connection
-    setMyAvatarPath("");
-
-    if(!m_switchingServer) //if we are not switching reset/turn-off all server's indicator status
-        m_myServersModel->resetPreviousIsActiveServer();
-
-
-    //because of method we do use setter to send requests to server
-    //then if server allowed/responsed we would do emits so, have to here reset them manually cant use setter.
-    m_muteHeadphone=false;
-    emit muteHeadphoneChanged();
-
-    m_muteMicrophone=false;
-    emit muteMicrophoneChanged();
-
-    m_isCameraOpen=false;
-    emit isCameraOpenChanged();
-
-
-    //release resourses
-    if(m_cam)
-        m_cam->stop();
-
-    if(m_mic)
-        m_mic->stop();
-
-    if(m_speaker)
-        m_speaker->stop();
+    resetVariables();
 
 }
 
@@ -618,18 +646,55 @@ void User::newAvatarArrived(quint64 userId,
                             const QString& oldAvatarHash,
                             const QByteArray& avatarData)
 {
-    if(m_avatarManager.saveAvatar(SAVE_AVATAR_PATH+QString::number(m_connectedServerId)
+    qDebug()<< "new Avatars Arrived";
+
+    //check whether that received avatarHash is valid?
+    if(avatarHash.isEmpty())
+        return;
+
+
+    if(m_avatarManager.saveAvatar(SAVE_AVATAR_PATH+QString::number(m_connectedServerId_onDb)
                                    ,avatarHash,avatarData))
     {
-        qDebug() << "avatar saved for that user, hash=" << avatarHash;
-
+        qDebug() << "avatar saved for that user, "
+                 << "userid=" << userId
+                 << "hash=" << avatarHash
+                 << "oldHash=" << oldAvatarHash
+                 << "avatarData.size=" << avatarData.size();
 
         //delete old avatar to protect privacy and decrease cache avatars size
-        m_avatarManager.deleteAvatar(SAVE_AVATAR_PATH+QString::number(m_connectedServerId)
+        m_avatarManager.deleteAvatar(SAVE_AVATAR_PATH+QString::number(m_connectedServerId_onDb)
                                      ,oldAvatarHash);
 
         //check and get that avatar path.
-        QString avatarPath = checkAvatar(userId, avatarHash);
+        QString avatarPath = checkAvatar(userId, avatarHash,false); //FALSE to turn off askForAvatar
+
+        if(avatarPath.isEmpty())
+        {
+            qDebug() << "avatarpath is empty!";
+        }
+
+        //check is it server's avatar or not
+        if(userId == RESERVED_TO_ASK_SERVERS_AVATAR)
+        {
+            //apply new avatar to myServers model
+            if(m_myServersModel->setAvatarPath(avatarPath))
+                qDebug() << "myServersModel avatar updated for that server avatarPath=" << avatarPath;
+            else
+                qDebug() << "failed to update avatar for that server on myServersModel avatarPath=" << avatarPath;
+
+            //update datbase for that myServer id. to when didnt connected to servers load their avatar if found.
+            QVariantMap values;
+            values["avatarPath"] = avatarPath;
+            if(m_database.update("MyServers", m_connectedServerId_onDb, values))
+                qDebug() << "server avatarPath updated on myServers' table.";
+            else
+                qDebug() << "failed to update avatarPath on myServers' table.";
+
+
+            return;
+        }
+
 
         //check if its me, set this to my variable to later load different parts like modifyProfile, userStuff's avatar
         if(userId == myId())
@@ -714,8 +779,8 @@ void User::processPacket(const Packet& packet)
             case UpdateUserInfoType::Avatar:
             {
                 qDebug() << "received avatar: hash="  << info.payloadValue << " avatar size=" << info.payloadData.size();
-                //save this new avatar``
 
+                //save this new avatar and apply it to models
                 newAvatarArrived(info.userId, info.payloadValue, info.payloadSecondValue, info.payloadData);
 
                break;
@@ -756,7 +821,6 @@ void User::processPacket(const Packet& packet)
 
         if(resp.channelId == m_myChannelId)
         {
-            qDebug() << "my current channel updated.";
             emit notificationRequested(NotificationType::Info,
                                        "Your channel has been updated.");
             setMyChannelName(resp.name);
@@ -776,7 +840,6 @@ void User::processPacket(const Packet& packet)
 
         if(resp.channelId == m_myChannelId)
         {
-            qDebug() << "oh no i became homeless";
             emit notificationRequested(NotificationType::Warning,
                                        "Your channel has been deleted.");
             m_currentChannelParticipant->clear();
@@ -842,7 +905,11 @@ void User::processPacket(const Packet& packet)
                 }
             }
             else
-                qDebug() << "camera is not ready. maybe say close camera to server.";
+            {
+                emit notificationRequested(NotificationType::Error,
+                                           "Failed to open camera.");
+            }
+
 
             emit isCameraOpenChanged();
         }
@@ -930,7 +997,10 @@ void User::processPacket(const Packet& packet)
         if(resp.userId == static_cast<quint64>(myId()))
         {
             if(packet.type==PacketType::UserMoved)
-                qDebug() << "voice: you are moved.";
+            {
+                emit notificationRequested(NotificationType::Info,
+                                           "You are moved.");
+            }
             else
                 qDebug() << "voice: channel switched.";
 
@@ -1075,7 +1145,6 @@ void User::processPacket(const Packet& packet)
 
         QString avatarPath = checkAvatar(u.id, u.avatarHash);
 
-
         m_connectedUsersModel->addUser(u.id,
                                        u.username,
                                        avatarPath,
@@ -1160,13 +1229,31 @@ void User::processPacket(const Packet& packet)
             PacketHelpers::unpack<ServerStatePacket>(
                 packet.payload);
 
-        if(!m_channelModel)
-            return;
+        //store server info
+        m_receivedServerInfo = state.serverInfo;
+        emit receivedServerInfoChanged(); //notify QML serverInfo changed go read those exposed methods
 
-        m_channelModel->clear();
+         //get avatar path or ask from server, id=RESERVED_TO_ASK_SERVERS_AVATAR server would return his avatarHash and data.
+        QString serverAvatarPath = checkAvatar(RESERVED_TO_ASK_SERVERS_AVATAR, state.serverInfo.avatarHash);
 
-        m_connectedUsersModel->clear();
 
+        if(!serverAvatarPath.isEmpty())
+        {
+            //update myServerModel avatar for this server.
+            m_myServersModel->setAvatarPath(serverAvatarPath);
+        }
+        // else checkAvatar() would add id RESERVED .. to list \
+                then askForNotFoundAvatars would send server that list and when response \
+                arrived apply avatars for users or in this case if userId==RESERVED_TO_ASK_SERVERS_AVATAR \
+                would apply it for myServers' avatarPath
+
+
+
+
+
+
+        //channels
+        m_channelModel->clear();        
         for(auto& c : state.channels)
         {
             m_channelModel->addChannel(
@@ -1176,6 +1263,8 @@ void User::processPacket(const Packet& packet)
                 c.saveChats);
         }
 
+        //users
+        m_connectedUsersModel->clear();
         for(auto& u : state.users)
         {
             QString avatarPath = checkAvatar(u.id, u.avatarHash);
@@ -1213,7 +1302,6 @@ void User::processPacket(const Packet& packet)
         //send request to server for all not found avatars
         askForNotFoundAvatars();
 
-        qInfo() << "voice: connected to server.";
     }
     break;
 
@@ -1271,16 +1359,17 @@ void User::loginToUdpSocket()
     }
 }
 
+
 int User::connectedServerId() const
 {
-    return m_connectedServerId;
+    return m_connectedServerId_onDb;
 }
 
 void User::setConnectedServerId(int newConnectedServerId)
 {
-    if (m_connectedServerId == newConnectedServerId)
+    if (m_connectedServerId_onDb == newConnectedServerId)
         return;
-    m_connectedServerId = newConnectedServerId;
+    m_connectedServerId_onDb = newConnectedServerId;
     emit connectedServerIdChanged();
 }
 
@@ -1322,35 +1411,35 @@ void User::updateMyProfile(const QString &username, const QString &identity, con
     //save locally in files of myServers..
 
     //check is username changed?
-    // if(username != myUsername())
-    // {
-    //     //send request updaet to server.
-    //     UpdateUserInfoPacket uu;
+    if(username != myUsername())
+    {
+        //send request updaet to server.
+        UpdateUserInfoPacket uu;
 
-    //     uu.updateType = UpdateUserInfoType::Username;
-    //     uu.payloadValue = username;
+        uu.updateType = UpdateUserInfoType::Username;
+        uu.payloadValue = username;
 
-    //     Packet p;
-    //     p.type = PacketType::UpdateUserInfo;
-    //     p.payload = PacketHelpers::pack(uu);
-    //     socket.write(p.serialize());
-    // }
+        Packet p;
+        p.type = PacketType::UpdateUserInfo;
+        p.payload = PacketHelpers::pack(uu);
+        socket.write(p.serialize());
+    }
 
 
     //check is identity changed?
-    // if(identity != myIdentity())
-    // {
-    //     //send request updaet to server.
-    //     UpdateUserInfoPacket uu;
-    //     uu.updateType = UpdateUserInfoType::Identity;
-    //     uu.payloadValue = identity;
+    if(identity != myIdentity())
+    {
+        //send request updaet to server.
+        UpdateUserInfoPacket uu;
+        uu.updateType = UpdateUserInfoType::Identity;
+        uu.payloadValue = identity;
 
-    //     Packet p;
-    //     p.type = PacketType::UpdateUserInfo;
-    //     p.payload = PacketHelpers::pack(uu);
+        Packet p;
+        p.type = PacketType::UpdateUserInfo;
+        p.payload = PacketHelpers::pack(uu);
 
-    //     socket.write(p.serialize());
-    // }
+        socket.write(p.serialize());
+    }
 
 
     if(!avatarPath.isEmpty())
@@ -1371,26 +1460,33 @@ void User::updateMyProfile(const QString &username, const QString &identity, con
 }
 
 
-QString User::checkAvatar(quint64 userId, const QString &avatarHash)
+QString User::checkAvatar(quint64 userId, const QString &avatarHash, bool askForAvatar)
 {
     //check for user's avatar sotred in cache or not.
     if(!avatarHash.isEmpty())
     {
         //check cache folder
-        if(m_avatarManager.avatarExists(SAVE_AVATAR_PATH+QString::number(m_connectedServerId),avatarHash)) //this method will append / at end path and .png at end of filename
+        if(m_avatarManager.avatarExists(SAVE_AVATAR_PATH+QString::number(m_connectedServerId_onDb),avatarHash)) //this method will append / at end path and .png at end of filename
         {
             QString avatarPath = SAVE_AVATAR_PATH
-                                 +QString::number(m_connectedServerId)
+                                 +QString::number(m_connectedServerId_onDb)
                                  +"/"+avatarHash
                                  +".png";
             avatarPath = QUrl::fromLocalFile(avatarPath).toString();
             qDebug() << "avatar found = " << avatarPath;
             return avatarPath;
         }
-    }
 
-    qDebug() << "avatar not found for hash " << avatarHash << "would send request for this.";
-    m_notFoundAvatars.append(userId);
+        if(askForAvatar)
+        {
+            qDebug() << "avatar not found for  "
+                     << "hash=" << avatarHash
+                     << "userid=" << userId
+                     << "would send request for this.";
+
+            m_notFoundAvatars.append(userId);
+        }
+    }
     return "";
 }
 
@@ -1405,7 +1501,44 @@ void User::onSocketError(QAbstractSocket::SocketError error)
 {
     qDebug() << "TCP error:" << error
              << socket.errorString();
-    disconnect();
+
+    QString errorMessage;
+    switch (error)
+    {
+        case QAbstractSocket::NetworkError:
+            errorMessage = "Network is unreachable";
+            break;
+
+        case QAbstractSocket::HostNotFoundError:
+            errorMessage = "DNS failed or host doesn't exist";
+            break;
+
+        case QAbstractSocket::ConnectionRefusedError:
+            errorMessage = "Server rejected the connection";
+            break;
+
+        case QAbstractSocket::RemoteHostClosedError:
+            errorMessage = "Server closed the connection";
+            break;
+
+        case QAbstractSocket::SocketTimeoutError:
+            errorMessage = "Connection timed out";
+            break;
+
+        default:
+            errorMessage = socket.errorString();
+            break;
+    }
+
+        emit notificationRequested(NotificationType::Error,
+                                   "Network Error: "+errorMessage,
+                                   NotificationId::ConnectionError);
+
+    //make sure UDP socket is closed too.
+    m_udpSocket.disconnectFromHost();
+
+    //make sure reset variables for next connection
+    resetVariables();
 }
 
 void User::onUdpReadyRead()
@@ -1483,13 +1616,13 @@ void User::onUdpReadyRead()
 
             in >> packet;
 
-            qDebug()
-                << "Video received from "
-                << packet.senderId
-                << "seq="
-                << packet.sequence
-                << "size="
-                << packet.videoData.size();
+            // qDebug()
+            //     << "Video received from "
+            //     << packet.senderId
+            //     << "seq="
+            //     << packet.sequence
+            //     << "size="
+            //     << packet.videoData.size();
 
             Participant* senderParticipant = m_currentChannelParticipant->findUser(packet.senderId);
             if(!senderParticipant)
@@ -1617,6 +1750,58 @@ QString User::platformName()
     #else
         return "Unknown";
     #endif
+}
+
+void User::resetVariables()
+{
+    //clear models
+    m_channelModel->clear();
+    m_currentChannelParticipant->clear();
+    m_connectedUsersModel->clear();
+    m_chatModel->clear();
+
+    //reset variables
+    setMyServerName("");
+    setMyChannelName("");
+    setMyChannelSavesChat(false);
+    setIsConnectedToServer(false);
+    m_me=nullptr;
+    setConnectedServerId(-1); //this is serverIndexDb which would use in saving user's avatar in each server's directory
+    m_connectedServerId_onDb=-1;
+    m_serverIp.clear();
+    m_serverPort=0;
+    setConnectionStatus(UserConnectionStatus::Disconnected);
+    setMyPing(-1);
+    setMyVideoPacketLoss(0.0f);
+    setMyVoicePacketLoss(0.0f);
+    m_notFoundAvatars.clear(); //clear list for next connection
+    setMyAvatarPath("");
+
+    if(!m_switchingServer) //if we are not switching reset/turn-off all server's indicator status
+        m_myServersModel->resetPreviousIsActiveServer();
+
+
+    //because of method we do use setter to send requests to server
+    //then if server allowed/responsed we would do emits so, have to here reset them manually cant use setter.
+    m_muteHeadphone=false;
+    emit muteHeadphoneChanged();
+
+    m_muteMicrophone=false;
+    emit muteMicrophoneChanged();
+
+    m_isCameraOpen=false;
+    emit isCameraOpenChanged();
+
+
+    //release resourses
+    if(m_cam)
+        m_cam->stop();
+
+    if(m_mic)
+        m_mic->stop();
+
+    if(m_speaker)
+        m_speaker->stop();
 }
 
 UserConnectionStatus User::connectionStatus() const

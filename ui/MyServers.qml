@@ -79,15 +79,19 @@ Item
                 // Dark base instead of full green/orange
                 color: "#2B2D31"
 
-                border.width: model.isActive ? 3 : 2
-                border.color: model.isActive
-                              ? "#57F287"
-                              : "#404249"
+
+                Image
+                {
+                    id:serverAvatar
+                    source: model.avatarPath
+                    visible: model.avatarPath.length>0
+                    anchors.fill: parent
+                }
 
                 Text
                 {
                     anchors.centerIn: parent
-
+                    visible: !serverAvatar.visible
                     text: model.name.length > 0
                           ? model.name[0].toUpperCase()
                           : "?"
@@ -96,6 +100,15 @@ Item
 
                     font.bold: true
                     font.pixelSize: 22
+                }
+
+                Rectangle
+                {
+                    anchors.fill: parent
+                    radius: parent.radius
+                    color: "transparent"
+                    border.width: 3
+                    border.color: model.isActive ? "#57F287" : "#404249"
                 }
 
                 Behavior on scale
@@ -111,7 +124,7 @@ Item
                     anchors.fill: parent
                     hoverEnabled: true
 
-                    onEntered: delegateRoot.scale = 1.08
+                    onEntered: delegateRoot.scale = 1.12
                     onExited: delegateRoot.scale = 1.0
 
                     acceptedButtons: Qt.LeftButton | Qt.RightButton

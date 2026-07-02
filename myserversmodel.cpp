@@ -41,6 +41,9 @@ QVariant MyServersModel::data(
     case ServerNameRole:
         return server.name;
 
+    case ServerAvatarPathRole:
+        return server.avatarPath;
+
     case ServerStatusRole:
         return static_cast<int>(server.status);
     }
@@ -59,6 +62,7 @@ MyServersModel::roleNames() const
             { ServerPortRole, "port" },
             { ServerIsActiveRole, "isActive"},
             { ServerNameRole, "name"},
+            { ServerAvatarPathRole, "avatarPath"},
             { ServerStatusRole, "status"}
         };
 }
@@ -73,6 +77,7 @@ void MyServersModel::clear()
 }
 
 void MyServersModel::addServer(QString name,
+                               const QString& avatarPath,
                                const QString& ip,
                                const QString& port,
                                bool isActive,
@@ -82,9 +87,11 @@ void MyServersModel::addServer(QString name,
                     rowCount(),
                     rowCount());
 
-    ServerInfo server;
+    MyServerInfo server;
     server.id = m_nextServerId++;
     server.index = index;
+    qDebug() << "add server, avatarPath myServersModel " << avatarPath;
+    server.avatarPath=avatarPath;
     server.name = name;
     server.ip = ip;
     server.port = port;
@@ -208,6 +215,40 @@ void MyServersModel::setIsActive(quint64 serverId)
         { ServerIsActiveRole });
 }
 
+void MyServersModel::setAvatarPath(quint64 serverId, const QString &path)
+{
+    int row = findRowById(serverId);
+
+    if (row < 0)
+        return;
+
+    m_servers[row].avatarPath = path;
+
+    emit dataChanged(
+        index(row),
+        index(row),
+        { ServerAvatarPathRole });
+}
+
+
+bool MyServersModel::setAvatarPath(const QString &path)
+{
+    int row = findRowById(m_lastIsActiveId);
+
+    if (row < 0)
+        return false;
+
+    m_servers[row].avatarPath = path;
+
+    emit dataChanged(
+        index(row),
+        index(row),
+        { ServerAvatarPathRole });
+    return true;
+}
+
+
+
 void MyServersModel::resetPreviousIsActiveServer()
 {
     if (m_lastIsActiveId == -1)
@@ -242,6 +283,7 @@ int MyServersModel::doesServerExists(const QString &ip, const QString& port)
 }
 
 
+
 int MyServersModel::findRowById(quint64 serverId) const
 {
     for (int i = 0; i < m_servers.size(); ++i)
@@ -249,6 +291,5 @@ int MyServersModel::findRowById(quint64 serverId) const
         if (m_servers[i].id == serverId)
             return i;
     }
-
     return -1;
 }

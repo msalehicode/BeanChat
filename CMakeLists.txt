@@ -4,7 +4,7 @@ project(BeanChat VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(APP_CURRENT_VERSION "0.16.2")
+set(APP_CURRENT_VERSION "0.17.4")
 set(APP_TitleName "Bean Chat")
 set(APP_OrganizationName "orgBeanChat")
 set(APP_ApplicationName "appBeanChat")
@@ -160,6 +160,7 @@ qt_add_qml_module(appBeanChat
     ui/icons/down.png
     ui/icons/voice.png
     ui/icons/settings.png
+    ui/icons/web.png
     ui/icons/arrow-right.png
     ui/icons/save.png
     ui/icons/endcall.png ui/icons/endcall-red.png
