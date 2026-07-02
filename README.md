@@ -1,9 +1,5 @@
 # BeanChat
 
-<p align="center">
-  <img width="250" src="https://github.com/user-attachments/assets/5be196ab-995b-496f-a434-e900b4e187fb">
-</p>
-
 A modern voice, video and text chat application built with **Qt 6.9 (QML/C++)**.
 
 ---
@@ -54,7 +50,7 @@ or browse
   * [Linux](#linux)
   * [Windows](BUILD_WINDOWS_GUIDE.md)
 * [Dependencies](#-dependencies)
-* [License](#license)
+* [License](#-license)
 
 ---
 
@@ -172,5 +168,4 @@ cmake --install "path/to/build/Desktop_Qt_6_9_3-Release" --prefix "path/to/somew
 ---
 
 ## 📄 License
-## License
 This project uses Qt under the LGPL v3 license.
