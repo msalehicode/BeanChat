@@ -33,9 +33,9 @@ or browse
 
 | Platform | Status | Stage | Version |
 |-----------|--------|--------|--------|
-| 🌐 Server | ✅ | Debug | 0.15.0 |
-| 🪟 Windows Client | ✅ | Release | v0.15.5 |
-| 🐧 Linux Client | ✅ | Debug | v0.15.5 |
+| 🌐 Server | ✅ | Debug | 0.16.0 |
+| 🪟 Windows Client | ✅ | Release | v0.17.4 |
+| 🐧 Linux Client | ✅ | Debug | v0.17.4 |
 | 🤖 Android Client | 🚧 | 🚧 | ? |
 | 🍎 macOS Client | 🚧 | 🚧 | ? | 
 | 📱 iOS Client | 🚧 | 🚧 | ? |
@@ -59,25 +59,34 @@ or browse
 ---
 
 ## 🎥 Preview
+https://github.com/user-attachments/assets/9dd1aafb-20a4-4aa3-b21d-816efbbe39e1
 
-https://github.com/user-attachments/assets/e15b8c5a-4412-4311-97cc-68b4200d40c1
+
+
+
 
 ---
 
 ## ✨ Features
 
-* Voice chat using **Opus** encoding/decoding.
-* Video chat using JPEG frame transmission (currently no video codec compression). Includes a local preview for the sender.
-* Text chat with clickable URLs. Image URLs (`.png`, `.jpg`, etc.) automatically display an inline preview while preserving the original link.
-* Create and join channels.
-* Password-protected channels.
-* Real-time user status indicators (microphone, speaker, and camera), including a speaking indicator when a user is talking.
-* Audio features including **RNNoise** noise suppression, **Push-to-Talk**, and **Voice Activity Detection (Volume Gate)**.
-* Packet loss handling for voice and video, plus a colored signal icon displaying connection quality and ping.
-* Connected users list showing each user's operating system icon.
-* Save servers to a **My Servers** list, with support for editing and removing saved servers.
-* Configurable audio and video devices (microphone, speaker, and camera), plus adjustable sound effect volume.
-* Sound effects for message sent/received and user join/leave events.
+1. Voice chat using **Opus** encoding/decoding.
+2. Video chat using (**ffmpeg** encode/decode), Includes a local preview for the sender.
+3. Text chat with clickable URLs. Image URLs (`.png`, `.jpg`, etc.) automatically display an inline preview while preserving the original link.
+4. Create and join, modify and delete channels
+5. Password-protected channels.
+6. Real-time user status indicators (microphone, speaker, and camera), including a speaking indicator when a user is talking.
+7. Audio features including **RNNoise** noise suppression, **Push-to-Talk**, and **Voice Activity Detection (Volume Gate)**.
+8. Packet loss handling for voice and video, plus a colored signal icon displaying connection quality and ping.
+9. Connected users are listed with showing each user's operating system icon.
+10. Save servers to a **My Servers** list, with support for editing and removing saved servers.
+11. Configurable audio and video devices (microphone, speaker, and camera), plus adjustable sound effect volume.
+12. Sound effects for message sent/received and user join/leave events.
+13. Participant model in center of screen for current channel with their information and video feed.
+14. Users can set their avatar picture.
+15. Move user in/out of channel.
+16. Floating notification system for erros/messages/... on top of screen.
+17. Servers can have their information such as Name, Version, Website, Avatar and Uptime).
+
 
 ---
 
