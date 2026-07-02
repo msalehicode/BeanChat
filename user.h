@@ -21,27 +21,27 @@
 
 
 // C++ models to expose data to QML lists
-#include "channelmodel.h"
-#include "chatmodel.h"
-#include "participantmodel.h"
-#include "myserversmodel.h"
-#include "connectedusersmodel.h"
+#include "models/channelmodel.h"
+#include "models/chatmodel.h"
+#include "models/participantmodel.h"
+#include "models/myserversmodel.h"
+#include "models/connectedusersmodel.h"
 
 
 //capture resources
-#include "cameracapture.h"
-#include "audiocapture.h"
-#include "audiospeaker.h"
+#include "video/cameracapture.h"
+#include "audio/audiocapture.h"
+#include "audio/audiospeaker.h"
 
 
-#include "settingsmanager.h"
-#include "soundmanager.h"
-#include "database.h"
-#include "opuscodec.h"
-#include "ffmpegdecoder.h"
+#include "managers/settingsmanager.h"
+#include "managers/soundmanager.h"
+#include "database/database.h"
+#include "audio/opuscodec.h"
+#include "video/ffmpegdecoder.h"
 
 
-#include "avatarmanager.h"
+#include "managers/avatarmanager.h"
 #include <QStandardPaths>
 #define SAVE_AVATAR_PATH QStandardPaths::writableLocation(QStandardPaths::CacheLocation)+"/servers/"
 

@@ -91,16 +91,18 @@ qt_add_qml_module(appBeanChat
         ui/components/NotificationCard.qml
 
 
-        #pop up dialogs
-        ui/ConnectPopup.qml
-        ui/EnterChannelPasswordPopup.qml
-        ui/ShowImagePopup.qml
-        ui/ModifySavedServerPopup.qml
+        #menu
         ui/MyServersItemMenu.qml
-        ui/CreateChannelPopup.qml
         ui/ServerMenu.qml
-        ui/ModifyChannelPopup.qml
-        ui/ModifyProfilePopup.qml
+
+        #popups
+        ui/popups/ConnectPopup.qml
+        ui/popups/EnterChannelPasswordPopup.qml
+        ui/popups/ShowImagePopup.qml
+        ui/popups/ModifySavedServerPopup.qml
+        ui/popups/CreateChannelPopup.qml
+        ui/popups/ModifyChannelPopup.qml
+        ui/popups/ModifyProfilePopup.qml
 
         # settingsPage pages/components
         ui/settingPages/SettingSection.qml
@@ -116,38 +118,37 @@ qt_add_qml_module(appBeanChat
         ui/settingPages/AudioOutputPage.qml
 
     SOURCES
-        # just in case
-        setup.h
-
-        # general
-        videosink.h
-        participant.h
         user.h user.cpp
-        soundmanager.h soundmanager.cpp
-        database.h database.cpp
-        settingsmanager.h settingsmanager.cpp
-        avatarmanager.h avatarmanager.cpp
 
-        # capture
-        audiocapture.h audiocapture.cpp
-        cameracapture.h cameracapture.cpp
-        audiospeaker.h audiospeaker.cpp
-        monitorcapture.h monitorcapture.cpp
+        #managers
+        managers/soundmanager.h managers/soundmanager.cpp
+        managers/settingsmanager.h managers/settingsmanager.cpp
+        managers/avatarmanager.h managers/avatarmanager.cpp
+
+        #video
+        video/videosink.h
+        video/myvideoitem.h video/myvideoitem.cpp
+        video/cameracapture.h video/cameracapture.cpp
+        video/monitorcapture.h video/monitorcapture.cpp
+        video/ffmpegencoder.h video/ffmpegencoder.cpp
+        video/ffmpegdecoder.h video/ffmpegdecoder.cpp
+
+        #audio
+        audio/audiocapture.h audio/audiocapture.cpp
+        audio/audiospeaker.h audio/audiospeaker.cpp
+        audio/opuscodec.h audio/opuscodec.cpp
+
+        #database
+        database/database.h database/database.cpp
 
         # C++ models for qml
-        channelmodel.h channelmodel.cpp
-        chatmodel.h chatmodel.cpp
-        participantmodel.h
-        connectedusersmodel.h connectedusersmodel.cpp
-        myserversmodel.h myserversmodel.cpp
+        models/participant.h
+        models/channelmodel.h models/channelmodel.cpp
+        models/chatmodel.h models/chatmodel.cpp
+        models/participantmodel.h
+        models/connectedusersmodel.h models/connectedusersmodel.cpp
+        models/myserversmodel.h models/myserversmodel.cpp
 
-        # C++ qml components
-        myvideoitem.h myvideoitem.cpp
-
-        # encode decode
-        opuscodec.h opuscodec.cpp
-        ffmpegencoder.h ffmpegencoder.cpp
-        ffmpegdecoder.h ffmpegdecoder.cpp
 
     # icons
     RESOURCES

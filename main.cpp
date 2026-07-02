@@ -11,32 +11,28 @@
 #include <QTimer>
 
 //resources
-#include "audiospeaker.h"
-#include "cameracapture.h"
-#include "audiocapture.h"
-#include "monitorcapture.h"
+#include "audio/audiospeaker.h"
+#include "audio/audiocapture.h"
+
+#include "video/cameracapture.h"
+#include "video/monitorcapture.h"
 
 
 //models
-#include "channelmodel.h"
-#include "chatmodel.h"
-#include "connectedusersmodel.h"
-#include "myserversmodel.h"
-#include "participantmodel.h"
+#include "models/channelmodel.h"
+#include "models/chatmodel.h"
+#include "models/connectedusersmodel.h"
+#include "models/myserversmodel.h"
+#include "models/participantmodel.h"
 
 //QML components
-#include "myvideoitem.h"
+#include "video/myvideoitem.h"
 
 
 //
 #include "user.h"
-#include "soundmanager.h"
-#include "settingsmanager.h"
-
-//encode decode
-// #include "opusencoder.h"
-// #include "videoencoder.h"
-// #include "ffmpegencoder.h"
+#include "managers/soundmanager.h"
+#include "managers/settingsmanager.h"
 
 
 int main(int argc, char *argv[])

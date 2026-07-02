@@ -1,7 +1,7 @@
 #pragma once
 
 #include <QObject>
-#include "videosink.h"
+#include "../video/videosink.h"
 
 class Participant : public QObject
 {

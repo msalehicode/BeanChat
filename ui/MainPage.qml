@@ -5,6 +5,8 @@ import QtQuick.Controls.Material
 
 import QtQuick.Layouts
 
+import "popups/"
+
 Item {
     anchors.fill: parent
     readonly property int widthBase: 250 //uses for userlist and chanenlist
