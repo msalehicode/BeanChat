@@ -23,37 +23,38 @@ QVariant ConnectedUsersModel::data(
     if(!index.isValid())
         return {};
 
-    const auto& usr =
-        m_connectedUsers[index.row()];
+    ClientUser *user = m_connectedUsers.at(index.row());
+    if(!user)
+        return{};
 
     switch(role)
     {
     case UserIdRole:
-        return usr.id;
+        return user->id();
 
     case UserNameRole:
-        return usr.username;
+        return user->username();
 
     case UserAvatarPathRole:
-        return usr.avatarPath;
+        return user->avatarPath();
 
     case UserStatusRole:
-        return static_cast<int>(usr.status);
+        return static_cast<int>(user->status());
 
     case UserIconsRole:
-        return usr.iconsId;
+        return user->iconsId();
 
     case UserOsVersionRole:
-        return usr.osVersion;
+        return user->osVersion();
 
     case USerOsNameRole:
-        return usr.osName;
+        return user->osName();
 
     case UserAppVersionRole:
-        return usr.appVersion;
+        return user->appVersion();
 
     case UserAppBuildTypeRole:
-        return usr.buildType;
+        return user->buildType();
 
     }
 
@@ -81,36 +82,45 @@ void ConnectedUsersModel::clear()
 {
     beginResetModel();
 
+    qDeleteAll(m_connectedUsers);
     m_connectedUsers.clear();
 
     endResetModel();
+
+    emit countChanged();
 }
 
-void ConnectedUsersModel::addUser(quint64 id, QString username, QString avatarPath, QString iconsId,
-                                  bool talking, bool muted, bool deafened, bool camera,
-                                  QString version, QString buildType, QString osName, QString osVersion,
-                                  UserActivityStatus status)
+void ConnectedUsersModel::addUser(quint64 id,
+                                  QString username,
+                                  QString avatarPath,
+                                  QString iconsId,
+                                  bool talking,
+                                  bool muted,
+                                  bool deafened,
+                                  bool camera,
+                                  QString version,
+                                  QString buildType,
+                                  QString osName,
+                                  QString osVersion,
+                                  ClientUser::Status status)
 {
-    beginInsertRows(
-        QModelIndex(),
-        rowCount(),
-        rowCount());
+    beginInsertRows(QModelIndex(), rowCount(), rowCount());
 
-    ConnectedUser user;
-    user.id=id;
-    user.username=username;
-    user.avatarPath = avatarPath;
-    user.iconsId=iconsId;
-    user.isTalking=talking;
-    user.muted=muted;
-    user.deafened=deafened;
-    user.hasVideo=camera;
-    user.status=status;
-    user.osName = osName;
-    user.osVersion = osVersion;
-    user.buildType = buildType;
-    user.appVersion = version;
+    ClientUser *user = new ClientUser(this);
 
+    user->setId(id);
+    user->setUsername(username);
+    user->setAvatarPath(avatarPath);
+    user->setIconsId(iconsId);
+    user->setIsTalking(talking);
+    user->setMuted(muted);
+    user->setDeafened(deafened);
+    user->setHasCamera(camera);
+    user->setStatus(status);
+    user->setAppVersion(version);
+    user->setBuildType(buildType);
+    user->setOsName(osName);
+    user->setOsVersion(osVersion);
 
     m_connectedUsers.append(user);
 
@@ -119,6 +129,7 @@ void ConnectedUsersModel::addUser(quint64 id, QString username, QString avatarPa
     emit countChanged();
 }
 
+
 void ConnectedUsersModel::setUserAvatarPath(quint64 userId, const QString &path)
 {
     int row = findRowById(userId);
@@ -126,7 +137,7 @@ void ConnectedUsersModel::setUserAvatarPath(quint64 userId, const QString &path)
     if (row < 0)
         return;
 
-    m_connectedUsers[row].avatarPath = path;
+    m_connectedUsers[row]->setAvatarPath(path);
 
     emit dataChanged(
         index(row),
@@ -138,11 +149,13 @@ void ConnectedUsersModel::removeUser(quint64 userId)
 {
     for (int row = 0; row < m_connectedUsers.size(); ++row)
     {
-        if (m_connectedUsers[row].id == userId)
+        if (m_connectedUsers[row]->id() == userId)
         {
             beginRemoveRows(QModelIndex(), row, row);
 
-            m_connectedUsers.removeAt(row);
+            ClientUser *user = m_connectedUsers.takeAt(row);
+
+            user->deleteLater();
 
             endRemoveRows();
             emit countChanged();
@@ -160,7 +173,7 @@ void ConnectedUsersModel::setUsername(
     if (row < 0)
         return;
 
-    m_connectedUsers[row].username = username;
+    m_connectedUsers[row]->setUsername(username);
 
     emit dataChanged(
         index(row),
@@ -172,7 +185,7 @@ int ConnectedUsersModel::findRowById(quint64 userId) const
 {
     for (int i = 0; i < m_connectedUsers.size(); ++i)
     {
-        if (m_connectedUsers[i].id == userId)
+        if (m_connectedUsers[i]->id() == userId)
             return i;
     }
 
@@ -180,27 +193,27 @@ int ConnectedUsersModel::findRowById(quint64 userId) const
 }
 
 
-ConnectedUser* ConnectedUsersModel::findUser(quint64 userId)
+ClientUser* ConnectedUsersModel::findUser(quint64 userId)
 {
     int row = findRowById(userId);
 
     if (row < 0)
         return nullptr;
 
-    return &m_connectedUsers[row];
+    return m_connectedUsers[row];
 }
 
 
 void ConnectedUsersModel::setStatus(
     quint64 userId,
-    UserActivityStatus status)
+    ClientUser::Status status)
 {
     int row = findRowById(userId);
 
     if (row < 0)
         return;
 
-    m_connectedUsers[row].status = status;
+    m_connectedUsers[row]->setStatus(status);
 
     emit dataChanged(
         index(row),
@@ -217,7 +230,7 @@ void ConnectedUsersModel::setIcons(
     if (row < 0)
         return;
 
-    m_connectedUsers[row].iconsId = iconsId;
+    m_connectedUsers[row]->setIconsId(iconsId);
 
     emit dataChanged(
         index(row),

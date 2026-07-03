@@ -986,11 +986,11 @@ void User::processPacket(const Packet& packet)
         if(resp.oldChannelId==-1) //if it's -1 means user just connected to server and didnt join any channel yet. so don't need add him channelModel
         {
             //read user's data from connectedUsersModel
-            ConnectedUser* user = m_connectedUsersModel->findUser(resp.userId);
+            ClientUser* user = m_connectedUsersModel->findUser(resp.userId);
 
             //add user to channemodel
-            m_channelModel->addUser(resp.channelId,user->id,user->username, user->avatarPath,
-                                    user->muted,user->deafened,user->hasVideo);
+            m_channelModel->addUser(resp.channelId,user->id(),user->username(), user->avatarPath(),
+                                    user->muted(),user->deafened(),user->hasCamera());
         }
 
         //check if user was me?
@@ -1153,7 +1153,7 @@ void User::processPacket(const Packet& packet)
                                        u.deafened,
                                        u.camera,
                                        u.appVersion, u.buildType, u.osName, u.osVersion,
-                                       UserActivityStatus::Online);//also server doesnt send this too.
+                                       ClientUser::Status::Online);//also server doesnt send this too.
         break;
     }
 
@@ -1290,7 +1290,7 @@ void User::processPacket(const Packet& packet)
                                            u.deafened,
                                            u.camera,
                                            u.appVersion, u.buildType, u.osName, u.osVersion,
-                                           UserActivityStatus::Online);//also server doesnt send this too.
+                                           ClientUser::Status::Online);//also server doesnt send this too.
 
 
             //add those users are in channels to our channel model
