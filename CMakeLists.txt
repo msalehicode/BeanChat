@@ -148,6 +148,7 @@ qt_add_qml_module(appBeanChat
         models/participantmodel.h
         models/connectedusersmodel.h models/connectedusersmodel.cpp
         models/myserversmodel.h models/myserversmodel.cpp
+        models/clientuser.h models/clientuser.cpp
 
 
     # icons
