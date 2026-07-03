@@ -33,6 +33,7 @@
 #include "user.h"
 #include "managers/soundmanager.h"
 #include "managers/settingsmanager.h"
+#include "managers/clientusermanager.h"
 
 
 int main(int argc, char *argv[])
@@ -55,6 +56,7 @@ int main(int argc, char *argv[])
     //etc
     SoundManager soundManager; //play effects
     SettingsManager settingsManager;
+    ClientUserManager clientuserManager;
 
 
 
@@ -67,7 +69,7 @@ int main(int argc, char *argv[])
 
     //----------
     User usr(&channelModel, &chatModel, &participantsModel, &connectedUsersModel, &myServersModel,
-             &soundManager, &settingsManager,
+             &soundManager, &settingsManager, &clientuserManager,
              &cam, &audio, &speaker);
 
     //---------- camera connection ----------

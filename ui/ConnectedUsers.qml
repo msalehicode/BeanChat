@@ -71,7 +71,7 @@ Item
             delegate: Rectangle
             {
                 width: connectedUsersView.width/1.11
-                anchors.horizontalCenter:parent.horizontalCenter
+                anchors.horizontalCenter: connectedUsersView.horizontalCenter
                 height: 60
                 radius: height
                 color: "#202225"

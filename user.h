@@ -42,6 +42,8 @@
 
 
 #include "managers/avatarmanager.h"
+#include "managers/clientusermanager.h"
+
 #include <QStandardPaths>
 #define SAVE_AVATAR_PATH QStandardPaths::writableLocation(QStandardPaths::CacheLocation)+"/servers/"
 
@@ -84,6 +86,8 @@ enum class NotificationId : int
     Disconnected=0,
 
     Message=1,
+
+    YouAreMoved=2
 };
 
 enum class NotificationDuration : int
@@ -103,7 +107,7 @@ class User : public QObject
 public:
     explicit User(ChannelModel *channelModel,ChatModel* chatModel,
                   ParticipantModel* currentChannelParticipant,ConnectedUsersModel* connectedUsersModel, MyServersModel* myServersModel,
-                  SoundManager* sounderManager, SettingsManager* settingsManager,
+                  SoundManager* sounderManager, SettingsManager* settingsManager, ClientUserManager* clientuserManager,
                   CameraCapture* cam, AudioCapture* mic, AudioSpeaker* speaker,
                   QObject *parent = nullptr);
 
@@ -302,6 +306,7 @@ private:
     Database m_database;
     SoundManager* m_soundManager;
     SettingsManager* m_settingsManager;
+    ClientUserManager* m_clientUserManager;
     OpusCodec m_opus;
 
 

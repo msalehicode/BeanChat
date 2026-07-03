@@ -2,13 +2,13 @@
 
 User::User(ChannelModel *channelModel, ChatModel *chatModel,
            ParticipantModel* currentChannelParticipant, ConnectedUsersModel *connectedUsersModel, MyServersModel* myServersModel,
-           SoundManager* sounderManager, SettingsManager* settingsManager,
+           SoundManager* sounderManager, SettingsManager* settingsManager, ClientUserManager *clientuserManager,
            CameraCapture* cam, AudioCapture *mic, AudioSpeaker* speaker,
            QObject *parent)
     : QObject{parent}, m_channelModel(channelModel), m_chatModel(chatModel),
     m_currentChannelParticipant(currentChannelParticipant), m_connectedUsersModel(connectedUsersModel),
     m_myServersModel(myServersModel),
-    m_soundManager(sounderManager), m_settingsManager(settingsManager),
+    m_soundManager(sounderManager), m_settingsManager(settingsManager), m_clientUserManager(clientuserManager),
     m_cam(cam), m_mic(mic), m_speaker(speaker)
 {
     qDebug() << "user starting..";
@@ -705,8 +705,9 @@ void User::newAvatarArrived(quint64 userId,
         }
 
         //notify models to update..
-        m_connectedUsersModel->setUserAvatarPath(userId, avatarPath);
         m_channelModel->setUserAvatarPath(userId, avatarPath);
+        ClientUser* user = m_clientUserManager->user(userId);
+        user->setAvatarPath(avatarPath);
 
         //check if user is me OR is he my channel? then apply on current channel participant model
         ChannelItem* channel = m_channelModel->findChannelOfUser(userId);
@@ -999,7 +1000,8 @@ void User::processPacket(const Packet& packet)
             if(packet.type==PacketType::UserMoved)
             {
                 emit notificationRequested(NotificationType::Info,
-                                           "You are moved.");
+                                           "You are moved.",
+                                           NotificationId::YouAreMoved);
             }
             else
                 qDebug() << "voice: channel switched.";
@@ -1135,25 +1137,52 @@ void User::processPacket(const Packet& packet)
 
     case PacketType::UserConnected:
     {
-        qInfo() << "user connected:";
         auto u =
             PacketHelpers::unpack<UserConnectedPacket>(
                 packet.payload);
 
-        qDebug() << "User joined:" << u.username;
+        qDebug() << "User connected:" << u.username;
+
+        //add user.
+        ClientUser* user = m_clientUserManager->createUser(u.id);
+        if(user)
+        {
+            QString avatarPath = checkAvatar(u.id, u.avatarHash);
+
+            qDebug() << "add user to connected list: " <<  u.appVersion << "-"
+                     << u.buildType << "-" << u.osName
+                     << "-" << u.osVersion << "- avatar hash= " << u.avatarHash
+                     << "avatar path=" << avatarPath;
+
+            //if user is me set myAvatarPath
+            if(u.id == myId())
+            {
+                qDebug() << "user connected received, this user is me: ";
+                setMyAvatarPath(avatarPath);
+                user->setSelf(true);
+            }
 
 
-        QString avatarPath = checkAvatar(u.id, u.avatarHash);
+            user->setUsername(u.username);
+            user->setAvatarPath(avatarPath);
+            // user->setIconsId(u.icon); //for now packet haven;t this
+            user->setMuted(u.muted);
+            user->setDeafened(u.deafened);
+            user->setHasCamera(u.camera);
+            // user->setStatus(u.status); //for now packet haven;t this
+            user->setAppVersion(u.appVersion);
+            user->setBuildType(u.buildType);
+            user->setOsName(u.osName);
+            user->setOsVersion(u.osVersion);
 
-        m_connectedUsersModel->addUser(u.id,
-                                       u.username,
-                                       avatarPath,
-                                       "",false,//server doesnt send these right now.
-                                       u.muted,
-                                       u.deafened,
-                                       u.camera,
-                                       u.appVersion, u.buildType, u.osName, u.osVersion,
-                                       ClientUser::Status::Online);//also server doesnt send this too.
+            m_connectedUsersModel->addUser(user);
+
+            qDebug() << "user added to connectedusrs id="<<u.id;
+        }
+        else
+            qDebug() << "failed to create user, invalid id or user exists. id=" << u.id;
+
+
         break;
     }
 
@@ -1264,39 +1293,55 @@ void User::processPacket(const Packet& packet)
         }
 
         //users
-        m_connectedUsersModel->clear();
         for(auto& u : state.users)
         {
-            QString avatarPath = checkAvatar(u.id, u.avatarHash);
-
-            qDebug() << "add user to connected: " <<  u.appVersion << "-"
-                     << u.buildType << "-" << u.osName
-                     << "-" << u.osVersion << "- avatar hash= " << u.avatarHash
-                     << "avatar path=" << avatarPath;
-
-
-            //if user is me set myAvatarPath
-            if(u.id == myId())
+            //add user.
+            ClientUser* user = m_clientUserManager->createUser(u.id);
+            qDebug() << "userid=" << u.id;
+            if(user)
             {
-                qDebug() << "statereceived, this user is me: ";
-                setMyAvatarPath(avatarPath);
+                QString avatarPath = checkAvatar(u.id, u.avatarHash);
+
+                qDebug() << "add user to connected: " <<  u.appVersion << "-"
+                         << u.buildType << "-" << u.osName
+                         << "-" << u.osVersion << "- avatar hash= " << u.avatarHash
+                         << "avatar path=" << avatarPath;
+
+                //if user is me set myAvatarPath
+                if(u.id == myId())
+                {
+                    qDebug() << "state received, this user is me: ";
+                    setMyAvatarPath(avatarPath);
+                    user->setSelf(true);
+                }
+
+
+                user->setUsername(u.username);
+                user->setAvatarPath(avatarPath);
+                // user->setIconsId(u.icon); //for now packet haven;t this
+                user->setMuted(u.muted);
+                user->setDeafened(u.deafened);
+                user->setHasCamera(u.camera);
+                // user->setStatus(u.status); //for now packet haven;t this
+                user->setAppVersion(u.appVersion);
+                user->setBuildType(u.buildType);
+                user->setOsName(u.osName);
+                user->setOsVersion(u.osVersion);
+
+                m_connectedUsersModel->addUser(user);
+
+                qDebug() << "user added to connectedusrs id="<<u.id;
+
+
+                //add those users are in channels to our channel model
+                if(u.channelId!=-1)
+                    m_channelModel->addUser(u.channelId, u.id, u.username, avatarPath,
+                                            u.muted, u.deafened, u.camera);
+                qDebug() << "user added to connectedusrs id="<<u.id;
             }
+            else
+                qDebug() << "failed to create user, invalid id or user exists. id=" << u.id;
 
-            m_connectedUsersModel->addUser(u.id,
-                                           u.username,
-                                           avatarPath,
-                                           "",false,//server doesnt send these right now.
-                                           u.muted,
-                                           u.deafened,
-                                           u.camera,
-                                           u.appVersion, u.buildType, u.osName, u.osVersion,
-                                           ClientUser::Status::Online);//also server doesnt send this too.
-
-
-            //add those users are in channels to our channel model
-            if(u.channelId!=-1)
-                m_channelModel->addUser(u.channelId, u.id, u.username, avatarPath,
-                                        u.muted, u.deafened, u.camera);
         }
 
         //send request to server for all not found avatars

@@ -42,27 +42,16 @@ signals:
     void countChanged();
 public:
 
-    void clear();
+    void addUser(ClientUser* user);
 
+    void clear();
 
     void removeUser(quint64 userId);
 
-    void setUsername(quint64 userId, const QString& username);
-
-    void setUserAvatarPath(quint64 userId, const QString& path);
-
-    void setStatus(quint64 userId, ClientUser::Status status);
-
-    void setIcons(quint64 userId, const QString& iconsId);
-
     ClientUser *findUser(quint64 userId);
 
-
-    void addUser(quint64 id, QString username, QString avatarPath, QString iconsId,
-                 bool talking, bool muted, bool deafened, bool camera,
-                 QString version, QString buildType, QString osName, QString osVersion,
-                 ClientUser::Status status);
 private:
+    void observeUser(ClientUser *user);
     int findRowById(quint64 userId) const;
     QList<ClientUser*> m_connectedUsers;
 };

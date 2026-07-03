@@ -82,7 +82,6 @@ void ConnectedUsersModel::clear()
 {
     beginResetModel();
 
-    qDeleteAll(m_connectedUsers);
     m_connectedUsers.clear();
 
     endResetModel();
@@ -90,60 +89,132 @@ void ConnectedUsersModel::clear()
     emit countChanged();
 }
 
-void ConnectedUsersModel::addUser(quint64 id,
-                                  QString username,
-                                  QString avatarPath,
-                                  QString iconsId,
-                                  bool talking,
-                                  bool muted,
-                                  bool deafened,
-                                  bool camera,
-                                  QString version,
-                                  QString buildType,
-                                  QString osName,
-                                  QString osVersion,
-                                  ClientUser::Status status)
+void ConnectedUsersModel::addUser(ClientUser* user)
 {
+    if(!user)
+    {
+        qDebug() << "fialed to add user to connected users model. invalid user";
+        return;
+    }
+
     beginInsertRows(QModelIndex(), rowCount(), rowCount());
-
-    ClientUser *user = new ClientUser(this);
-
-    user->setId(id);
-    user->setUsername(username);
-    user->setAvatarPath(avatarPath);
-    user->setIconsId(iconsId);
-    user->setIsTalking(talking);
-    user->setMuted(muted);
-    user->setDeafened(deafened);
-    user->setHasCamera(camera);
-    user->setStatus(status);
-    user->setAppVersion(version);
-    user->setBuildType(buildType);
-    user->setOsName(osName);
-    user->setOsVersion(osVersion);
 
     m_connectedUsers.append(user);
 
     endInsertRows();
 
+    observeUser(user);
     emit countChanged();
 }
 
-
-void ConnectedUsersModel::setUserAvatarPath(quint64 userId, const QString &path)
+void ConnectedUsersModel::observeUser(ClientUser* user)
 {
-    int row = findRowById(userId);
-
-    if (row < 0)
+    if(!user)
         return;
 
-    m_connectedUsers[row]->setAvatarPath(path);
+    connect(user,
+            &ClientUser::idChanged,
+            this,
+            [this, user]()
+            {
+                int row = m_connectedUsers.indexOf(user);
 
-    emit dataChanged(
-        index(row),
-        index(row),
-        { UserAvatarPathRole });
+                if (row >= 0)
+                    emit dataChanged(index(row), index(row), { UserIdRole });
+            });
+
+    connect(user,
+            &ClientUser::usernameChanged,
+            this,
+            [this, user]()
+            {
+                int row = m_connectedUsers.indexOf(user);
+
+                if (row >= 0)
+                    emit dataChanged(index(row), index(row), { UserNameRole });
+            });
+
+
+    connect(user,
+            &ClientUser::avatarPathChanged,
+            this,
+            [this, user]()
+            {
+                int row = m_connectedUsers.indexOf(user);
+
+                if (row >= 0)
+                    emit dataChanged(index(row), index(row), { UserAvatarPathRole });
+            });
+
+    connect(user,
+            &ClientUser::statusChanged,
+            this,
+            [this, user]()
+            {
+                int row = m_connectedUsers.indexOf(user);
+
+                if (row >= 0)
+                    emit dataChanged(index(row), index(row), { UserStatusRole });
+            });
+
+    connect(user,
+            &ClientUser::iconsIdChanged,
+            this,
+            [this, user]()
+            {
+                int row = m_connectedUsers.indexOf(user);
+
+                if (row >= 0)
+                    emit dataChanged(index(row), index(row), { UserIconsRole });
+            });
+
+    connect(user,
+            &ClientUser::osVersionChanged,
+            this,
+            [this, user]()
+            {
+                int row = m_connectedUsers.indexOf(user);
+
+                if (row >= 0)
+                    emit dataChanged(index(row), index(row), { UserOsVersionRole });
+            });
+
+    connect(user,
+            &ClientUser::osNameChanged,
+            this,
+            [this, user]()
+            {
+                int row = m_connectedUsers.indexOf(user);
+
+                if (row >= 0)
+                    emit dataChanged(index(row), index(row), { USerOsNameRole });
+            });
+
+    connect(user,
+            &ClientUser::appVersionChanged,
+            this,
+            [this, user]()
+            {
+                int row = m_connectedUsers.indexOf(user);
+
+                if (row >= 0)
+                    emit dataChanged(index(row), index(row), { UserAppVersionRole });
+            });
+
+
+    connect(user,
+            &ClientUser::buildTypeChanged,
+            this,
+            [this, user]()
+            {
+                int row = m_connectedUsers.indexOf(user);
+
+                if (row >= 0)
+                    emit dataChanged(index(row), index(row), { UserAppBuildTypeRole });
+            });
+
 }
+
 
 void ConnectedUsersModel::removeUser(quint64 userId)
 {
@@ -153,32 +224,13 @@ void ConnectedUsersModel::removeUser(quint64 userId)
         {
             beginRemoveRows(QModelIndex(), row, row);
 
-            ClientUser *user = m_connectedUsers.takeAt(row);
-
-            user->deleteLater();
+            m_connectedUsers.removeAt(row);
 
             endRemoveRows();
             emit countChanged();
             return;
         }
     }
-}
-
-void ConnectedUsersModel::setUsername(
-    quint64 userId,
-    const QString& username)
-{
-    int row = findRowById(userId);
-
-    if (row < 0)
-        return;
-
-    m_connectedUsers[row]->setUsername(username);
-
-    emit dataChanged(
-        index(row),
-        index(row),
-        { UserNameRole });
 }
 
 int ConnectedUsersModel::findRowById(quint64 userId) const
@@ -203,37 +255,3 @@ ClientUser* ConnectedUsersModel::findUser(quint64 userId)
     return m_connectedUsers[row];
 }
 
-
-void ConnectedUsersModel::setStatus(
-    quint64 userId,
-    ClientUser::Status status)
-{
-    int row = findRowById(userId);
-
-    if (row < 0)
-        return;
-
-    m_connectedUsers[row]->setStatus(status);
-
-    emit dataChanged(
-        index(row),
-        index(row),
-        { UserStatusRole });
-}
-
-void ConnectedUsersModel::setIcons(
-    quint64 userId,
-    const QString& iconsId)
-{
-    int row = findRowById(userId);
-
-    if (row < 0)
-        return;
-
-    m_connectedUsers[row]->setIconsId(iconsId);
-
-    emit dataChanged(
-        index(row),
-        index(row),
-        { UserIconsRole });
-}

@@ -124,6 +124,7 @@ qt_add_qml_module(appBeanChat
         managers/soundmanager.h managers/soundmanager.cpp
         managers/settingsmanager.h managers/settingsmanager.cpp
         managers/avatarmanager.h managers/avatarmanager.cpp
+        managers/clientusermanager.h managers/clientusermanager.cpp
 
         #video
         video/videosink.h
