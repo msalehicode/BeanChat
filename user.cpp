@@ -31,18 +31,18 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
         this,
         [this](const QImage &image)
         {
-            Participant *sender =
+            ClientUser* sender =
                 m_currentChannelParticipant->findUser(m_lastVideoSender);
 
             if(!sender)
                 return;
 
-            VideoSink *sink = sender->videoSink();
+            VideoSink *sink = m_currentChannelParticipant->videoSink(sender->id());
 
             if(!sink)
                 return;
 
-            sender->setIsCameraOpen(true);
+            sender->setHasCamera(true);
 
             sink->setImage(image);
         });
@@ -139,9 +139,14 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
      * make a connection between channelmodel  to participantModel (center of screen [those rectangles]) sync with channelModel user's talking status
      * channelModel -> (which contineusly check users of current channel to find out who stopped talking due to last talking time)
     */
-    connect(m_channelModel, &ChannelModel::userTalkingStatus,
-            m_currentChannelParticipant, &ParticipantModel::setTalking);
-
+    connect(m_channelModel,
+            &ChannelModel::userTalkingStatus,
+            this,
+            [this](quint64 userId, bool talking)
+            {
+                if (ClientUser *user = m_clientUserManager->user(userId))
+                    user->setIsTalking(talking);
+            });
 
     //get system info to send to server on login stage.
     m_info.appVersion = QCoreApplication::applicationVersion();
@@ -570,7 +575,9 @@ void User::sendVoicePcm(
         m_channelModel->setUserTalking(myId(),true);
 
         //update participantmodel too
-        m_currentChannelParticipant->setTalking(myId(),true);
+        ClientUser *clientUser = m_clientUserManager->user(myId());
+        if (clientUser)
+            clientUser->setIsTalking(true);
     }
     senderUser->lastVoicePacket.restart();
 }
@@ -708,17 +715,6 @@ void User::newAvatarArrived(quint64 userId,
         m_channelModel->setUserAvatarPath(userId, avatarPath);
         ClientUser* user = m_clientUserManager->user(userId);
         user->setAvatarPath(avatarPath);
-
-        //check if user is me OR is he my channel? then apply on current channel participant model
-        ChannelItem* channel = m_channelModel->findChannelOfUser(userId);
-        bool isInMyChannel=false;
-        if(channel)
-            isInMyChannel = (channel->id == m_myChannelId);
-
-        if(userId == myId() || isInMyChannel)
-        {
-            m_currentChannelParticipant->setAvatarPath(userId, avatarPath);
-        }
     }
     else
         qDebug() << "failed to save avatar for that user...";
@@ -848,7 +844,6 @@ void User::processPacket(const Packet& packet)
             m_myChannelId=-1; //default vlaue for homeless users :D
             setMyChannelSavesChat(false);
             setChatUnreadMessages(0);
-            m_me=nullptr;
         }
         break;
     }
@@ -876,10 +871,6 @@ void User::processPacket(const Packet& packet)
             // start or stop camera
             if(m_cam)
             {
-                m_me = m_currentChannelParticipant->findUser(myId());
-                if(!m_me)
-                    return;
-
                 if(resp.status)
                 {
                     qDebug() << "staring camera..";
@@ -887,22 +878,27 @@ void User::processPacket(const Packet& packet)
 
 
                     //feed this user's vidoeSink with preview.
-                    QObject::connect(
-                        m_cam,
-                        &CameraCapture::imageReady,
-                        m_me->videoSink(),
-                        &VideoSink::setImage,
-                        Qt::QueuedConnection);
+                    if (VideoSink *sink = m_currentChannelParticipant->videoSink(myId()))
+                    {
+                        connect(m_cam,
+                                &CameraCapture::imageReady,
+                                sink,
+                                &VideoSink::setImage,
+                                Qt::QueuedConnection);
+                    }
                 }
                 else
                 {
                     qDebug() << "stopping camera..";
+                    if (VideoSink *sink = m_currentChannelParticipant->videoSink(myId()))
+                    {
+                        QObject::disconnect(m_cam,
+                                   &CameraCapture::imageReady,
+                                   sink,
+                                   &VideoSink::setImage);
+                    }
+
                     m_cam->stop();
-                    QObject::disconnect(
-                        m_cam,
-                        &CameraCapture::imageReady,
-                        m_me->videoSink(),
-                        &VideoSink::setImage);
                 }
             }
             else
@@ -920,7 +916,8 @@ void User::processPacket(const Packet& packet)
         }
 
         m_channelModel->setUserHasVideo(resp.userId,resp.status);
-        m_currentChannelParticipant->setCameraOpen(resp.userId,resp.status);
+        if (ClientUser *user = m_clientUserManager->user(resp.userId))
+            user->setHasCamera(resp.status);
     }break;
 
 
@@ -945,7 +942,8 @@ void User::processPacket(const Packet& packet)
         }
 
         m_channelModel->setUserMuted(resp.userId,resp.status);
-        m_currentChannelParticipant->setMuted(resp.userId,resp.status);
+        if (ClientUser *user = m_clientUserManager->user(resp.userId))
+            user->setMuted(resp.status);
     }break;
 
 
@@ -968,7 +966,8 @@ void User::processPacket(const Packet& packet)
         }
 
         m_channelModel->setUserDeafened(resp.userId,resp.status);
-        m_currentChannelParticipant->setDeafened(resp.userId,resp.status);
+        if (ClientUser *user = m_clientUserManager->user(resp.userId))
+            user->setDeafened(resp.status);
     }break;
 
 
@@ -1023,32 +1022,16 @@ void User::processPacket(const Packet& packet)
             setMyChannelName(m_channelModel->getChannelName(m_myChannelId)); //to show on top of Chat also on userConnectedServer.
             setMyChannelSavesChat(m_channelModel->getChannelSaveChats(m_myChannelId)); //to show on top of Chat
 
-            if(!m_me) //if this user is not inside participantModel, reset model comepletely.
-                m_currentChannelParticipant->clear();
-            else //otherwise hold user to save camera preview ,moreover less user add user, clear model but hold this user.
-                m_currentChannelParticipant->clearExcept(myId()); //to dont ruin camera preview feedback, if clear completely this user camera preview would be black!
-
-
             //add each users of this channel of (which user joint) into participantModel
             ChannelItem* channel = m_channelModel->findChannel(resp.channelId);
             if(channel)
             {
                 //add found users into participant model
-                for(const UserItem& user: channel->users)
+                for (const UserItem &user : channel->users)
                 {
-                    if(user.id == myId()) //because we didnt completely clear participantmodel, we hold this user.
-                    {
-                        if(m_me) //is thisUser inside participantModel?
-                            continue;
-                    }
-
-                    m_currentChannelParticipant->addUser(user.id,user.username,user.avatarPath,
-                                                         user.isTalking,user.muted,
-                                                         user.deafened,user.hasVideo);
+                    if (ClientUser *clientUser = m_clientUserManager->user(user.id))
+                        m_currentChannelParticipant->addUser(clientUser);
                 }
-
-                if(!m_me) //user was not inside model therefore it has been added recently so lets set pointer
-                    m_me = m_currentChannelParticipant->findUser(myId()); //update user's pointer (uses for camera preview to set this user videoSink to show local preview for camera)
             }
             else
                 qDebug() << "could not find channel id:" << resp.channelId;
@@ -1068,9 +1051,8 @@ void User::processPacket(const Packet& packet)
             {
                 UserItem* jointUser = m_channelModel->findUserInChannel(channel,resp.userId);
                 if(jointUser)
-                    m_currentChannelParticipant->addUser(jointUser->id,jointUser->username,jointUser->avatarPath,
-                                                         jointUser->isTalking,jointUser->muted,
-                                                         jointUser->deafened,jointUser->hasVideo);
+                    if (ClientUser *clientUser = m_clientUserManager->user(jointUser->id))
+                        m_currentChannelParticipant->addUser(clientUser);
                 else
                     qDebug() << "user joined could not find user inside channel id:" << resp.channelId << " userid=" << resp.userId;
             }
@@ -1630,7 +1612,8 @@ void User::onUdpReadyRead()
                     m_channelModel->setUserTalking(senderUser->id,true);
 
                     //update participantmodel too
-                    m_currentChannelParticipant->setTalking(packet.senderId,true);
+                    if (ClientUser *user = m_clientUserManager->user(packet.senderId))
+                        user->setIsTalking(true);
                 }
 
                 senderUser->lastVoicePacket.restart();
@@ -1669,7 +1652,7 @@ void User::onUdpReadyRead()
             //     << "size="
             //     << packet.videoData.size();
 
-            Participant* senderParticipant = m_currentChannelParticipant->findUser(packet.senderId);
+            ClientUser* senderParticipant = m_currentChannelParticipant->findUser(packet.senderId);
             if(!senderParticipant)
             {
                 qDebug() << "could not find sender as participant..";
@@ -1810,7 +1793,6 @@ void User::resetVariables()
     setMyChannelName("");
     setMyChannelSavesChat(false);
     setIsConnectedToServer(false);
-    m_me=nullptr;
     setConnectedServerId(-1); //this is serverIndexDb which would use in saving user's avatar in each server's directory
     m_connectedServerId_onDb=-1;
     m_serverIp.clear();

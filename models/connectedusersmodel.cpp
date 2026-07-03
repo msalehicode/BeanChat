@@ -103,8 +103,9 @@ void ConnectedUsersModel::addUser(ClientUser* user)
 
     endInsertRows();
 
-    observeUser(user);
     emit countChanged();
+
+    observeUser(user);
 }
 
 void ConnectedUsersModel::observeUser(ClientUser* user)

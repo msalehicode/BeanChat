@@ -327,7 +327,6 @@ private:
     bool m_myChannelSavesChat=false;
     QString m_myServerName= ""; //current server connected to (name that saved by user inside myServers, can be modified, only shown to this user)
     UserModel m_info; //to store system info such as appVersio and ..
-    Participant* m_me=nullptr; //hold this user info and update it when channel switched, to connect with cameraCapture and show images as local preview
     UserConnectionStatus m_connectionStatus=UserConnectionStatus::Unknown;
     int m_connectedServerId_onDb=-1; //(serverDbIndex) to use for path of avatars. e.g path/to/Cached/avatars/0  <- this 0 is server id (directory to hold that server user's avatar files)
 

@@ -143,10 +143,10 @@ qt_add_qml_module(appBeanChat
         database/database.h database/database.cpp
 
         # C++ models for qml
-        models/participant.h
+
         models/channelmodel.h models/channelmodel.cpp
         models/chatmodel.h models/chatmodel.cpp
-        models/participantmodel.h
+        models/participantmodel.h models/participantmodel.cpp
         models/connectedusersmodel.h models/connectedusersmodel.cpp
         models/myserversmodel.h models/myserversmodel.cpp
         models/clientuser.h models/clientuser.cpp

@@ -1,7 +1,8 @@
 #pragma once
 
 #include <QAbstractListModel>
-#include "participant.h"
+#include "../video/videosink.h"
+#include "clientuser.h"
 
 class ParticipantModel : public QAbstractListModel
 {
@@ -20,283 +21,34 @@ public:
         IsMuted
     };
 
-    explicit ParticipantModel(QObject *parent = nullptr)
-        : QAbstractListModel(parent)
-    {
-    }
+    explicit ParticipantModel(QObject *parent = nullptr);
 
-    int rowCount(
-        const QModelIndex &) const override
-    {
-        return m_users.size();
-    }
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
     QVariant data(
         const QModelIndex &index,
-        int role) const override
-    {
-        Participant *user =
-            m_users[index.row()];
-
-        switch(role)
-        {
-        case UsernameRole:
-            return user->username();
-
-        case UserAvatarPathRole:
-            return user->avatarPath();
-
-        case IsTalkingRole:
-            return user->isTalking();
-
-        case IsCameraOpenRole:
-            return user->isCameraOpen();
-
-        case VideoSinkRole:
-            return QVariant::fromValue(user->videoSink());
-
-        case UserId:
-            return user->id();
-
-        case IsDeafened:
-            return user->isDeafened();
-
-        case IsMuted:
-            return user->isMuted();
-        }
-
-
-
-        return {};
-    }
+        int role) const override;
 
     QHash<int,QByteArray>
-    roleNames() const override
-    {
-        return {
-            {UsernameRole,"username"},
-            {UserAvatarPathRole, "avatarPath"},
-            {IsTalkingRole,"isTalking"},
-            {IsCameraOpenRole,"isCameraOpen"},
-            {VideoSinkRole,"videoSink"},
-            {UserId,"userId"},
-            {IsDeafened, "isDeafened"},
-            {IsMuted, "isMuted"}
-        };
-    }
+    roleNames() const override;
 
-    void addUser(quint64 id, const QString &name, const QString& avatarPath,
-                 bool isTalking=false, bool isMuted=false,
-                 bool isDeafened=false, bool isCameraOpen=false)
-    {
-        beginInsertRows(QModelIndex(), m_users.size(), m_users.size());
+    void addUser(ClientUser *user);
 
-        //check if user exists then ignore
-        if(findUser(id))
-            return;
+    void removeUser(const quint64 &userId);
 
-        m_users.append(new Participant(id,name,avatarPath, isTalking,isMuted,isDeafened,isCameraOpen,this));
+    void clear();
 
-        endInsertRows();
-    }
+    ClientUser* findUser(quint64 userId);
 
-    void removeUser(const quint64 &userId)
-    {
-        for(int i=0;i<m_users.size();i++)
-        {
-            if(m_users[i]->id()==userId)
-            {
-                beginRemoveRows(
-                    QModelIndex(),
-                    i,
-                    i);
-
-                delete m_users.takeAt(i);
-
-                endRemoveRows();
-                return;
-            }
-        }
-    }
-
-    void clear()
-    {
-        beginResetModel();
-
-        qDeleteAll(m_users); // deletes all Participant*
-        m_users.clear();
-
-        endResetModel();
-    }
-
-    void clearExcept(quint64 keepId)
-    {
-        beginResetModel();
-
-        auto it = m_users.begin();
-        while (it != m_users.end())
-        {
-            if ((*it)->id() == keepId)
-            {
-                ++it;
-            }
-            else
-            {
-                delete *it;
-                it = m_users.erase(it);
-            }
-        }
-
-        endResetModel();
-    }
-
-    void updateUser(
-        quint64 userId,
-        bool isTalking,
-        bool isMuted,
-        bool isDeafened,
-        bool isCameraOpen)
-    {
-        for(int i = 0; i < m_users.size(); ++i)
-        {
-            Participant* user = m_users[i];
-
-            if(user->id() == userId)
-            {
-                user->setIsTalking(isTalking);
-                user->setIsDeafened(isDeafened);
-                user->setIsMuted(isMuted);
-                user->setIsCameraOpen(isCameraOpen);
-
-                QModelIndex idx = index(i);
-
-                emit dataChanged(
-                    idx,
-                    idx,
-                    {
-                        IsTalkingRole,
-                        IsMuted,
-                        IsDeafened,
-                        IsCameraOpenRole
-                    });
-
-                return;
-            }
-        }
-    }
-
-
-    void setTalking(
-        quint64 userId,
-        bool talking=false)
-    {
-        for(int i = 0; i < m_users.size(); ++i)
-        {
-            if(m_users[i]->id() == userId)
-            {
-                m_users[i]->setIsTalking(talking);
-
-                emit dataChanged(
-                    index(i),
-                    index(i),
-                    { IsTalkingRole });
-
-                return;
-            }
-        }
-    }
-
-    void setCameraOpen(
-        quint64 userId,
-        bool open)
-    {
-        for(int i = 0; i < m_users.size(); ++i)
-        {
-            if(m_users[i]->id() == userId)
-            {
-                m_users[i]->setIsCameraOpen(open);
-
-                emit dataChanged(
-                    index(i),
-                    index(i),
-                    { IsCameraOpenRole });
-
-                return;
-            }
-        }
-    }
-
-    void setDeafened(
-        quint64 userId,
-        bool deafened)
-    {
-        for(int i = 0; i < m_users.size(); ++i)
-        {
-            if(m_users[i]->id() == userId)
-            {
-                m_users[i]->setIsDeafened(deafened);
-
-                emit dataChanged(
-                    index(i),
-                    index(i),
-                    { IsDeafened });
-
-                return;
-            }
-        }
-    }
-
-    void setAvatarPath(
-        quint64 userId,
-        const QString& path)
-    {
-        for(int i = 0; i < m_users.size(); ++i)
-        {
-            if(m_users[i]->id() == userId)
-            {
-                m_users[i]->setAvatarPath(path);
-
-                emit dataChanged(
-                    index(i),
-                    index(i),
-                    { UserAvatarPathRole });
-
-                return;
-            }
-        }
-    }
-
-
-    void setMuted(
-        quint64 userId,
-        bool muted)
-    {
-        for(int i = 0; i < m_users.size(); ++i)
-        {
-            if(m_users[i]->id() == userId)
-            {
-                m_users[i]->setIsMuted(muted);
-
-                emit dataChanged(
-                    index(i),
-                    index(i),
-                    { IsMuted });
-
-                return;
-            }
-        }
-    }
-    Participant *findUser(quint64 userId)
-    {
-        for(auto user : m_users)
-        {
-            if(user->id()==userId)
-                return user;
-        }
-
-        return nullptr;
-    }
-
+    VideoSink *videoSink(quint64 userId);
 private:
-    QList<Participant*> m_users;
+    int findRow(ClientUser *user) const;
+    void observeUser(ClientUser* user);
+    struct ParticipantData
+    {
+        ClientUser *user = nullptr;
+        VideoSink *videoSink = nullptr;
+    };
+
+    QList<ParticipantData> m_users;
 };
