@@ -1215,7 +1215,8 @@ void User::processPacket(const Packet& packet)
             emit messageSent(); //play message sent effect.
         else
         {
-            //check if chat is not open (user is in connectedUsersList), show notification and play effect
+            //check if chat is not open (user is in connectedUsersList), \
+                    show notification and play effect
             if(!isChatOpen())
             {
                 emit notificationRequested(NotificationType::Info,
@@ -1227,7 +1228,12 @@ void User::processPacket(const Packet& packet)
             }
         }
 
-        m_chatModel->addMessage(msg);
+        ClientUser* senderUser = m_clientUserManager->user(msg.senderId);
+        if(senderUser)
+        {
+            m_chatModel->addMessage(msg,senderUser);
+        }
+
     }
     break;
 

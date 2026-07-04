@@ -169,17 +169,18 @@ Item
                     Text
                     {
                         anchors.centerIn: parent
-
                         text: model.senderName.charAt(0)
-
+                        visible: !userAvatar.visible
                         color: "white"
                         font.bold: true
                     }
-                    // Image
-                    // {
-                        // anchors.fill: parent
-                        // source:
-                    // }
+                    Image
+                    {
+                        id:userAvatar
+                        anchors.fill: parent
+                        visible: senderAvatarPath.length>0
+                        source: model.senderAvatarPath
+                    }
                 }
 
                 Column

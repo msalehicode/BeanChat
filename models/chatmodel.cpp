@@ -15,47 +15,58 @@ QVariant ChatModel::data(
     const QModelIndex &index,
     int role) const
 {
-    if(!index.isValid())
+    if (!index.isValid() ||
+        index.row() < 0 ||
+        index.row() >= m_messages.size())
         return {};
 
-    const auto& msg =
-        m_messages[index.row()];
+
+    const ChatItem &item = m_messages[index.row()];
 
     switch(role)
     {
-    case MessageIdRole:
-        return QVariant::fromValue(msg.messageId);
+        case MessageIdRole:
+            return QVariant::fromValue(item.message.messageId);
 
-    case SenderIdRole:
-        return QVariant::fromValue(msg.senderId);
+        case SenderIdRole:
+            return item.sender
+                       ? item.sender->id()
+                       : item.message.senderId;
 
-    case SenderNameRole:
-        return msg.senderName;
+        case SenderAvatarPathRole:
+            return item.sender
+                       ? item.sender->avatarPath()
+                       : QString();
 
-    case TextRole:
-        return msg.text;
+        case SenderNameRole:
+            return item.sender
+                       ? item.sender->username()  // live username
+                       : item.message.senderName; // cached username in case user is not connected. and cant access his name
 
-    case TypeRole:
-        return static_cast<int>(msg.type);
+        case TextRole:
+            return item.message.text;
 
-    case MediaPathRole:
-        return msg.mediaPath;
+        case TypeRole:
+            return static_cast<int>(item.message.type);
 
-    case TimestampRole:
-        return msg.timestamp;
+        case MediaPathRole:
+            return item.message.mediaPath;
+
+        case TimestampRole:
+            return item.message.timestamp;
     }
 
     return {};
 }
 
-QHash<int,QByteArray>
-ChatModel::roleNames() const
+QHash<int,QByteArray> ChatModel::roleNames() const
 {
     return
         {
             { MessageIdRole, "messageId" },
             { SenderIdRole, "senderId" },
             { SenderNameRole, "senderName"},
+            { SenderAvatarPathRole, "senderAvatarPath"},
             { TextRole, "textMessage" },
             { TypeRole, "messageType" },
             { MediaPathRole, "mediaPath" },
@@ -63,26 +74,64 @@ ChatModel::roleNames() const
         };
 }
 
+void ChatModel::updateUserMessages(ClientUser *user, const QList<int> &roles)
+{
+    for (int row = 0; row < m_messages.size(); ++row)
+    {
+        if (m_messages[row].sender == user)
+            emit dataChanged(index(row), index(row), roles);
+    }
+}
+
 void ChatModel::clear()
 {
     beginResetModel();
 
     m_messages.clear();
+    m_observedUsers.clear();
 
     endResetModel();
 }
 
-void ChatModel::addMessage(
-    const ChatMessagePacket &message)
+void ChatModel::addMessage(const ChatMessagePacket &message, ClientUser* sender)
 {
+    ChatItem item;
+    item.message = message;
+    item.sender = sender;
+
+    observeUser(sender);
+
     beginInsertRows(
         QModelIndex(),
         rowCount(),
         rowCount());
 
-    m_messages.push_back(message);
+    m_messages.append(item);
 
     endInsertRows();
+}
+
+void ChatModel::observeUser(ClientUser *user)
+{
+    if (!user || m_observedUsers.contains(user))
+        return;
+    m_observedUsers.insert(user);
+
+    connect(user,
+            &ClientUser::usernameChanged,
+            this,
+            [this, user]()
+            {
+                updateUserMessages(user, { SenderNameRole });
+            });
+
+    connect(user,
+            &ClientUser::avatarPathChanged,
+            this,
+            [this, user]()
+            {
+                updateUserMessages(user, { SenderAvatarPathRole });
+            });
 }
 
 void ChatModel::removeMessage(
@@ -90,8 +139,7 @@ void ChatModel::removeMessage(
 {
     for(int i=0;i<m_messages.size();i++)
     {
-        if(m_messages[i].messageId ==
-            messageId)
+        if (m_messages[i].message.messageId == messageId)
         {
             beginRemoveRows(
                 QModelIndex(),
