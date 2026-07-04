@@ -54,25 +54,25 @@ QVariant ChannelModel::data(
             QVariantMap map;
 
             map["userid"] =
-                user.id;
+                user.user->id();
 
             map["username"] =
-                user.username;
+                user.user->username();
 
             map["avatarPath"] =
-                user.avatarPath;
+                user.user->avatarPath();
 
             map["muted"] =
-                user.muted;
+                user.user->muted();
 
             map["isTalking"] =
-                user.isTalking;
+                user.user->isTalking();
 
             map["deafened"] =
-                user.deafened;
+                user.user->deafened();
 
             map["hasVideo"] =
-                user.hasVideo;
+                user.user->hasCamera();
 
             users.push_back(map);
         }
@@ -102,6 +102,7 @@ void ChannelModel::clear()
     beginResetModel();
 
     m_channels.clear();
+    m_observedUsers.clear();
 
     endResetModel();
 }
@@ -128,66 +129,100 @@ void ChannelModel::addChannel(
     endInsertRows();
 }
 
-void ChannelModel::addUser(
-    quint64 channelId,
-    quint64 userId,
-    const QString& username,
-    const QString& avatarPath,
-    bool muted,
-    bool deafened, bool hasVideo)
+void ChannelModel::addUser(quint64 channelId, ClientUser *user)
 {
-    auto channel =
-        findChannel(channelId);
+    ChannelItem *channel = findChannel(channelId);
 
-    if(!channel)
+    if (!channel || !user)
         return;
 
-    UserItem user;
+    UserItem item;
+    item.user = user;
 
-    user.id = userId;
-    user.username = username;
-    user.avatarPath = avatarPath;
+    if (findUserInChannel(channel, user->id()))
+        return;
 
-    user.muted = muted;
-    user.deafened = deafened;
-    user.hasVideo = hasVideo;
+    channel->users.append(item);
 
-    channel->users.push_back(
-        user);
+    observeUser(user);
 
-    int row =
-        &(*channel) - m_channels.data();
-
-    emit dataChanged(
-        index(row),
-        index(row));
+    int row = findRow(channel);
+    emit dataChanged(index(row), index(row), { UsersRole });
 }
 
-void ChannelModel::updateUserStatus(quint64 userId, bool isTalking, bool isMuted, bool isDefened, bool hasVideo)
+
+int ChannelModel::findRow(ChannelItem *channel) const
 {
-    auto channel = findChannelOfUser(userId);
+    if (!channel)
+        return -1;
 
-    if(!channel)
-        return;
-
-
-    UserItem* user = findUserInChannel(channel,userId);
-    if(!user)
-        return;
-
-    user->isTalking = isTalking;
-    user->muted = isMuted;
-    user->deafened = isDefened;
-    user->hasVideo = hasVideo;
-
-
-    int row =
-        &(*channel) - m_channels.data();
-
-    emit dataChanged(
-        index(row),
-        index(row));
+    return channel - m_channels.data();
 }
+
+int ChannelModel::findRow(ClientUser *user) const
+{
+    for (int row = 0; row < m_channels.size(); ++row)
+    {
+        for (const UserItem &item : m_channels[row].users)
+        {
+            if (item.user == user)
+                return row;
+        }
+    }
+
+    return -1;
+}
+
+void ChannelModel::observeUser(ClientUser *user)
+{
+    if (!user || m_observedUsers.contains(user))
+        return;
+    m_observedUsers.insert(user);
+
+
+    auto updateRoles = [this, user]()
+    {
+        int row = findRow(user);
+
+        if (row >= 0)
+            emit dataChanged(index(row), index(row), { UsersRole });
+    };
+    connect(user,
+            &ClientUser::idChanged,
+            this,
+            updateRoles);
+
+    connect(user,
+            &ClientUser::usernameChanged,
+            this,
+            updateRoles);
+
+    connect(user,
+            &ClientUser::avatarPathChanged,
+            this,
+            updateRoles);
+
+    connect(user,
+            &ClientUser::mutedChanged,
+            this,
+            updateRoles);
+
+    connect(user,
+            &ClientUser::deafenedChanged,
+            this,
+            updateRoles);
+
+    connect(user,
+            &ClientUser::hasCameraChanged,
+            this,
+            updateRoles);
+
+    connect(user,
+            &ClientUser::isTalkingChanged,
+            this,
+            updateRoles);
+}
+
 
 void ChannelModel::updateChannel(quint64 id, const QString &name, bool isLocked, bool saveChats)
 {
@@ -243,100 +278,13 @@ void ChannelModel::resetChannelTalkingStatus(quint64 channelId)
 
     for(auto& user : channel->users)
     {
-        setUserTalking(user.id,false);
+        user.user->setIsTalking(false);
     }
 }
 
 
 
-void ChannelModel::setUserTalking(quint64 userId, bool talking)
-{
-    auto channel = findChannelOfUser(userId);
-    if (!channel)
-        return;
-
-    UserItem* user = findUserInChannel(channel, userId);
-    if (!user || user->isTalking == talking)
-        return;
-
-    user->isTalking = talking;
-
-    int row = &(*channel) - m_channels.data();
-
-    emit dataChanged(index(row), index(row));
-}
-
-void ChannelModel::setUserMuted(quint64 userId, bool muted)
-{
-    auto channel = findChannelOfUser(userId);
-    if (!channel)
-        return;
-
-    UserItem* user = findUserInChannel(channel, userId);
-    if (!user || user->muted == muted)
-        return;
-
-    user->muted = muted;
-
-    int row = &(*channel) - m_channels.data();
-
-    emit dataChanged(index(row), index(row));
-}
-
-void ChannelModel::setUserDeafened(quint64 userId, bool deafened)
-{
-    auto channel = findChannelOfUser(userId);
-    if (!channel)
-        return;
-
-    UserItem* user = findUserInChannel(channel, userId);
-    if (!user || user->deafened == deafened)
-        return;
-
-    user->deafened = deafened;
-
-    int row = &(*channel) - m_channels.data();
-
-    emit dataChanged(index(row), index(row));
-}
-
-void ChannelModel::setUserHasVideo(quint64 userId, bool hasVideo)
-{
-    auto channel = findChannelOfUser(userId);
-    if (!channel)
-        return;
-
-    UserItem* user = findUserInChannel(channel, userId);
-    if (!user || user->hasVideo == hasVideo)
-        return;
-
-    user->hasVideo = hasVideo;
-
-    int row = &(*channel) - m_channels.data();
-
-    emit dataChanged(index(row), index(row));
-}
-
-void ChannelModel::setUserAvatarPath(quint64 userId, const QString &avatarPath)
-{
-    auto channel = findChannelOfUser(userId);
-    if (!channel)
-        return;
-
-    UserItem *user = findUserInChannel(channel, userId);
-    if (!user || user->avatarPath == avatarPath)
-        return;
-
-    user->avatarPath = avatarPath;
-
-    int row = channel - m_channels.data();
-
-    emit dataChanged(index(row), index(row));
-}
-
-
-
-UserItem *ChannelModel::getUser(quint64 channelId, quint64 userId)
+ClientUser *ChannelModel::getUser(quint64 channelId, quint64 userId)
 {
     ChannelItem* channel = findChannel(channelId);
     if(channel)
@@ -355,9 +303,7 @@ QString ChannelModel::getChannelName(quint64 channelId)
 bool ChannelModel::getChannelSaveChats(quint64 channelId)
 {
     ChannelItem* channel = findChannel(channelId);
-    if(channel)
-        return channel->saveChats;
-    return "";
+    return channel ? channel->saveChats : false;
 }
 
 
@@ -365,27 +311,21 @@ bool ChannelModel::getChannelSaveChats(quint64 channelId)
 void ChannelModel::removeUser(
     quint64 userId)
 {
-    auto channel =
-        findChannelOfUser(
-            userId);
+    auto channel = findChannelOfUser(userId);
 
     if(!channel)
         return;
 
-    for(int i=0;
-         i<channel->users.size();
-         ++i)
+    for(int i=0; i<channel->users.size(); ++i)
     {
-        if(channel->users[i].id
-            == userId)
+        if (channel->users[i].user->id() == userId)
         {
             channel->users.removeAt(i);
             break;
         }
     }
 
-    int row =
-        &(*channel) - m_channels.data();
+    int row = &(*channel) - m_channels.data();
 
     emit dataChanged(
         index(row),
@@ -400,18 +340,13 @@ void ChannelModel::moveUser(
 
     bool found = false;
 
-    for(auto& channel :
-         m_channels)
+    for(auto& channel : m_channels)
     {
-        for(int i=0;
-             i<channel.users.size();
-             ++i)
+        for(int i=0; i<channel.users.size(); ++i)
         {
-            if(channel.users[i].id
-                == userId)
+            if(channel.users[i].user->id() == userId)
             {
-                user =
-                    channel.users[i];
+                user = channel.users[i];
 
                 channel.users.removeAt(i);
 
@@ -449,33 +384,22 @@ void ChannelModel::updateTalkingUsers()
     ChannelItem* channel = findChannel(m_currentChannelId);
 
     if(!channel)
-    {
-        // qDebug() << "could not fincd channel to updateTalking users..";
         return;
-    }
-    // else
-        // qDebug() << "updating talking uspesr for channel id:" << m_currentChannelId;
 
     for(auto& user : channel->users)
     {
-        if(user.isTalking && user.lastVoicePacket.elapsed() > CHANNEL_MODEL_TALKING_TIMEOUT)
+        if (user.user->isTalking() && user.lastVoicePacket.elapsed() > CHANNEL_MODEL_TALKING_TIMEOUT)
         {
-            setUserTalking(user.id, false);
-            // qDebug() << "not talking..";
-            emit userTalkingStatus(user.id,false);
+            user.user->setIsTalking(false);
+            emit userTalkingStatus(user.user->id(),false);
         }
-        // else
-            // qDebug() << "talking..";
     }
 
 }
 
-ChannelItem*
-ChannelModel::findChannel(
-    quint64 id)
+ChannelItem* ChannelModel::findChannel(quint64 id)
 {
-    for(auto& channel :
-         m_channels)
+    for(auto& channel : m_channels)
     {
         if(channel.id == id)
             return &channel;
@@ -484,17 +408,13 @@ ChannelModel::findChannel(
     return nullptr;
 }
 
-ChannelItem*
-ChannelModel::findChannelOfUser(
-    quint64 userId)
+ChannelItem* ChannelModel::findChannelOfUser(quint64 userId)
 {
-    for(auto& channel :
-         m_channels)
+    for(auto& channel : m_channels)
     {
-        for(const auto& user :
-             channel.users)
+        for(const auto& user : channel.users)
         {
-            if(user.id == userId)
+            if (user.user->id() == userId)
                 return &channel;
         }
     }
@@ -502,13 +422,33 @@ ChannelModel::findChannelOfUser(
     return nullptr;
 }
 
-UserItem *ChannelModel::findUserInChannel(ChannelItem* channel, quint64 userId)
+ClientUser *ChannelModel::findUserInChannel(ChannelItem* channel, quint64 userId)
 {
     for(UserItem& usr : channel->users)
     {
-        if(usr.id == userId)
-            return &usr;
+        if (usr.user->id() == userId)
+            return usr.user;
     }
+    return nullptr;
+}
+
+void ChannelModel::restartVoiceTimer(quint64 userId)
+{
+    if (UserItem *item = findUserItem(userId))
+        item->lastVoicePacket.restart();
+}
+
+UserItem *ChannelModel::findUserItem(quint64 userId)
+{
+    for (ChannelItem &channel : m_channels)
+    {
+        for (UserItem &item : channel.users)
+        {
+            if (item.user->id() == userId)
+                return &item;
+        }
+    }
+
     return nullptr;
 }
 

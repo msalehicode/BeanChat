@@ -83,6 +83,7 @@ void ConnectedUsersModel::clear()
     beginResetModel();
 
     m_connectedUsers.clear();
+    m_observedUsers.clear();
 
     endResetModel();
 
@@ -110,8 +111,9 @@ void ConnectedUsersModel::addUser(ClientUser* user)
 
 void ConnectedUsersModel::observeUser(ClientUser* user)
 {
-    if(!user)
+    if (!user || m_observedUsers.contains(user))
         return;
+    m_observedUsers.insert(user);
 
     connect(user,
             &ClientUser::idChanged,
@@ -224,6 +226,7 @@ void ConnectedUsersModel::removeUser(quint64 userId)
         if (m_connectedUsers[row]->id() == userId)
         {
             beginRemoveRows(QModelIndex(), row, row);
+
 
             m_connectedUsers.removeAt(row);
 

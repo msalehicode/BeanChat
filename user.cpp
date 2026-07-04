@@ -565,21 +565,14 @@ void User::sendVoicePcm(
     if (!sentPacket)
         return;
 
-    //update isTalking this user/device
-    UserItem* senderUser = m_channelModel->getUser(m_myChannelId, myId());
+    //update isTalking ourself
+    ClientUser *senderUser = m_channelModel->getUser(m_myChannelId, myId());
     if(!senderUser)
         return;
 
-    if(!senderUser->isTalking)
-    {
-        m_channelModel->setUserTalking(myId(),true);
-
-        //update participantmodel too
-        ClientUser *clientUser = m_clientUserManager->user(myId());
-        if (clientUser)
-            clientUser->setIsTalking(true);
-    }
-    senderUser->lastVoicePacket.restart();
+    if (!senderUser->isTalking())
+        senderUser->setIsTalking(true);
+    m_channelModel->restartVoiceTimer(myId());
 }
 
 void User::sendMessage(QString message)
@@ -712,7 +705,6 @@ void User::newAvatarArrived(quint64 userId,
         }
 
         //notify models to update..
-        m_channelModel->setUserAvatarPath(userId, avatarPath);
         ClientUser* user = m_clientUserManager->user(userId);
         user->setAvatarPath(avatarPath);
     }
@@ -915,7 +907,6 @@ void User::processPacket(const Packet& packet)
             qDebug() << "update cmaera for user:" << resp.userId << " to " << resp.status;
         }
 
-        m_channelModel->setUserHasVideo(resp.userId,resp.status);
         if (ClientUser *user = m_clientUserManager->user(resp.userId))
             user->setHasCamera(resp.status);
     }break;
@@ -941,7 +932,6 @@ void User::processPacket(const Packet& packet)
             qDebug() << "update mute for user:" << resp.userId << " to " << resp.status;
         }
 
-        m_channelModel->setUserMuted(resp.userId,resp.status);
         if (ClientUser *user = m_clientUserManager->user(resp.userId))
             user->setMuted(resp.status);
     }break;
@@ -965,7 +955,6 @@ void User::processPacket(const Packet& packet)
             qDebug() << "update speaker/headphone for user:" << resp.userId << " to " << resp.status;
         }
 
-        m_channelModel->setUserDeafened(resp.userId,resp.status);
         if (ClientUser *user = m_clientUserManager->user(resp.userId))
             user->setDeafened(resp.status);
     }break;
@@ -989,8 +978,7 @@ void User::processPacket(const Packet& packet)
             ClientUser* user = m_connectedUsersModel->findUser(resp.userId);
 
             //add user to channemodel
-            m_channelModel->addUser(resp.channelId,user->id(),user->username(), user->avatarPath(),
-                                    user->muted(),user->deafened(),user->hasCamera());
+            m_channelModel->addUser(resp.channelId, user);
         }
 
         //check if user was me?
@@ -1005,8 +993,7 @@ void User::processPacket(const Packet& packet)
             else
                 qDebug() << "voice: channel switched.";
 
-            //check if i had channel and i had videoCamera open? \
-                    dont clear me from paritcipant (because wanna keep preview feed)\
+            //check if i had channel dont remove me from paritcipant (because wanna keep preview feed)\
                     else remove everyone
             if(resp.oldChannelId>0)
                 m_currentChannelParticipant->clearExcept(myId()); //reset channel participants except ourself, this way our camera live-preview won't broken and we skipped an unnecessary addUser into currentChannelParticipantModel
@@ -1036,10 +1023,10 @@ void User::processPacket(const Packet& packet)
                 for (const UserItem &user : channel->users)
                 {
                     //check if its me AND i was in a channel THEN skip adding me because in this case we didnt remove me at all from model
-                    if(user.id == myId() && resp.oldChannelId>0)
+                    if(user.user->id() == myId() && resp.oldChannelId>0)
                         continue; //skip this round, we didnt remove ourself so no need add ourself into participant
 
-                    if (ClientUser *clientUser = m_clientUserManager->user(user.id))
+                    if (ClientUser *clientUser = m_clientUserManager->user(user.user->id()))
                         m_currentChannelParticipant->addUser(clientUser);
                 }
             }
@@ -1059,9 +1046,9 @@ void User::processPacket(const Packet& packet)
             ChannelItem* channel = m_channelModel->findChannel(resp.channelId);
             if(channel)
             {
-                UserItem* jointUser = m_channelModel->findUserInChannel(channel,resp.userId);
+                ClientUser* jointUser = m_channelModel->findUserInChannel(channel,resp.userId);
                 if(jointUser)
-                    if (ClientUser *clientUser = m_clientUserManager->user(jointUser->id))
+                    if (ClientUser *clientUser = m_clientUserManager->user(jointUser->id()))
                         m_currentChannelParticipant->addUser(clientUser);
                 else
                     qDebug() << "user joined could not find user inside channel id:" << resp.channelId << " userid=" << resp.userId;
@@ -1086,7 +1073,8 @@ void User::processPacket(const Packet& packet)
             m_currentChannelParticipant->removeUser(resp.userId);
 
             //rest leaved user talkin status
-            m_channelModel->setUserTalking(resp.userId,false);
+            if (ClientUser *user = m_clientUserManager->user(resp.userId))
+                user->setIsTalking(false);
 
             //for soundmanager to play effect
             emit userLeft();
@@ -1327,8 +1315,7 @@ void User::processPacket(const Packet& packet)
 
                 //if user was in a channel, add him to our channel model
                 if(u.channelId!=0)
-                    m_channelModel->addUser(u.channelId, u.id, u.username, avatarPath,
-                                            u.muted, u.deafened, u.camera);
+                    m_channelModel->addUser(u.channelId, user);
                 qDebug() << "user added to connectedusrs id="<<u.id;
             }
             else
@@ -1613,20 +1600,15 @@ void User::onUdpReadyRead()
 
             if(!muteHeadphone())
             {
-                UserItem* senderUser = m_channelModel->getUser(m_myChannelId, packet.senderId);
+                ClientUser* senderUser = m_channelModel->getUser(m_myChannelId, packet.senderId);
+
                 if(!senderUser)
                     continue;
 
-                if(!senderUser->isTalking)
-                {
-                    m_channelModel->setUserTalking(senderUser->id,true);
+                if(!senderUser->isTalking())
+                    senderUser->setIsTalking(true);
 
-                    //update participantmodel too
-                    if (ClientUser *user = m_clientUserManager->user(packet.senderId))
-                        user->setIsTalking(true);
-                }
-
-                senderUser->lastVoicePacket.restart();
+                m_channelModel->restartVoiceTimer(senderUser->id());
 
 
                 //decode

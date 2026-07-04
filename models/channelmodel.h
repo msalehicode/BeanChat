@@ -4,18 +4,11 @@
 
 #include <QElapsedTimer>
 #include <QTimer>
+#include "clientuser.h"
 
 struct UserItem
 {
-    quint64 id;
-    QString username;
-    QString avatarPath;
-
-    bool isTalking = false;
-    bool muted = false;
-    bool deafened = false;
-    bool hasVideo = false;
-
+    ClientUser *user = nullptr;
     QElapsedTimer lastVoicePacket;
 
     UserItem()
@@ -69,15 +62,6 @@ public:
         quint64 id,
         const QString& name, bool isLocked, bool saveChat);
 
-    void addUser(
-        quint64 channelId,
-        quint64 userId,
-        const QString& username, const QString &avatarPath,
-        bool muted = false,
-        bool deafened = false,
-        bool hasVideo = false);
-
-    void updateUserStatus(quint64 userId, bool isTalking, bool isMuted, bool isDefened, bool hasVideo=false);
 
     void updateChannel(quint64 id,
                        const QString &name,
@@ -86,7 +70,7 @@ public:
 
     void removeChannel(quint64 channelId);
 
-    UserItem* getUser(quint64 channelId, quint64 userId);
+    ClientUser* getUser(quint64 channelId, quint64 userId);
     QString getChannelName(quint64 channelId);
 
     void removeUser(
@@ -100,13 +84,13 @@ public:
 
     void setCurrentChannelId(quint64 channelId);
 
-    void setUserTalking(quint64 userId, bool talking);
-    void setUserMuted(quint64 userId, bool muted);
-    void setUserDeafened(quint64 userId, bool deafened);
-    void setUserHasVideo(quint64 userId, bool hasVideo);
-    void setUserAvatarPath(quint64 userId, const QString& avatarPath);
     void resetChannelTalkingStatus(quint64 channelId);
     bool getChannelSaveChats(quint64 channelId);
+    void addUser(quint64 channelId, ClientUser *user);
+    ChannelItem* findChannel(quint64 id);
+    ChannelItem* findChannelOfUser(quint64 userId);
+    ClientUser* findUserInChannel(ChannelItem *channel, quint64 userId);
+    void restartVoiceTimer(quint64 userId);
 signals:
     void userTalkingStatus(quint64 userId,bool status);
 
@@ -114,19 +98,17 @@ private slots:
     void updateTalkingUsers();
 private:
 
-    ChannelItem* findChannel(
-        quint64 id);
-
-    ChannelItem* findChannelOfUser(
-        quint64 userId);
-
-    UserItem* findUserInChannel(ChannelItem *channel, quint64 userId);
 
 private:
-    quint64 m_currentChannelId=0;
+    UserItem *findUserItem(quint64 userId);
+    int findRow(ChannelItem *channel) const;
+    int findRow(ClientUser *user) const;
+    void observeUser(ClientUser *user);
 
+    quint64 m_currentChannelId=0;
     QTimer m_talkingTimer;
 
     QList<ChannelItem> m_channels;
-    friend class User;
+    QSet<ClientUser*> m_observedUsers;
+
 };

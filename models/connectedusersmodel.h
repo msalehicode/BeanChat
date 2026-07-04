@@ -54,4 +54,5 @@ private:
     void observeUser(ClientUser *user);
     int findRowById(quint64 userId) const;
     QList<ClientUser*> m_connectedUsers;
+    QSet<ClientUser*> m_observedUsers;
 };

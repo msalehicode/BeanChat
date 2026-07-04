@@ -15,7 +15,7 @@ QVariant ParticipantModel::data(const QModelIndex &index, int role) const
     if (!index.isValid())
         return {};
 
-    if (index.row() >= m_users.size())
+    if (index.row() < 0 || index.row() >= m_users.size())
         return {};
 
     const ParticipantData &entry = m_users[index.row()];
@@ -110,9 +110,12 @@ void ParticipantModel::clear()
     beginResetModel();
 
     for (auto &entry : m_users)
+    {
         delete entry.videoSink;
+    }
 
     m_users.clear();
+    m_observedUsers.clear();
 
     endResetModel();
 }
@@ -136,9 +139,14 @@ void ParticipantModel::clearExcept(quint64 keepUserId)
         }
     }
 
+    m_observedUsers.clear();
+
+    for (const auto &entry : m_users)
+        m_observedUsers.insert(entry.user);
+
     endResetModel();
 }
-ClientUser* ParticipantModel::findUser(quint64 id)
+ClientUser* ParticipantModel::findUser(quint64 id) const
 {
     for (auto &entry : m_users)
     {
@@ -160,7 +168,7 @@ int ParticipantModel::findRow(ClientUser *user) const
     return -1;
 }
 
-VideoSink *ParticipantModel::videoSink(quint64 userId)
+VideoSink *ParticipantModel::videoSink(quint64 userId) const
 {
     for (auto &entry : m_users)
     {
@@ -173,8 +181,9 @@ VideoSink *ParticipantModel::videoSink(quint64 userId)
 
 void ParticipantModel::observeUser(ClientUser *user)
 {
-    if(!user)
+    if (!user || m_observedUsers.contains(user))
         return;
+    m_observedUsers.insert(user);
 
     connect(user,
             &ClientUser::usernameChanged,

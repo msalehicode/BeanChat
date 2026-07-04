@@ -40,9 +40,9 @@ public:
 
     void clearExcept(quint64 keepUserId);
 
-    ClientUser* findUser(quint64 userId);
+    ClientUser* findUser(quint64 userId) const;
 
-    VideoSink *videoSink(quint64 userId);
+    VideoSink *videoSink(quint64 userId) const;
 private:
     int findRow(ClientUser *user) const;
     void observeUser(ClientUser* user);
@@ -53,4 +53,5 @@ private:
     };
 
     QList<ParticipantData> m_users;
+    QSet<ClientUser*> m_observedUsers;
 };
