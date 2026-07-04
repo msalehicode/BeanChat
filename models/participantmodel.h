@@ -38,6 +38,8 @@ public:
 
     void clear();
 
+    void clearExcept(quint64 keepUserId);
+
     ClientUser* findUser(quint64 userId);
 
     VideoSink *videoSink(quint64 userId);

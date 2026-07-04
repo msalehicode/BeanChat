@@ -117,6 +117,27 @@ void ParticipantModel::clear()
     endResetModel();
 }
 
+void ParticipantModel::clearExcept(quint64 keepUserId)
+{
+    beginResetModel();
+
+    auto it = m_users.begin();
+
+    while (it != m_users.end())
+    {
+        if (it->user->id() == keepUserId)
+        {
+            ++it;
+        }
+        else
+        {
+            delete it->videoSink;
+            it = m_users.erase(it);
+        }
+    }
+
+    endResetModel();
+}
 ClientUser* ParticipantModel::findUser(quint64 id)
 {
     for (auto &entry : m_users)
@@ -165,6 +186,7 @@ void ParticipantModel::observeUser(ClientUser *user)
                 if (row >= 0)
                     emit dataChanged(index(row), index(row), { UsernameRole });
             });
+
 
     connect(user,
             &ClientUser::mutedChanged,

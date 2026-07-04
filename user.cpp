@@ -983,7 +983,7 @@ void User::processPacket(const Packet& packet)
 
 
         //if user has no channel add him to channelModel
-        if(resp.oldChannelId==-1) //if it's -1 means user just connected to server and didnt join any channel yet. so don't need add him channelModel
+        if(resp.oldChannelId==0) //if it's 0 means user just connected to server and didnt join any channel yet. so don't need add him channelModel
         {
             //read user's data from connectedUsersModel
             ClientUser* user = m_connectedUsersModel->findUser(resp.userId);
@@ -1005,6 +1005,13 @@ void User::processPacket(const Packet& packet)
             else
                 qDebug() << "voice: channel switched.";
 
+            //check if i had channel and i had videoCamera open? \
+                    dont clear me from paritcipant (because wanna keep preview feed)\
+                    else remove everyone
+            if(resp.oldChannelId>0)
+                m_currentChannelParticipant->clearExcept(myId()); //reset channel participants except ourself, this way our camera live-preview won't broken and we skipped an unnecessary addUser into currentChannelParticipantModel
+            else
+                m_currentChannelParticipant->clear();
 
             //open mic and speaker
             if(m_mic && !m_mic->started()) //check is mic start or not if it's start dont restart it!
@@ -1014,7 +1021,6 @@ void User::processPacket(const Packet& packet)
 
             //rest talkin status of all previous channel users, because if dont it would show/stuck user is talkin on previous channel..
             m_channelModel->resetChannelTalkingStatus(resp.oldChannelId);
-
 
             //set channel name for Chat and other parts to know current channel name
             m_myChannelId = resp.channelId;
@@ -1029,6 +1035,10 @@ void User::processPacket(const Packet& packet)
                 //add found users into participant model
                 for (const UserItem &user : channel->users)
                 {
+                    //check if its me AND i was in a channel THEN skip adding me because in this case we didnt remove me at all from model
+                    if(user.id == myId() && resp.oldChannelId>0)
+                        continue; //skip this round, we didnt remove ourself so no need add ourself into participant
+
                     if (ClientUser *clientUser = m_clientUserManager->user(user.id))
                         m_currentChannelParticipant->addUser(clientUser);
                 }
@@ -1315,8 +1325,8 @@ void User::processPacket(const Packet& packet)
                 qDebug() << "user added to connectedusrs id="<<u.id;
 
 
-                //add those users are in channels to our channel model
-                if(u.channelId!=-1)
+                //if user was in a channel, add him to our channel model
+                if(u.channelId!=0)
                     m_channelModel->addUser(u.channelId, u.id, u.username, avatarPath,
                                             u.muted, u.deafened, u.camera);
                 qDebug() << "user added to connectedusrs id="<<u.id;
