@@ -200,7 +200,7 @@ int main(int argc, char *argv[])
     //register to QML
     qmlRegisterType<MyVideoItem>("CustomVideo", 1, 0, "VideoItem");
     qmlRegisterUncreatableType<VideoSink>("CustomVideo", 1, 0, "VideoSink", "VideoSink cannot be created from QML");
-
+    qmlRegisterUncreatableType<ClientUser>("BeanChatClient", 1, 0, "ClientUser", "Created by C++ only");
 
     //qml
     QQmlApplicationEngine engine;
@@ -215,6 +215,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("chatModel",&chatModel);
     engine.rootContext()->setContextProperty("soundManager",&soundManager);
     engine.rootContext()->setContextProperty("settings",&settingsManager);
+
 
     QObject::connect(
         &engine,

@@ -33,10 +33,11 @@ public:
         Unknown = 0,
         Offline,
         Online,
-        Idle
+        Idle,
+        DoNotDisturb,
+        Busy
     };
-    Q_ENUM(Status) //make it usebale in qml
-
+    Q_ENUM(Status) //make it useable in qml
 
 
     quint64 id() const;

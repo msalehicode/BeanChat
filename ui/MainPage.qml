@@ -390,6 +390,11 @@ Item {
         id:modifyProfilePopup
     }
 
+    UserProfilePopup
+    {
+        id: profilePopup
+    }
+
     Connections
     {
         target: user

@@ -120,8 +120,10 @@ public:
     Q_INVOKABLE void sendMessage(QString message);
     Q_INVOKABLE void updateChannel(quint64 channelId, const QString& name,
                                     const QString& pass, bool saveMessages);
+    Q_INVOKABLE QString getChannelName(quint64 channelId); //to show channlename inside user's profile
     Q_INVOKABLE void deleteChannel(quint64 channelId);
 
+    Q_INVOKABLE ClientUser *clientUser(quint64 id);
 
     //connect,disconnect
     Q_INVOKABLE void connectToServer(bool saveThisConnection, const QString& serverIp, const QString& str_serverPort);
@@ -224,6 +226,9 @@ public:
     QString serverUptime() const;
 
 
+    ClientUser::Status myStatus() const;
+    void setMyStatus(const ClientUser::Status &newMyStatus);
+
 signals:
 
     void myIdChanged();
@@ -289,6 +294,8 @@ signals:
 
     void receivedServerInfoChanged();
 
+    void myStatusChanged();
+
 public slots:
     void onTcpReadyRead();
     void onDisconnected();
@@ -322,6 +329,7 @@ private:
 
     //user cant modify, would receive from target server
     int m_myId =-1;
+    ClientUser::Status m_myStatus=ClientUser::Status::Offline;
     quint64 m_myChannelId=-2; //channelId -1 is default value for those users didn't connect to any channel just connected to server.
     QString m_myChannelName = ""; //current channel
     bool m_myChannelSavesChat=false;
@@ -411,6 +419,7 @@ private:
 
     Q_PROPERTY(QString myAppVersion READ myAppVersion CONSTANT)
     Q_PROPERTY(QString appTitle READ appTitle CONSTANT)
+    Q_PROPERTY(ClientUser::Status myStatus READ myStatus WRITE setMyStatus NOTIFY myStatusChanged FINAL)
 };
 
 #endif // USER_H

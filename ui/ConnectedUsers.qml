@@ -3,7 +3,7 @@ import QtQuick.Controls.Material
 
 import QtQuick.Layouts
 
-
+import "constants/"
 Item
 {
     Rectangle
@@ -131,7 +131,7 @@ Item
                             border.width: 2
                             border.color: bg2   // same as panel background
 
-                            color: "lime"      // Online
+                            color: UiHelpers.statusColor(model.userStatus)
                         }
                     }
 
@@ -174,6 +174,18 @@ Item
                 }
 
 
+                MouseArea
+                {
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    anchors.fill: parent
+
+                    onClicked:
+                    {
+                        profilePopup.clientUser = user.clientUser(model.userId)
+                        profilePopup.open()
+                    }
+                }
 
             }
         }

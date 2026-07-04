@@ -604,6 +604,11 @@ void User::updateChannel(quint64 channelId, const QString &name, const QString &
     socket.write(p.serialize());
 }
 
+QString User::getChannelName(quint64 channelId)
+{
+    return m_channelModel->getChannelName(channelId);
+}
+
 void User::deleteChannel(quint64 channelId)
 {
     DeleteChannelPacket d;
@@ -614,6 +619,11 @@ void User::deleteChannel(quint64 channelId)
     p.payload = PacketHelpers::pack(d);
 
     socket.write(p.serialize());
+}
+
+ClientUser *User::clientUser(quint64 id)
+{
+    return m_clientUserManager->user(id);
 }
 
 void User::askForServerState()
@@ -1083,6 +1093,11 @@ void User::processPacket(const Packet& packet)
         else //user's action is not my concern, no sound effect or additional actions
             qInfo () << "user (" << resp.userId << ") has left " << resp.oldChannelId << " and joined to " << resp.channelId ;
 
+
+
+        //update user's channelId
+        if (ClientUser *user = m_clientUserManager->user(resp.userId))
+            user->setChannelId(resp.channelId);
         break;
     }
 
@@ -1132,7 +1147,7 @@ void User::processPacket(const Packet& packet)
             qDebug() << "add user to connected list: " <<  u.appVersion << "-"
                      << u.buildType << "-" << u.osName
                      << "-" << u.osVersion << "- avatar hash= " << u.avatarHash
-                     << "avatar path=" << avatarPath;
+                     << "avatar path=" << avatarPath << "channelid=";
 
             //if user is me set myAvatarPath
             if(u.id == myId())
@@ -1199,6 +1214,17 @@ void User::processPacket(const Packet& packet)
 
         //also dont know if user was inside a channel or not anyway try to remove him from model
         m_channelModel->removeUser(resp.id);
+
+
+        //set some status for that user. e.g set him offline to show user status as offline on chat
+        ClientUser* user = m_clientUserManager->user(resp.id);
+        if(user)
+        {
+            user->setStatus(ClientUser::Status::Offline);
+        }
+
+        //remove user.
+        m_clientUserManager->removeUser(resp.id);
 
         break;
     }
@@ -1291,7 +1317,7 @@ void User::processPacket(const Packet& packet)
                 qDebug() << "add user to connected: " <<  u.appVersion << "-"
                          << u.buildType << "-" << u.osName
                          << "-" << u.osVersion << "- avatar hash= " << u.avatarHash
-                         << "avatar path=" << avatarPath;
+                         << "avatar path=" << avatarPath << "channelid=" << u.channelId;
 
                 //if user is me set myAvatarPath
                 if(u.id == myId())
@@ -1299,6 +1325,7 @@ void User::processPacket(const Packet& packet)
                     qDebug() << "state received, this user is me: ";
                     setMyAvatarPath(avatarPath);
                     user->setSelf(true);
+                    // setMyStatus(u.status); //for now packet doesn't support it.
                 }
 
 
@@ -1307,6 +1334,7 @@ void User::processPacket(const Packet& packet)
                 // user->setIconsId(u.icon); //for now packet haven;t this
                 user->setMuted(u.muted);
                 user->setDeafened(u.deafened);
+                user->setChannelId(u.channelId);
                 user->setHasCamera(u.camera);
                 // user->setStatus(u.status); //for now packet haven;t this
                 user->setAppVersion(u.appVersion);
@@ -1387,6 +1415,19 @@ void User::loginToUdpSocket()
                  << ":"
                  << m_serverPort;
     }
+}
+
+ClientUser::Status User::myStatus() const
+{
+    return m_myStatus;
+}
+
+void User::setMyStatus(const ClientUser::Status &newMyStatus)
+{
+    if (m_myStatus == newMyStatus)
+        return;
+    m_myStatus = newMyStatus;
+    emit myStatusChanged();
 }
 
 

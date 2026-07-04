@@ -3,6 +3,9 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
 
+import BeanChatClient 1.0
+import "constants/"
+
 Item
 {
     id: root
@@ -178,9 +181,43 @@ Item
                     {
                         id:userAvatar
                         anchors.fill: parent
-                        visible: senderAvatarPath.length>0
+                        visible: model.senderAvatarPath.length>0
                         source: model.senderAvatarPath
                     }
+                    MouseArea
+                    {
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        anchors.fill: parent
+
+                        onClicked:
+                        {
+                            profilePopup.clientUser = user.clientUser(model.senderId)
+                            profilePopup.open()
+                        }
+                    }
+
+                    // Status indicator
+                    Rectangle
+                    {
+                        id: userStatus
+
+                        width: 14
+                        height: 14
+                        radius: width / 2
+
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+
+                        anchors.rightMargin: -1
+                        anchors.bottomMargin: -1
+
+                        border.width: 2
+                        border.color: bg2   // same as panel background
+
+                        color: UiHelpers.statusColor(model.senderStatus)
+                    }
+
                 }
 
                 Column
@@ -201,6 +238,18 @@ Item
                             color: "white"
                             font.bold: true
                             font.pixelSize: 15
+                            MouseArea
+                            {
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                anchors.fill: parent
+
+                                onClicked:
+                                {
+                                    profilePopup.clientUser = user.clientUser(model.senderId)
+                                    profilePopup.open()
+                                }
+                            }
                         }
 
                         Text

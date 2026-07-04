@@ -33,6 +33,11 @@ QVariant ChatModel::data(
                        ? item.sender->id()
                        : item.message.senderId;
 
+        case SenderStatusRole:
+            return item.sender
+                        ? static_cast<int>(item.sender->status())
+                        : static_cast<int>(ClientUser::Status::Offline);
+
         case SenderAvatarPathRole:
             return item.sender
                        ? item.sender->avatarPath()
@@ -67,6 +72,7 @@ QHash<int,QByteArray> ChatModel::roleNames() const
             { SenderIdRole, "senderId" },
             { SenderNameRole, "senderName"},
             { SenderAvatarPathRole, "senderAvatarPath"},
+            { SenderStatusRole, "senderStatus"},
             { TextRole, "textMessage" },
             { TypeRole, "messageType" },
             { MediaPathRole, "mediaPath" },
@@ -123,6 +129,14 @@ void ChatModel::observeUser(ClientUser *user)
             [this, user]()
             {
                 updateUserMessages(user, { SenderNameRole });
+            });
+
+    connect(user,
+            &ClientUser::statusChanged,
+            this,
+            [this, user]()
+            {
+                updateUserMessages(user, { SenderStatusRole });
             });
 
     connect(user,

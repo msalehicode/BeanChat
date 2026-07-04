@@ -2,7 +2,7 @@
 
 ClientUser::ClientUser(QObject *parent)
 {
-    // lastVoicePacket.start();
+
 }
 
 quint64 ClientUser::id() const

@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 project(BeanChat VERSION 0.1 LANGUAGES CXX)
 
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(APP_CURRENT_VERSION "0.17.4")
@@ -65,6 +66,7 @@ qt_add_resources(appBeanChat resources
 set_source_files_properties(
     ui/managers/NotificationManager.qml
     ui/constants/NotificationTypes.qml
+    ui/constants/UiHelpers.qml
     PROPERTIES QT_QML_SINGLETON_TYPE TRUE
 )
 
@@ -86,6 +88,7 @@ qt_add_qml_module(appBeanChat
 
         # notification system (overlays, components, managers)
         ui/constants/NotificationTypes.qml
+        ui/constants/UiHelpers.qml
         ui/managers/NotificationManager.qml
         ui/overlays/NotificationOverlay.qml
         ui/components/NotificationCard.qml
@@ -103,6 +106,7 @@ qt_add_qml_module(appBeanChat
         ui/popups/CreateChannelPopup.qml
         ui/popups/ModifyChannelPopup.qml
         ui/popups/ModifyProfilePopup.qml
+        ui/popups/UserProfilePopup.qml
 
         # settingsPage pages/components
         ui/settingPages/SettingSection.qml

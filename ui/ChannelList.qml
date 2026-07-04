@@ -3,7 +3,7 @@ import QtQuick.Controls.Material
 
 import QtQuick.Layouts
 
-
+import "constants/"
 Item
 {
     id:channelList
@@ -136,10 +136,13 @@ Item
                 Rectangle
                 {
                     id:theChannel
-                    width: parent.width/1.02
+                    width: parent.width/1.04
                     height: 43
                     radius: height
                     anchors.horizontalCenter: parent.horizontalCenter
+                    border.color: "green"
+                    border.width: model.saveChats ? 1 : 0
+
                     Row
                     {
                         anchors.fill: parent
@@ -159,7 +162,7 @@ Item
                             anchors.verticalCenter: parent.verticalCenter
                             text: channelName
                             font.pixelSize: 15
-                            color:"white"
+                            color: "white"
                             width: implicitWidth>250 ? 250 : implicitWidth
                             elide: Text.ElideRight
                         }
@@ -413,7 +416,22 @@ Item
                                 id:userMouseArea
                                 anchors.fill: parent
                                 hoverEnabled: true
-                                onClicked: console.log("clicked on user.")
+                                acceptedButtons: Qt.LeftButton | Qt.RightButton
+
+                                onClicked:
+                                {
+                                    if (mouse.button === Qt.RightButton)
+                                    {
+                                        console.log("Right clicked:", modelData.userid)
+                                        return
+                                    }
+
+                                    if (mouse.button === Qt.LeftButton)
+                                    {
+                                        profilePopup.clientUser = user.clientUser(modelData.userid)
+                                        profilePopup.open()
+                                    }
+                                }
                             }
                         }
 
@@ -790,7 +808,7 @@ Item
                         border.width: 2
                         border.color: bg2   // same as panel background
 
-                        color: "lime"      // Online
+                        color: UiHelpers.statusColor(user.myStatus)
                         MouseArea
                         {
                             anchors.fill: parent
