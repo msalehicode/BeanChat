@@ -30,10 +30,10 @@ or browse
 | Platform | Status | Stage | Version |
 |-----------|--------|--------|--------|
 | 🌐 Server | ✅ | Debug | 0.16.0 |
-| 🪟 Windows Client | ✅ | Release | v0.17.4 |
-| 🐧 Linux Client | ✅ | Debug | v0.17.4 |
+| 🪟 Windows Client | ✅ | Debug | v0.19.10 |
+| 🐧 Linux Client | ✅ | Debug | v0.19.10 |
 | 🤖 Android Client | 🚧 | 🚧 | ? |
-| 🍎 macOS Client | 🚧 | 🚧 | ? | 
+| 🍎 macOS Client | 🚧 | 🚧 | ? |
 | 📱 iOS Client | 🚧 | 🚧 | ? |
 
 </td>
@@ -54,7 +54,7 @@ or browse
 
 ---
 
-## 🎥 Preview
+## 🎥 Preview v0.17.4
 https://github.com/user-attachments/assets/9dd1aafb-20a4-4aa3-b21d-816efbbe39e1
 
 
@@ -65,24 +65,25 @@ https://github.com/user-attachments/assets/9dd1aafb-20a4-4aa3-b21d-816efbbe39e1
 
 ## ✨ Features
 
-1. Voice chat using **Opus** encoding/decoding.
+1. Voice chat using (**Opus** encoding/decoding).
 2. Video chat using (**ffmpeg** encode/decode), Includes a local preview for the sender.
 3. Text chat with clickable URLs. Image URLs (`.png`, `.jpg`, etc.) automatically display an inline preview while preserving the original link.
 4. Create and join, modify and delete channels
-5. Password-protected channels.
-6. Real-time user status indicators (microphone, speaker, and camera), including a speaking indicator when a user is talking.
+5. **Password-protected** channels.
+6. **Real-time user status indicators** (microphone, speaker, and camera), including a speaking indicator when a user is talking.
 7. Audio features including **RNNoise** noise suppression, **Push-to-Talk**, and **Voice Activity Detection (Volume Gate)**.
-8. Packet loss handling for voice and video, plus a colored signal icon displaying connection quality and ping.
+8. **Packet loss handling for voice and video** and user's **ping**, plus a colored signal icon displaying connection quality.
 9. Connected users are listed with showing each user's operating system icon.
 10. Save servers to a **My Servers** list, with support for editing and removing saved servers.
-11. Configurable audio and video devices (microphone, speaker, and camera), plus adjustable sound effect volume.
-12. Sound effects for message sent/received and user join/leave events.
+11. **Configurable audio and video devices** (microphone, speaker, and camera), plus **adjustable sound effect volume.**
+12. **Sound effects** for message sent/received and user join/leave events.
 13. Participant model in center of screen for current channel with their information and video feed.
-14. Users can set their avatar picture.
-15. Move user in/out of channel.
-16. Floating notification system for erros/messages/... on top of screen.
-17. Servers can have their information such as Name, Version, Website, Avatar and Uptime).
-
+14. Users can **set avatar picture**.
+15. **Move user** in/out of channel.
+16. **Floating notification** system for erros/messages/... on top of screen.
+17. **Servers can have their information** such as Name, Version, Website, Avatar and Uptime).
+18. **User Profile**, can open User's profile by clicking on their name/avatar to see their data (statis,name,id,current channel with button join his channel).
+19. **Mute/Unmute** users' voice locally, also can **adjust voice volume** of users by right click on their name in user's setting popup.
 
 ---
 
@@ -106,9 +107,10 @@ https://github.com/user-attachments/assets/9dd1aafb-20a4-4aa3-b21d-816efbbe39e1
 >
 > See gist [How Deploy Qt/QML For Ubuntu](https://gist.github.com/msalehicode/c285afa2ce87536db6492b301e9f4f18) to understand how deploy for Ubuntu
 
-Or follow blow instructions to install requirements on Linux:
+---
+### Instructions to install requirements on Linux:
 
-### 1. RNNoise
+#### 1. RNNoise
 
 ```bash
 git clone https://github.com/xiph/rnnoise.git
@@ -119,7 +121,7 @@ make
 sudo make install
 ```
 
-### 2. QHotkey
+#### 2. QHotkey
 
 ```bash
 git clone https://github.com/Skycoder42/QHotkey.git
@@ -131,13 +133,13 @@ make -j$(nproc)
 sudo make install
 ```
 
-### 3. Opus
+#### 3. Opus
 
 ```bash
 sudo apt install libopus-dev
 ```
 
-### 4. FFmpeg
+#### 4. FFmpeg
 
 ```bash
 sudo apt install \
@@ -148,7 +150,7 @@ sudo apt install \
     libswscale-dev
 ```
 
-### 5. Build BeanChat
+#### 5. Build BeanChat
 
 build Release then run
 ```bash
