@@ -20,9 +20,10 @@ class ClientUser : public QObject
     Q_PROPERTY(bool isAdmin READ isAdmin NOTIFY isAdminChanged FINAL)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged FINAL)
     Q_PROPERTY(quint64 channelId READ channelId NOTIFY channelIdChanged FINAL)
-    Q_PROPERTY(float volume READ volume NOTIFY volumeChanged FINAL)
+    Q_PROPERTY(int volume READ volume WRITE setVolume NOTIFY volumeChanged FINAL)
     Q_PROPERTY(bool self READ self NOTIFY selfChanged FINAL)
     Q_PROPERTY(bool hasCamera READ hasCamera NOTIFY hasCameraChanged FINAL)
+    Q_PROPERTY(bool localMuted READ localMuted WRITE setLocalMuted NOTIFY localMutedChanged FINAL)
 
 public:
     explicit ClientUser(QObject *parent = nullptr);
@@ -82,14 +83,17 @@ public:
     quint64 channelId() const;
     void setChannelId(quint64 newChannelId);
 
-    float volume() const;
-    void setVolume(float newVolume);
+    int volume() const;
+    void setVolume(int newVolume);
 
     bool self() const;
     void setSelf(bool newSelf);
 
     bool hasCamera() const;
     void setHasCamera(bool newHasCamera);
+
+    bool localMuted() const;
+    void setLocalMuted(bool newLocalMuted);
 
 signals:
 
@@ -128,6 +132,8 @@ signals:
 
     void hasCameraChanged();
 
+    void localMutedChanged();
+
 private:
 
     //info
@@ -136,7 +142,8 @@ private:
     QString m_username;
     QString m_avatarPath;
     QString m_iconsId="";
-    float m_volume = 1.0f;
+    int m_volume = SPEAKER_DEFAULT_CHANNEL_USERS_VOLUME;
+    bool m_localMuted=false;
     bool m_self=false;
 
     //user's app info

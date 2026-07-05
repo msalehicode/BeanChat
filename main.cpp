@@ -34,6 +34,7 @@
 #include "managers/soundmanager.h"
 #include "managers/settingsmanager.h"
 #include "managers/clientusermanager.h"
+#include "audio/audiomixer.h"
 
 
 int main(int argc, char *argv[])
@@ -57,6 +58,8 @@ int main(int argc, char *argv[])
     SoundManager soundManager; //play effects
     SettingsManager settingsManager;
     ClientUserManager clientuserManager;
+    AudioMixer mixer;
+
 
 
 
@@ -142,12 +145,18 @@ int main(int argc, char *argv[])
 
     // ---------- speaker connection ----------
 
-    //play received voice from udp socket
     QObject::connect(
         &usr,
         &User::voiceReceived,
+        &mixer,
+        &AudioMixer::addVoice);
+
+    QObject::connect(
+        &mixer,
+        &AudioMixer::mixedFrameReady,
         &speaker,
         &AudioSpeaker::playPcm);
+
 
     //make soundmanager output change when speaker output changed.
     QObject::connect(

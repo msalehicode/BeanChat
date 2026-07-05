@@ -187,16 +187,14 @@ void ClientUser::setChannelId(quint64 newChannelId)
     emit channelIdChanged();
 }
 
-float ClientUser::volume() const
+int ClientUser::volume() const
 {
     return m_volume;
 }
 
-void ClientUser::setVolume(float volume)
+void ClientUser::setVolume(int volume)
 {
-    volume = std::clamp(volume, 0.f, 2.f);
-
-    if (qFuzzyCompare(m_volume, volume))
+    if (m_volume == volume)
         return;
 
     m_volume = volume;
@@ -227,4 +225,17 @@ void ClientUser::setHasCamera(bool newHasCamera)
         return;
     m_hasCamera = newHasCamera;
     emit hasCameraChanged();
+}
+
+bool ClientUser::localMuted() const
+{
+    return m_localMuted;
+}
+
+void ClientUser::setLocalMuted(bool newLocalMuted)
+{
+    if (m_localMuted == newLocalMuted)
+        return;
+    m_localMuted = newLocalMuted;
+    emit localMutedChanged();
 }

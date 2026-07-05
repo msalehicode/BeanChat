@@ -107,6 +107,7 @@ qt_add_qml_module(appBeanChat
         ui/popups/ModifyChannelPopup.qml
         ui/popups/ModifyProfilePopup.qml
         ui/popups/UserProfilePopup.qml
+        ui/popups/UserContextPopup.qml
 
         # settingsPage pages/components
         ui/settingPages/SettingSection.qml
@@ -142,6 +143,7 @@ qt_add_qml_module(appBeanChat
         audio/audiocapture.h audio/audiocapture.cpp
         audio/audiospeaker.h audio/audiospeaker.cpp
         audio/opuscodec.h audio/opuscodec.cpp
+        audio/audiomixer.h audio/audiomixer.cpp
 
         #database
         database/database.h database/database.cpp
@@ -279,6 +281,7 @@ target_compile_definitions(appBeanChat PRIVATE
     D_PRINT_MYVIDEOITEM_INFO=false
     D_PRINT_VOICE_INFO=false
     D_PRINT_VIDEO_INFO=false
+    D_PRINT_AUDIO_INFO=false #audio in and out + mixer
 
     # opus
     OPUS_DEFAULT_SAMPLE_RATE=48000
@@ -289,6 +292,8 @@ target_compile_definitions(appBeanChat PRIVATE
     #speaker
     SPEAKER_DEFAULT_SAMPLE_RATE=48000
     SPEAKER_DEFAULT_CHANNEL=1
+
+    SPEAKER_DEFAULT_CHANNEL_USERS_VOLUME=100 #default volume of each user in channel
 
     # ffmpeg
     FFMPEG_DECODER_DEFAULT_FPS=30
@@ -411,6 +416,14 @@ if(WIN32)
 endif()
 
 
+# debug tool to get sigfault infos.
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+target_compile_options(appBeanChat PRIVATE
+   -fsanitize=address
+   -g)
+target_link_options(appBeanChat PRIVATE
+   -fsanitize=address)
+endif()
 
 
 # to deploy

@@ -5,10 +5,11 @@
 #include <QElapsedTimer>
 #include <QTimer>
 #include "clientuser.h"
+#include <QPointer>
 
 struct UserItem
 {
-    ClientUser *user = nullptr;
+    QPointer<ClientUser> user;
     QElapsedTimer lastVoicePacket;
 
     UserItem()

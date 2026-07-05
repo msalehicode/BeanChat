@@ -1350,6 +1350,8 @@ void User::processPacket(const Packet& packet)
                 //if user was in a channel, add him to our channel model
                 if(u.channelId!=0)
                     m_channelModel->addUser(u.channelId, user);
+                else
+                    qDebug() << "user channel id ==0 we dont add him to channel model";
                 qDebug() << "user added to connectedusrs id="<<u.id;
             }
             else
@@ -1657,23 +1659,37 @@ void User::onUdpReadyRead()
 
                 m_channelModel->restartVoiceTimer(senderUser->id());
 
+                //check if user is muted locally.
+                if(senderUser->localMuted())
+                    break;
+
 
                 //decode
+#if D_PRINT_AUDIO_INFO
+                QElapsedTimer t;
+                t.start();
+#endif
                 QByteArray pcm = m_opus.decode(packet.audioData);
+#if D_PRINT_AUDIO_INFO
+                qDebug() << "decode =" << t.nsecsElapsed()/1000000.0 << "ms";
+#endif
 #if D_PRINT_VOICE_INFO
                 qDebug() << "received opus=" << pcm.size() << " raw pcm=" << packet.audioData.size();
 #endif
-                if (!pcm.isEmpty())
-                    emit voiceReceived(pcm);
-            }
 
-            // qDebug()
-            //     << "Voice received from"
-            //     << packet.senderId
-            //     << "seq"
-            //     << packet.sequence
-            //     << "size"
-            //     << packet.audioData.size();
+                if (!pcm.isEmpty())
+                    emit voiceReceived(senderUser->id(),
+                                       pcm, senderUser->volume());
+            }
+#if D_PRINT_AUDIO_INFO
+            qDebug()
+                << "Voice received from"
+                << packet.senderId
+                << "seq"
+                << packet.sequence
+                << "size"
+                << packet.audioData.size();
+#endif
             break;
         }
 
@@ -1842,6 +1858,7 @@ void User::resetVariables()
     setMyVoicePacketLoss(0.0f);
     m_notFoundAvatars.clear(); //clear list for next connection
     setMyAvatarPath("");
+    m_clientUserManager->clear();
 
     if(!m_switchingServer) //if we are not switching reset/turn-off all server's indicator status
         m_myServersModel->resetPreviousIsActiveServer();

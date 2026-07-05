@@ -76,6 +76,10 @@ bool AudioSpeaker::start()
     }
 
     m_sink = new QAudioSink(m_audioOutputs[m_currentAudioOutput], m_format, this);
+
+    // m_sink->setBufferSize(16384);
+    m_sink->setBufferSize(32768);
+
     m_device = m_sink->start();
 
     m_started=true;
@@ -105,13 +109,30 @@ void AudioSpeaker::stop()
 }
 
 
+
 void AudioSpeaker::playPcm(const QByteArray &pcm)
 {
     if (!m_device)
         return;
 
-    m_device->write(pcm);
+    qint64 written = m_device->write(pcm);
+#if D_PRINT_SPEAKER_INFO
+    if (written != pcm.size())
+    {
+        qDebug()
+        << "SHORT WRITE"
+        << written
+        << "/"
+        << pcm.size();
+    }
+    qDebug()
+        << "write"
+        << pcm.size()
+        << "returned"
+        << m_device->write(pcm);
+#endif
 }
+
 
 bool AudioSpeaker::started() const
 {

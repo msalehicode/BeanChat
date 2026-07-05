@@ -16,6 +16,7 @@ public:
         VideoSinkRole,
         IsTalkingRole,
         IsCameraOpenRole,
+        IsLocalMuteRole,
         UserId,
         IsDeafened,
         IsMuted

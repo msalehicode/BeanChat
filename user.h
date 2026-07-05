@@ -235,7 +235,9 @@ signals:
 
     void myUsernameChanged();
 
-    void voiceReceived(QByteArray pcm);
+    void voiceReceived(quint64 userId,
+                       const QByteArray& pcm,
+                       int volume);
     void videoReceived(QByteArray data);
 
     void muteHeadphoneChanged();

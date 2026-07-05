@@ -34,6 +34,9 @@ QVariant ParticipantModel::data(const QModelIndex &index, int role) const
     case IsMuted:
         return entry.user->muted();
 
+    case IsLocalMuteRole:
+        return entry.user->localMuted();
+
     case IsDeafened:
         return entry.user->deafened();
 
@@ -59,6 +62,7 @@ QHash<int, QByteArray> ParticipantModel::roleNames() const
         {IsCameraOpenRole,"isCameraOpen"},
         {VideoSinkRole,"videoSink"},
         {UserId,"userId"},
+        {IsLocalMuteRole, "isLocalMuted"},
         {IsDeafened, "isDeafened"},
         {IsMuted, "isMuted"}
     };
@@ -232,6 +236,17 @@ void ParticipantModel::observeUser(ClientUser *user)
                     emit dataChanged(index(row), index(row), { UserId });
             });
 
+
+    connect(user,
+            &ClientUser::localMutedChanged,
+            this,
+            [this, user]()
+            {
+                int row = findRow(user);
+
+                if (row >= 0)
+                    emit dataChanged(index(row), index(row), { IsLocalMuteRole });
+            });
 
     connect(user,
             &ClientUser::avatarPathChanged,

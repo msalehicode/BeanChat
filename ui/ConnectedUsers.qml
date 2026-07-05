@@ -176,15 +176,59 @@ Item
 
                 MouseArea
                 {
+                    id:userMouseArea
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     anchors.fill: parent
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
 
-                    onClicked:
+                    onClicked: function(mouse)
                     {
-                        profilePopup.clientUser = user.clientUser(model.userId)
-                        profilePopup.open()
+                        if (mouse.button === Qt.RightButton)
+                        {
+                            var selectedUser = user.clientUser(model.userId)
+                            if (selectedUser.self)
+                                return
+
+                            userContextPopup.userId = model.userId
+                            userContextPopup.username = model.userName
+                            userContextPopup.clientUser = selectedUser
+
+                            var p = userMouseArea.mapToItem(userContextPopup.parent, mouse.x, mouse.y)
+
+                            var margin = 8
+
+                            // Default: open below cursor
+                            var x = p.x
+                            var y = p.y
+
+                            // Not enough room below? Open above.
+                            if (y + userContextPopup.height > userContextPopup.parent.height - margin)
+                                y = p.y - userContextPopup.height
+
+                            // Not enough room on the right? Shift left.
+                            if (x + userContextPopup.width > userContextPopup.parent.width - margin)
+                                x = userContextPopup.parent.width - userContextPopup.width - margin
+
+                            // Prevent negative coordinates.
+                            x = Math.max(margin, x)
+                            y = Math.max(margin, y)
+
+                            userContextPopup.x = x
+                            userContextPopup.y = y
+
+                            userContextPopup.open()
+                        }
+
+                        if(mouse.button === Qt.LeftButton)
+                        {
+                            profilePopup.clientUser = user.clientUser(model.userId)
+                            profilePopup.open()
+                        }
+
                     }
+
+
                 }
 
             }

@@ -341,6 +341,7 @@ Item
 
                                     Rectangle
                                     {
+                                        id:isTalkingIndicator
                                         anchors.centerIn: parent
 
                                         width: parent.width + 4
@@ -351,7 +352,7 @@ Item
                                         color: "transparent"
 
                                         border.width: 4
-                                        border.color: "lime"
+                                        border.color: modelData.isLocalMuted ? "red" : "lime"
 
                                         visible: modelData.isTalking
 
@@ -411,6 +412,7 @@ Item
                                 }
                             }
 
+
                             MouseArea
                             {
                                 id:userMouseArea
@@ -418,12 +420,42 @@ Item
                                 hoverEnabled: true
                                 acceptedButtons: Qt.LeftButton | Qt.RightButton
 
-                                onClicked:
+                                onClicked: function(mouse)
                                 {
                                     if (mouse.button === Qt.RightButton)
                                     {
-                                        console.log("Right clicked:", modelData.userid)
-                                        return
+                                        var selectedUser = user.clientUser(modelData.userid)
+                                        if (selectedUser.self)
+                                            return
+
+                                        userContextPopup.userId = modelData.userid
+                                        userContextPopup.username = modelData.username
+                                        userContextPopup.clientUser = selectedUser
+
+                                        var p = userMouseArea.mapToItem(userContextPopup.parent, mouse.x, mouse.y)
+
+                                        var margin = 8
+
+                                        // Default: open below cursor
+                                        var x = p.x
+                                        var y = p.y
+
+                                        // Not enough room below? Open above.
+                                        if (y + userContextPopup.height > userContextPopup.parent.height - margin)
+                                            y = p.y - userContextPopup.height
+
+                                        // Not enough room on the right? Shift left.
+                                        if (x + userContextPopup.width > userContextPopup.parent.width - margin)
+                                            x = userContextPopup.parent.width - userContextPopup.width - margin
+
+                                        // Prevent negative coordinates.
+                                        x = Math.max(margin, x)
+                                        y = Math.max(margin, y)
+
+                                        userContextPopup.x = x
+                                        userContextPopup.y = y
+
+                                        userContextPopup.open()
                                     }
 
                                     if (mouse.button === Qt.LeftButton)
@@ -993,6 +1025,7 @@ Item
             console.log("Settings")
         }
     }
+
 
 }
 

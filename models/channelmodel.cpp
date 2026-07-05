@@ -71,6 +71,9 @@ QVariant ChannelModel::data(
             map["deafened"] =
                 user.user->deafened();
 
+            map["isLocalMuted"] =
+                user.user->localMuted();
+
             map["hasVideo"] =
                 user.user->hasCamera();
 
@@ -203,6 +206,11 @@ void ChannelModel::observeUser(ClientUser *user)
             updateRoles);
 
     connect(user,
+            &ClientUser::localMutedChanged,
+            this,
+            updateRoles);
+
+    connect(user,
             &ClientUser::mutedChanged,
             this,
             updateRoles);
@@ -314,7 +322,10 @@ void ChannelModel::removeUser(
     auto channel = findChannelOfUser(userId);
 
     if(!channel)
+    {
+        qDebug() << "FAILED TO REMOVE USER" << userId;
         return;
+    }
 
     for(int i=0; i<channel->users.size(); ++i)
     {
@@ -388,6 +399,9 @@ void ChannelModel::updateTalkingUsers()
 
     for(auto& user : channel->users)
     {
+        if (!user.user)
+            continue;
+
         if (user.user->isTalking() && user.lastVoicePacket.elapsed() > CHANNEL_MODEL_TALKING_TIMEOUT)
         {
             user.user->setIsTalking(false);

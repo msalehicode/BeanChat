@@ -328,8 +328,10 @@ Item {
         }
     }
 
-
-
+    UserContextPopup
+    {
+        id:userContextPopup
+    }
 
 
     // ================================= POP UP =================================
@@ -394,6 +396,8 @@ Item {
     {
         id: profilePopup
     }
+
+
 
     Connections
     {
