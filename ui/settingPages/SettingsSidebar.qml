@@ -192,7 +192,7 @@ Item
         {
             Layout.leftMargin: 12
 
-            text: user.myAppVersion
+            text: user.myAppVersion + " - " + user.buildType
 
             color: "#B5BAC1"
 

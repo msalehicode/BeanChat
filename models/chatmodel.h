@@ -4,8 +4,9 @@
 #include "clientuser.h"
 #include <QPointer>
 
-// include from BeanChatServer to server and client speak one language and undrestand packets
-#include "network/packets.h"
+// include from BeanChatCommon (to server and client speak one language)
+#include <protocol/Packets.h>
+using namespace BeanChatCommon;
 
 class ChatModel : public QAbstractListModel
 {

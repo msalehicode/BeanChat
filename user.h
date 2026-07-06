@@ -12,12 +12,14 @@
 #include <QTimer>
 #include <QHostInfo>
 
-// include from BeanChatServer to server and client speak one language and undrestand packets
-#include "network/packet.h"
-#include "network/packets.h"
-#include "network/packethelpers.h"
-#include "network/voicepackets.h"
-#include "models/user.h"
+// include from BeanChatCommon (to server and client speak one language)
+#include <protocol/Packets.h>
+#include <protocol/Packet.h>
+#include <protocol/PacketHelpers.h>
+#include <protocol/ProtocolVersion.h>
+#include <protocol/ProtocolLimits.h>
+using namespace BeanChatCommon;
+
 
 
 // C++ models to expose data to QML lists
@@ -190,6 +192,7 @@ public:
 
     void initOrLoadSettings();
     QString myAppVersion() const;
+    QString buildType() const;
     UserConnectionStatus connectionStatus() const;
     void setConnectionStatus(UserConnectionStatus newConnectionStatus);
 
@@ -336,7 +339,6 @@ private:
     QString m_myChannelName = ""; //current channel
     bool m_myChannelSavesChat=false;
     QString m_myServerName= ""; //current server connected to (name that saved by user inside myServers, can be modified, only shown to this user)
-    UserModel m_info; //to store system info such as appVersio and ..
     UserConnectionStatus m_connectionStatus=UserConnectionStatus::Unknown;
     int m_connectedServerId_onDb=-1; //(serverDbIndex) to use for path of avatars. e.g path/to/Cached/avatars/0  <- this 0 is server id (directory to hold that server user's avatar files)
 
@@ -420,6 +422,7 @@ private:
     Q_PROPERTY(QString myAvatarPath READ myAvatarPath WRITE setMyAvatarPath NOTIFY myAvatarPathChanged FINAL)
 
     Q_PROPERTY(QString myAppVersion READ myAppVersion CONSTANT)
+    Q_PROPERTY(QString buildType READ buildType CONSTANT)
     Q_PROPERTY(QString appTitle READ appTitle CONSTANT)
     Q_PROPERTY(ClientUser::Status myStatus READ myStatus WRITE setMyStatus NOTIFY myStatusChanged FINAL)
 };

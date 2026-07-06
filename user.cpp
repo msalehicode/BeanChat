@@ -11,6 +11,7 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
     m_soundManager(sounderManager), m_settingsManager(settingsManager), m_clientUserManager(clientuserManager),
     m_cam(cam), m_mic(mic), m_speaker(speaker)
 {
+    qInfo() << "using BeanChatCommon version " << BeanChatCommon::Protocol::Version;
     qDebug() << "user starting..";
 
 
@@ -147,18 +148,6 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
                 if (ClientUser *user = m_clientUserManager->user(userId))
                     user->setIsTalking(talking);
             });
-
-    //get system info to send to server on login stage.
-    m_info.appVersion = QCoreApplication::applicationVersion();
-    #ifdef QT_NO_DEBUG
-        m_info.buildType = USER_BUILD_TYPE_RELEASE;
-    #else
-        m_info.buildType = USER_BUILD_TYPE_DEBUG;
-    #endif
-    m_info.osName = platformName();
-    m_info.osVersion = QSysInfo::prettyProductName();
-    m_info.machineName = QSysInfo::machineHostName();
-    m_info.machineId = QString(QSysInfo::machineUniqueId().toHex());
 }
 
 
@@ -360,12 +349,12 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
     login.username = myUsername();
     login.identity = myIdentity();
     //system info.
-    login.appVersion = m_info.appVersion;
-    login.buildType = m_info.buildType;
-    login.machineId = m_info.machineId;
-    login.machineName = m_info.machineName;
-    login.osName = m_info.osName;
-    login.osVersion = m_info.osVersion;
+    login.appVersion = myAppVersion();
+    login.buildType = buildType();
+    login.machineId = QString(QSysInfo::machineUniqueId().toHex());
+    login.machineName = QSysInfo::machineHostName();
+    login.osName =  platformName();
+    login.osVersion = QSysInfo::prettyProductName();
 
     Packet p;
     p.type = PacketType::LoginRequest;
@@ -685,7 +674,7 @@ void User::newAvatarArrived(quint64 userId,
         }
 
         //check is it server's avatar or not
-        if(userId == RESERVED_TO_ASK_SERVERS_AVATAR)
+        if(userId == BeanChatCommon::ReservedIds::ServerAvatar)
         {
             //apply new avatar to myServers model
             if(m_myServersModel->setAvatarPath(avatarPath))
@@ -1275,7 +1264,7 @@ void User::processPacket(const Packet& packet)
         emit receivedServerInfoChanged(); //notify QML serverInfo changed go read those exposed methods
 
          //get avatar path or ask from server, id=RESERVED_TO_ASK_SERVERS_AVATAR server would return his avatarHash and data.
-        QString serverAvatarPath = checkAvatar(RESERVED_TO_ASK_SERVERS_AVATAR, state.serverInfo.avatarHash);
+        QString serverAvatarPath = checkAvatar(BeanChatCommon::ReservedIds::ServerAvatar, state.serverInfo.avatarHash);
 
 
         if(!serverAvatarPath.isEmpty())
@@ -2064,7 +2053,16 @@ void User::initOrLoadSettings()
 
 QString User::myAppVersion() const
 {
-    return m_info.appVersion + " - " + m_info.buildType;
+    return QCoreApplication::applicationVersion();
+}
+
+QString User::buildType() const
+{
+#ifdef QT_NO_DEBUG
+    return USER_BUILD_TYPE_RELEASE;
+#else
+    return USER_BUILD_TYPE_DEBUG;
+#endif
 }
 
 float User::myVoicePacketLoss() const

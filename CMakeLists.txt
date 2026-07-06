@@ -149,7 +149,6 @@ qt_add_qml_module(appBeanChat
         database/database.h database/database.cpp
 
         # C++ models for qml
-
         models/channelmodel.h models/channelmodel.cpp
         models/chatmodel.h models/chatmodel.cpp
         models/participantmodel.h models/participantmodel.cpp
@@ -180,13 +179,11 @@ qt_add_qml_module(appBeanChat
     ui/icons/screen.png ui/icons/screen-closed.png ui/icons/screen-red.png
     ui/icons/signal.png ui/icons/signal-green.png ui/icons/signal-orange.png ui/icons/signal-red.png ui/icons/signal-yellow.png
     ui/icons/os/android.png ui/icons/os/ios.png ui/icons/os/linux.png ui/icons/os/macos.png ui/icons/os/windows.png
+)
 
-    # from Server. later move these into a library
-    SOURCES
-        ../BeanChatServer/src/network/packet.h
-        ../BeanChatServer/src/network/packets.h
-        ../BeanChatServer/src/network/packethelpers.h
-
+add_subdirectory(
+    ../BeanChatCommon
+    BeanChatCommon
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
@@ -205,6 +202,12 @@ set_target_properties(appBeanChat PROPERTIES
 # switch line down if your BeanChatServer is situated by this CMake file
 target_include_directories(appBeanChat PRIVATE ${CMAKE_SOURCE_DIR}/../BeanChatServer/src )
 # target_include_directories(appBeanChat PRIVATE ${CMAKE_SOURCE_DIR}/BeanChatServer/src )
+
+target_include_directories(
+    BeanChatCommon
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
 
 
@@ -371,6 +374,7 @@ target_link_libraries(appBeanChat
     Qt6::Sql
     Qt6::QuickDialogs2
 
+    BeanChatCommon
 )
 
 include(GNUInstallDirs)
