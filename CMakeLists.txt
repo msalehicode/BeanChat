@@ -382,47 +382,62 @@ install(TARGETS appBeanChat
 
 
 
-#copy thridparty libraries for release windows
+# ==========================================================
+# Windows deployment
+# ==========================================================
 if(WIN32)
+    get_target_property(WINDEPLOYQT_EXECUTABLE Qt6::windeployqt IMPORTED_LOCATION)
+
+    set(DEPLOY_DIR "${CMAKE_BINARY_DIR}/deploy/${APP_TitleName}-${APP_CURRENT_VERSION}-Windows")
+
     add_custom_command(TARGET appBeanChat POST_BUILD
+
+        # recreate deployment directory
+        COMMAND ${CMAKE_COMMAND} -E rm -rf "${DEPLOY_DIR}"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${DEPLOY_DIR}"
+
+        # copy executable
+        COMMAND ${CMAKE_COMMAND} -E copy
+            "$<TARGET_FILE:appBeanChat>"
+            "${DEPLOY_DIR}"
+
+        # deploy Qt
+        COMMAND
+            "${WINDEPLOYQT_EXECUTABLE}"
+            --release
+            --qmldir "${CMAKE_SOURCE_DIR}"
+            "${DEPLOY_DIR}/$<TARGET_FILE_NAME:appBeanChat>"
+
+
+        # ffmpeg
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "C:/Libraries/ffmpeg/bin/avcodec-62.dll"
-        "$<TARGET_FILE_DIR:appBeanChat>"
+            "C:/Libraries/ffmpeg/bin/avcodec-62.dll"
+            "${DEPLOY_DIR}"
 
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "C:/Libraries/ffmpeg/bin/avformat-62.dll"
-        "$<TARGET_FILE_DIR:appBeanChat>"
+            "C:/Libraries/ffmpeg/bin/avformat-62.dll"
+            "${DEPLOY_DIR}"
 
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "C:/Libraries/ffmpeg/bin/avutil-60.dll"
-        "$<TARGET_FILE_DIR:appBeanChat>"
+            "C:/Libraries/ffmpeg/bin/avutil-60.dll"
+            "${DEPLOY_DIR}"
 
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "C:/Libraries/ffmpeg/bin/swresample-6.dll"
-        "$<TARGET_FILE_DIR:appBeanChat>"
-
+            "C:/Libraries/ffmpeg/bin/swresample-6.dll"
+            "${DEPLOY_DIR}"
 
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "C:/Libraries/ffmpeg/bin/swscale-9.dll"
-        "$<TARGET_FILE_DIR:appBeanChat>"
+            "C:/Libraries/ffmpeg/bin/swscale-9.dll"
+            "${DEPLOY_DIR}"
 
-
-        #noise
+        # rnnoise
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "C:/Libraries/rnnoise/bin/librnnoise-0.dll"
-        "$<TARGET_FILE_DIR:appBeanChat>"
+            "C:/Libraries/rnnoise/bin/librnnoise-0.dll"
+            "${DEPLOY_DIR}"
 
+        COMMENT "Deploying BeanChat..."
     )
-endif()
 
-
-# debug tool to get sigfault infos.
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-target_compile_options(appBeanChat PRIVATE
-   -fsanitize=address
-   -g)
-target_link_options(appBeanChat PRIVATE
-   -fsanitize=address)
 endif()
 
 
