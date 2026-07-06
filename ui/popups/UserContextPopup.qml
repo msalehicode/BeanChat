@@ -62,7 +62,7 @@ Popup {
             id: volumeSlider
 
             width: parent.width
-
+            height: 50
             from: 0
             to: 100
 
