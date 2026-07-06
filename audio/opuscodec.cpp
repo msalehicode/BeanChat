@@ -1,7 +1,5 @@
 #include "opuscodec.h"
 
-#include <QDebug>
-
 OpusCodec::OpusCodec(QObject *parent)
     : QObject(parent)
 {

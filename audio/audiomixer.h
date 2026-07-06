@@ -7,6 +7,7 @@
 #include <QTimer>
 #include <QQueue>
 #include <QDebug>
+#include <QtMath>
 
 
 class AudioMixer : public QObject

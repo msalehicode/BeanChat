@@ -1,7 +1,5 @@
 #include "ffmpegencoder.h"
 
-#include <QDebug>
-
 FFmpegEncoder::FFmpegEncoder(QObject *parent)
     : QObject(parent)
 {

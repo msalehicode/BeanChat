@@ -3,6 +3,8 @@
 #include <QObject>
 #include <QHash>
 #include <QDebug>
+#include "../models/clientuser.h"
+
 
 class ClientUser;
 

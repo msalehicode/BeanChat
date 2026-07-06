@@ -1,12 +1,5 @@
 #include "ffmpegdecoder.h"
 
-#include <QDebug>
-
-extern "C"
-{
-#include <libavutil/imgutils.h>
-}
-
 FFmpegDecoder::FFmpegDecoder(QObject *parent)
     : QObject(parent)
 {

@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QByteArray>
+#include <QDebug>
 
 #include <opus/opus.h>
 

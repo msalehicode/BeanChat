@@ -3,12 +3,14 @@
 #include <QObject>
 #include <QByteArray>
 #include <QImage>
+#include <QDebug>
 
 extern "C"
 {
-#include <libavcodec/avcodec.h>
-#include <libswscale/swscale.h>
-#include <libavutil/frame.h>
+    #include <libavcodec/avcodec.h>
+    #include <libswscale/swscale.h>
+    #include <libavutil/frame.h>
+    #include <libavutil/imgutils.h>
 }
 
 class FFmpegDecoder : public QObject

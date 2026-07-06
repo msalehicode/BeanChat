@@ -1,5 +1,4 @@
 #include "clientusermanager.h"
-#include "../models/clientuser.h"
 
 ClientUserManager::ClientUserManager(QObject *parent)
     : QObject(parent)

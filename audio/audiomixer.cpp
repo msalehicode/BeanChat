@@ -1,7 +1,5 @@
 #include "audiomixer.h"
 
-#include <QtMath>
-
 AudioMixer::AudioMixer(QObject *parent)
     : QObject(parent)
 {
