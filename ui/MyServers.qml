@@ -33,6 +33,7 @@ Item
             MouseArea
             {
                 anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
                 onClicked: console.log("clicked on beanchat.")
             }
             Rectangle
@@ -123,7 +124,7 @@ Item
                 {
                     anchors.fill: parent
                     hoverEnabled: true
-
+                    cursorShape: Qt.PointingHandCursor
                     onEntered: delegateRoot.scale = 1.12
                     onExited: delegateRoot.scale = 1.0
 
@@ -180,6 +181,7 @@ Item
             MouseArea
             {
                 anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
                 onClicked: connectPopup.open()
             }
         }

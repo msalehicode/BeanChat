@@ -298,7 +298,6 @@ Item
                         BusyIndicator
                         {
                             anchors.centerIn: parent
-
                             running: chatImage.status === Image.Loading
                             visible: running
                         }
@@ -379,6 +378,7 @@ Item
         MouseArea
         {
             anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
             onClicked: chatView.positionViewAtEnd()
         }
 
@@ -506,6 +506,7 @@ Item
                     MouseArea
                     {
                         anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
                         onClicked: enterTextBase.sendMessage()
                     }
 

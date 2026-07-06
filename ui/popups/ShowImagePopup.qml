@@ -45,13 +45,19 @@ Popup
                 right:parent.right
             }
             font.pixelSize: 35
+
+            MouseArea
+            {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: imagePopup.close()
+            }
         }
     }
 
     MouseArea
     {
         anchors.fill: parent
-
         onClicked: imagePopup.close()
     }
 }

@@ -90,6 +90,7 @@ Item
             MouseArea
             {
                 anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
                 onClicked: serverTitle.opened = !serverTitle.opened
             }
         }
@@ -264,6 +265,7 @@ Item
 
                         MouseArea {
                             anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
                             onClicked:
                             {
                                 modifyChannelPopup.initialChannelName=model.channelName
@@ -532,7 +534,7 @@ Item
                     MouseArea
                     {
                         anchors.fill: parent
-
+                        cursorShape: Qt.PointingHandCursor
                         onClicked:
                         {
                             parent.infoVisible = !parent.infoVisible
@@ -710,6 +712,7 @@ Item
                     MouseArea
                     {
                         anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
                         onClicked: user.isCameraOpen = !user.isCameraOpen
                     }
                 }
@@ -728,6 +731,7 @@ Item
                     MouseArea
                     {
                         anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
                         onClicked: console.log("share screen")
                     }
                 }
@@ -747,6 +751,7 @@ Item
                     MouseArea
                     {
                         anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
                         onClicked: user.disconnect();
                     }
                 }
@@ -766,6 +771,7 @@ Item
                     MouseArea
                     {
                         anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
                         onClicked: Qt.openUrlExternally(user.serverWebsite)
                     }
                 }
@@ -815,6 +821,7 @@ Item
                     MouseArea
                     {
                         anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
                         onClicked:
                         {
                             modifyProfilePopup.avatarSource=user.myAvatarPath
@@ -844,6 +851,7 @@ Item
                         MouseArea
                         {
                             anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
                             onClicked: console.log("clicked on my status indicator")
                         }
                     }
@@ -858,6 +866,7 @@ Item
                     MouseArea
                     {
                         anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
                         onClicked:
                         {
                             modifyProfilePopup.avatarSource=user.myAvatarPath
@@ -896,6 +905,7 @@ Item
                     MouseArea
                     {
                         anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
                         onClicked: user.muteMicrophone = !user.muteMicrophone
                     }
                 }
@@ -918,6 +928,7 @@ Item
                     MouseArea
                     {
                         anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
                         onClicked: user.muteHeadphone = !user.muteHeadphone
                     }
                 }
@@ -938,6 +949,7 @@ Item
                     MouseArea
                     {
                         anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
                         onClicked: changePage("settings")
                     }
                 }
