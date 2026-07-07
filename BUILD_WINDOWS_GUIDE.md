@@ -18,6 +18,7 @@
      * 4.1.2 Opus
      * 4.1.3 RNNoise
      * 4.1.4 FFmpeg
+     * 4.1.5 OpenSSL
    * 4.2 Install libraries from vcpkg
 5. Get BeanChatServer
 6. Build Release
@@ -311,6 +312,30 @@ target_link_libraries(appBeanChat PRIVATE
     swscale
 )
 ```
+
+### 4.1.5 Installation of OpenSSL
+using msys2 (MingW) run:
+> pacman -S mingw-w64-x86_64-openssl
+
+to check openssl installed:
+> pacman -Qs openssl
+
+
+or for dll:
+> ls /mingw64/bin/libcrypto-3*.dll
+
+If you see something like:
+```/mingw64/bin/libcrypto-3-x64.dll```
+
+then OpenSSL is already installed and you don't need to reinstall it.
+
+if you need openssl .dll can find it inside:
+```C:\msys64\mingw64\bin\libcrypto-3-x64.dll```
+
+> [!TIP]
+> in CMake (where OPENSSL included) we add
+> set(OPENSSL_ROOT_DIR "C:/msys64/mingw64") #to introduce to CMAKE we installed it by mingw msys2.
+
 
 ---
 
