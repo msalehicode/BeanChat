@@ -393,6 +393,8 @@ install(TARGETS appBeanChat
 
 
 
+
+
 # ==========================================================
 # Windows deployment
 # ==========================================================
@@ -400,6 +402,11 @@ if(WIN32)
     get_target_property(WINDEPLOYQT_EXECUTABLE Qt6::windeployqt IMPORTED_LOCATION)
 
     set(DEPLOY_DIR "${CMAKE_BINARY_DIR}/deploy/${APP_TitleName}-${APP_CURRENT_VERSION}-Windows")
+
+    install(FILES
+        $<TARGET_FILE:OpenSSL::Crypto>
+        DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
 
     add_custom_command(TARGET appBeanChat POST_BUILD
 
@@ -447,6 +454,12 @@ if(WIN32)
             "${DEPLOY_DIR}"
 
         COMMENT "Deploying BeanChat..."
+
+
+        #crypto
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                $<TARGET_FILE:OpenSSL::Crypto>
+                "${DEPLOY_DIR}"
     )
 
 endif()
