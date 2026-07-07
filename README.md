@@ -29,9 +29,9 @@ or browse
 
 | Platform | Status | Stage | Version |
 |-----------|--------|--------|--------|
-| 🌐 Server | ✅ | Debug | 0.16.0 |
-| 🪟 Windows Client | ✅ | Debug | v0.19.10 |
-| 🐧 Linux Client | ✅ | Debug | v0.19.10 |
+| 🌐 Server | ✅ | Debug | 0.17.13 |
+| 🪟 Windows Client | ✅ | Debug | v0.20.8 |
+| 🐧 Linux Client | ✅ | Debug | v0.20.8 |
 | 🤖 Android Client | 🚧 | 🚧 | ? |
 | 🍎 macOS Client | 🚧 | 🚧 | ? |
 | 📱 iOS Client | 🚧 | 🚧 | ? |
@@ -84,7 +84,7 @@ https://github.com/user-attachments/assets/9dd1aafb-20a4-4aa3-b21d-816efbbe39e1
 17. **Servers can have their information** such as Name, Version, Website, Avatar and Uptime).
 18. **User Profile**, can open User's profile by clicking on their name/avatar to see their data (statis,name,id,current channel with button join his channel).
 19. **Mute/Unmute** users' voice locally, also can **adjust voice volume** of users by right click on their name in user's setting popup.
-
+20. **identity** system for login into accounts. also can switch/rename/create/delete identities when user is disconnected from any server.
 ---
 
 # 🛠 Building
@@ -149,8 +149,12 @@ sudo apt install \
     libavutil-dev \
     libswscale-dev
 ```
+#### 5. OpenSSL
+```bash
+sudo apt install libssl-dev
+```
 
-#### 5. Build BeanChat
+#### 6. Build BeanChat
 
 build Release then run
 ```bash
@@ -166,6 +170,7 @@ cmake --install "path/to/build/Desktop_Qt_6_9_3-Release" --prefix "path/to/somew
 * QHotkey
 * Opus
 * FFmpeg
+* OpenSSL (Crypto)
 
 ---
 
