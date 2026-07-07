@@ -24,6 +24,7 @@ class ClientUser : public QObject
     Q_PROPERTY(bool self READ self NOTIFY selfChanged FINAL)
     Q_PROPERTY(bool hasCamera READ hasCamera NOTIFY hasCameraChanged FINAL)
     Q_PROPERTY(bool localMuted READ localMuted WRITE setLocalMuted NOTIFY localMutedChanged FINAL)
+    Q_PROPERTY(QString identity READ identity WRITE setIdentity NOTIFY identityChanged FINAL)
 
 public:
     explicit ClientUser(QObject *parent = nullptr);
@@ -95,6 +96,9 @@ public:
     bool localMuted() const;
     void setLocalMuted(bool newLocalMuted);
 
+    QString identity() const;
+    void setIdentity(const QString &newIdentity);
+
 signals:
 
 
@@ -134,12 +138,15 @@ signals:
 
     void localMutedChanged();
 
+    void identityChanged();
+
 private:
 
     //info
     quint64 m_id=0;
     quint64 m_channelId=0;
     QString m_username;
+    QString m_identity;
     QString m_avatarPath;
     QString m_iconsId="";
     int m_volume = SPEAKER_DEFAULT_CHANNEL_USERS_VOLUME;
@@ -159,4 +166,5 @@ private:
     bool m_hasCamera = false;
     bool m_isAdmin = false;
     Status m_status= Status::Online;
+
 };

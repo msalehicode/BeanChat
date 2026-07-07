@@ -239,3 +239,16 @@ void ClientUser::setLocalMuted(bool newLocalMuted)
     m_localMuted = newLocalMuted;
     emit localMutedChanged();
 }
+
+QString ClientUser::identity() const
+{
+    return m_identity;
+}
+
+void ClientUser::setIdentity(const QString &newIdentity)
+{
+    if (m_identity == newIdentity)
+        return;
+    m_identity = newIdentity;
+    emit identityChanged();
+}

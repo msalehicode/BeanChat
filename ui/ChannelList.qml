@@ -364,7 +364,7 @@ Item
                                 Text
                                 {
                                     id: userName
-                                    text: "(" + modelData.userid + ") " + modelData.username
+                                    text: modelData.username
                                     font.pixelSize: 13
                                     color: "white"
                                     font.bold:modelData.userid === user.myId

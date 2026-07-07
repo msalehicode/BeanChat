@@ -138,7 +138,7 @@ Item
                     Text
                     {
                         color: "white"
-                        text: userId + " " + userName
+                        text: userName
                         anchors.verticalCenter: parent.verticalCenter
                     }
 

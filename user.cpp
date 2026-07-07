@@ -2,16 +2,38 @@
 
 User::User(ChannelModel *channelModel, ChatModel *chatModel,
            ParticipantModel* currentChannelParticipant, ConnectedUsersModel *connectedUsersModel, MyServersModel* myServersModel,
-           SoundManager* sounderManager, SettingsManager* settingsManager, ClientUserManager *clientuserManager,
+           SoundManager* sounderManager, SettingsManager* settingsManager,
+           ClientUserManager *clientuserManager, IdentityManager *identityManager,
            CameraCapture* cam, AudioCapture *mic, AudioSpeaker* speaker,
            QObject *parent)
     : QObject{parent}, m_channelModel(channelModel), m_chatModel(chatModel),
     m_currentChannelParticipant(currentChannelParticipant), m_connectedUsersModel(connectedUsersModel),
     m_myServersModel(myServersModel),
-    m_soundManager(sounderManager), m_settingsManager(settingsManager), m_clientUserManager(clientuserManager),
+    m_soundManager(sounderManager), m_settingsManager(settingsManager),
+    m_clientUserManager(clientuserManager), m_identityManager(identityManager),
     m_cam(cam), m_mic(mic), m_speaker(speaker)
 {
     qInfo() << "using BeanChatCommon version " << BeanChatCommon::Protocol::Version;
+
+
+    //read or generate identitiy if not exsit
+    if(!m_identityManager->load())
+    {
+        qFatal() << "failed to load/generate identity.";
+    }
+
+    qDebug() << "Loaded identities count= " << m_identityManager->identities().count();
+    qDebug() << "found identities:";
+    for(auto& identity : m_identityManager->identities())
+    {
+        qDebug() << "name= " <<identity.name  << " pub:" <<identity.publicKeyBase64() << " priv:" << identity.privateKeyBase64() << " craeted at=" <<identity.createdAt;
+    }
+    //notify QML identity loaded/changed
+    emit myIdentityChanged();
+
+
+
+
     qDebug() << "user starting..";
 
 
@@ -317,15 +339,6 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
 
 
 
-    //store in variables for different parts of app
-    m_serverIp=serverIp;
-    m_serverPort=serverPort;
-
-    //connect to TCP
-    socket.connectToHost(
-        m_serverIp,
-        m_serverPort);
-
 
     //update servername for QML
     if(serverId!=-1) //server exists just try to read server name from myServers table. otherwise when adding server would setServerName.
@@ -345,9 +358,23 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
         setMyUsername("BeanUser"+QString::number(QRandomGenerator::global()->bounded(100)));
     }
 
-    setIsConnectedToServer(true);
+
     login.username = myUsername();
-    login.identity = myIdentity();
+    if(!m_identityManager->currentIdentity())
+    {
+        qDebug() << "connect failed. no identity selected... create one";
+        if(m_identityManager->createIdentity("Default"+QString::number(QRandomGenerator::global()->bounded(100))))
+        {
+            qDebug()<<"we create one new identity for you";
+        }
+        else
+        {
+            qDebug() << "you didnt have an identity and sadly we couldn't create one for you!";
+            return;
+        }
+    }
+    login.publicKey = m_identityManager->currentIdentity()->publicKey;
+
     //system info.
     login.appVersion = myAppVersion();
     login.buildType = buildType();
@@ -359,6 +386,18 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
     Packet p;
     p.type = PacketType::LoginRequest;
     p.payload = PacketHelpers::pack(login);
+
+    //store in variables for different parts of app
+    m_serverIp=serverIp;
+    m_serverPort=serverPort;
+
+    //connect to TCP
+    socket.connectToHost(
+        m_serverIp,
+        m_serverPort);
+
+    setIsConnectedToServer(true);
+
 
     qDebug() << "sending login request.. will wait for response.. connecting server is "
              << m_serverIp << ":" << m_serverPort  << " name=" << myUsername() << "identity=" << myIdentity() ;
@@ -694,18 +733,18 @@ void User::newAvatarArrived(quint64 userId,
             return;
         }
 
+        //notify models to update..
+        ClientUser* user = m_clientUserManager->user(userId);
+        user->setAvatarPath(avatarPath);
 
         //check if its me, set this to my variable to later load different parts like modifyProfile, userStuff's avatar
-        if(userId == myId())
+        if(user->self())
         {
             setMyAvatarPath(avatarPath);
             emit notificationRequested(NotificationType::Success,
                                        "Avatar has updated successfully.");
         }
 
-        //notify models to update..
-        ClientUser* user = m_clientUserManager->user(userId);
-        user->setAvatarPath(avatarPath);
     }
     else
         qDebug() << "failed to save avatar for that user...";
@@ -756,6 +795,37 @@ void User::processPacket(const Packet& packet)
     switch(packet.type)
     {
 
+    case PacketType::LoginChallenge:
+    {
+        auto challange = PacketHelpers::unpack<LoginPacket>(packet.payload);
+        qDebug() << "chalange received. lets proof";
+        qDebug() << "Challenge received:" << packet.payload.toBase64();
+
+        const Identity* identity = m_identityManager->currentIdentity();
+
+        if(!identity)
+            return;
+
+        qDebug() << "Public:" << identity->publicKeyBase64();
+
+        LoginPacket proof;
+
+        // proof.payload = BeanChatCommon::Crypto::sign(identity->privateKey, packet.payload);
+        QByteArray signature = Crypto::sign(identity->privateKey, challange.payload);
+        proof.payload = signature;
+
+        qDebug() << "proofing Signature:" << signature.toBase64();
+
+        Packet p;
+        p.type = PacketType::LoginProof;
+        p.payload = PacketHelpers::pack(proof);
+
+        qDebug() << "sending proof to server.";
+        socket.write(p.serialize());
+
+        break;
+    }
+
     case PacketType::UserInfoChanged: //when users change their profile stuff, name,identtiy,avatar,...
     {
         auto info =
@@ -764,6 +834,23 @@ void User::processPacket(const Packet& packet)
 
         switch (info.updateType)
         {
+            case UpdateUserInfoType::Username:
+            {
+                qDebug() << "received a username changed";
+                ClientUser* user = m_clientUserManager->user(info.userId);
+                if(!user)
+                    return;
+
+                user->setUsername(info.payloadValue);
+                if(user->self())
+                {
+                    emit notificationRequested(NotificationType::Info,
+                                               "Your username has been updated.");
+                    setMyUsername(info.payloadValue);
+                }
+
+                break;
+            }
             case UpdateUserInfoType::Avatar:
             {
                 qDebug() << "received avatar: hash="  << info.payloadValue << " avatar size=" << info.payloadData.size();
@@ -1125,7 +1212,7 @@ void User::processPacket(const Packet& packet)
             PacketHelpers::unpack<UserConnectedPacket>(
                 packet.payload);
 
-        qDebug() << "User connected:" << u.username;
+        qDebug() << "User connected:" << u.username << " identity:" << u.identity;
 
         //add user.
         ClientUser* user = m_clientUserManager->createUser(u.id);
@@ -1148,6 +1235,7 @@ void User::processPacket(const Packet& packet)
 
 
             user->setUsername(u.username);
+            user->setIdentity(u.identity);
             user->setAvatarPath(avatarPath);
             // user->setIconsId(u.icon); //for now packet haven;t this
             user->setMuted(u.muted);
@@ -1279,9 +1367,6 @@ void User::processPacket(const Packet& packet)
 
 
 
-
-
-
         //channels
         m_channelModel->clear();        
         for(auto& c : state.channels)
@@ -1319,6 +1404,7 @@ void User::processPacket(const Packet& packet)
 
 
                 user->setUsername(u.username);
+                user->setIdentity(u.identity);
                 user->setAvatarPath(avatarPath);
                 // user->setIconsId(u.icon); //for now packet haven;t this
                 user->setMuted(u.muted);
@@ -1466,43 +1552,34 @@ QString User::appTitle() const
     return QString::fromUtf8(APP_TITLE) + " v" + QString::fromUtf8(APP_VERSION);
 }
 
-void User::updateMyProfile(const QString &username, const QString &identity, const QString &avatarPath)
+void User::updateMyProfile(const QString &username, const QString &avatarPath)
 {
-    qDebug()<< "update my profile username to " << username << " udentity to" << identity << "avatarpath to " << avatarPath;
+    qDebug()<< "update my profile username to " << username << "avatarpath to " << avatarPath;
 
     //save locally in files of myServers..
 
     //check is username changed?
     if(username != myUsername())
     {
-        //send request updaet to server.
-        UpdateUserInfoPacket uu;
+        if(isConnectedToServer())
+        {
+            //send request updaet to server.
+            UpdateUserInfoPacket uu;
 
-        uu.updateType = UpdateUserInfoType::Username;
-        uu.payloadValue = username;
+            uu.updateType = UpdateUserInfoType::Username;
+            uu.payloadValue = username;
 
-        Packet p;
-        p.type = PacketType::UpdateUserInfo;
-        p.payload = PacketHelpers::pack(uu);
-        socket.write(p.serialize());
+            Packet p;
+            p.type = PacketType::UpdateUserInfo;
+            p.payload = PacketHelpers::pack(uu);
+            socket.write(p.serialize());
+        }
+        else
+        {
+            //update local username for upcoming connections.
+            setMyUsername(username);
+        }
     }
-
-
-    //check is identity changed?
-    if(identity != myIdentity())
-    {
-        //send request updaet to server.
-        UpdateUserInfoPacket uu;
-        uu.updateType = UpdateUserInfoType::Identity;
-        uu.payloadValue = identity;
-
-        Packet p;
-        p.type = PacketType::UpdateUserInfo;
-        p.payload = PacketHelpers::pack(uu);
-
-        socket.write(p.serialize());
-    }
-
 
     if(!avatarPath.isEmpty())
     {
@@ -1805,6 +1882,12 @@ void User::sendVideoFrame(const QByteArray &videoData)
 #endif
 }
 
+void User::currentIdentityChangedTo(const QString &name)
+{
+    //update config
+    m_settingsManager->setValue(USER_SETTING_LAST_IDENTITY_NAME,name);
+}
+
 
 QString User::platformName()
 {
@@ -1841,7 +1924,7 @@ void User::resetVariables()
     m_connectedServerId_onDb=-1;
     m_serverIp.clear();
     m_serverPort=0;
-    setConnectionStatus(UserConnectionStatus::Disconnected);
+    // setConnectionStatus(UserConnectionStatus::Disconnected);
     setMyPing(-1);
     setMyVideoPacketLoss(0.0f);
     setMyVoicePacketLoss(0.0f);
@@ -1876,18 +1959,18 @@ void User::resetVariables()
         m_speaker->stop();
 }
 
-UserConnectionStatus User::connectionStatus() const
-{
-    return m_connectionStatus;
-}
+// UserConnectionStatus User::connectionStatus() const
+// {
+//     return m_connectionStatus;
+// }
 
-void User::setConnectionStatus(UserConnectionStatus newConnectionStatus)
-{
-    if (m_connectionStatus == newConnectionStatus)
-        return;
-    m_connectionStatus = newConnectionStatus;
-    emit connectionStatusChanged();
-}
+// void User::setConnectionStatus(UserConnectionStatus newConnectionStatus)
+// {
+//     if (m_connectionStatus == newConnectionStatus)
+//         return;
+//     m_connectionStatus = newConnectionStatus;
+//     emit connectionStatusChanged();
+// }
 
 float User::myVideoPacketLoss() const
 {
@@ -1960,6 +2043,18 @@ void User::initOrLoadSettings()
         m_settingsManager->setValue(MIC_SETTING_PTT_HOTKEY, MIC_DEFAULT_PTT_HOTKEY);
         m_mic->setPushToTalkKey(MIC_DEFAULT_PTT_HOTKEY);
     }
+
+
+    //user info
+    if(m_settingsManager->contains(USER_SETTING_USERNAME))
+        setMyUsername(m_settingsManager->value(USER_SETTING_USERNAME, "").toString());
+    else
+        qDebug()<< "username not found in config";
+
+    if(m_settingsManager->contains(USER_SETTING_LAST_IDENTITY_NAME))
+        m_identityManager->setCurrentIdentity(m_settingsManager->value(USER_SETTING_LAST_IDENTITY_NAME, "").toString());
+    else
+        qDebug()<< "identity last name not found in config";
 
 
 
@@ -2117,16 +2212,15 @@ void User::setIsChatOpen(bool newIsChatOpen)
     emit isChatOpenChanged();
 }
 
-QString User::myIdentity() const
+QString User::myIdentity()
 {
-    return m_myIdentity;
+    Identity* tempId = m_identityManager->currentIdentity();
+    return tempId ? tempId->publicKeyBase64() : QString();
 }
 
 void User::setMyIdentity(const QString &newIdentity)
 {
-    if (m_myIdentity == newIdentity)
-        return;
-    m_myIdentity = newIdentity;
+    //code here
     emit myIdentityChanged();
 }
 
@@ -2225,6 +2319,10 @@ void User::setMyUsername(const QString &newMyUsername)
 {
     if (m_myUsername == newMyUsername)
         return;
+
+    //update config username
+    m_settingsManager->setValue(USER_SETTING_USERNAME, newMyUsername);
+
     m_myUsername = newMyUsername;
     emit myUsernameChanged();
 }

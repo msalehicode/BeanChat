@@ -34,6 +34,7 @@
 #include "managers/soundmanager.h"
 #include "managers/settingsmanager.h"
 #include "managers/clientusermanager.h"
+#include "managers/identitymanager.h"
 #include "audio/audiomixer.h"
 
 
@@ -58,6 +59,7 @@ int main(int argc, char *argv[])
     SoundManager soundManager; //play effects
     SettingsManager settingsManager;
     ClientUserManager clientuserManager;
+    IdentityManager identityManager;
     AudioMixer mixer;
 
 
@@ -72,7 +74,7 @@ int main(int argc, char *argv[])
 
     //----------
     User usr(&channelModel, &chatModel, &participantsModel, &connectedUsersModel, &myServersModel,
-             &soundManager, &settingsManager, &clientuserManager,
+             &soundManager, &settingsManager, &clientuserManager, &identityManager,
              &cam, &audio, &speaker);
 
     //---------- camera connection ----------
@@ -224,6 +226,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("chatModel",&chatModel);
     engine.rootContext()->setContextProperty("soundManager",&soundManager);
     engine.rootContext()->setContextProperty("settings",&settingsManager);
+    engine.rootContext()->setContextProperty("identityManager",&identityManager);
 
 
     QObject::connect(

@@ -5,7 +5,7 @@ project(BeanChat VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(APP_CURRENT_VERSION "0.19.10")
+set(APP_CURRENT_VERSION "0.20.8")
 set(APP_TitleName "BeanChat")
 set(APP_OrganizationName "orgBeanChat")
 set(APP_ApplicationName "appBeanChat")
@@ -130,6 +130,7 @@ qt_add_qml_module(appBeanChat
         managers/settingsmanager.h managers/settingsmanager.cpp
         managers/avatarmanager.h managers/avatarmanager.cpp
         managers/clientusermanager.h managers/clientusermanager.cpp
+        managers/identitymanager.h managers/identitymanager.cpp
 
         #video
         video/videosink.h
@@ -155,6 +156,7 @@ qt_add_qml_module(appBeanChat
         models/connectedusersmodel.h models/connectedusersmodel.cpp
         models/myserversmodel.h models/myserversmodel.cpp
         models/clientuser.h models/clientuser.cpp
+        models/identity.h models/identity.cpp
 
 
     # icons
@@ -171,6 +173,8 @@ qt_add_qml_module(appBeanChat
     ui/icons/web.png
     ui/icons/arrow-right.png
     ui/icons/save.png
+    ui/icons/user-add-block.png ui/icons/user-is-blocked.png
+    ui/icons/user-add-friend.png ui/icons/user-is-friend.png
     ui/icons/endcall.png ui/icons/endcall-red.png
     ui/icons/camera.png ui/icons/camera-closed.png ui/icons/camera-red.png
     ui/icons/disconnect.png ui/icons/disconnect-red.png
@@ -179,6 +183,8 @@ qt_add_qml_module(appBeanChat
     ui/icons/screen.png ui/icons/screen-closed.png ui/icons/screen-red.png
     ui/icons/signal.png ui/icons/signal-green.png ui/icons/signal-orange.png ui/icons/signal-red.png ui/icons/signal-yellow.png
     ui/icons/os/android.png ui/icons/os/ios.png ui/icons/os/linux.png ui/icons/os/macos.png ui/icons/os/windows.png
+    QML_FILES ui/popups/GetValuePopup.qml
+
 )
 
 add_subdirectory(
@@ -262,8 +268,6 @@ target_compile_definitions(appBeanChat PRIVATE
 
     #user configs
     USER_DEFAULT_SOUNDEFFECTS_VOLUME=0.5
-    USER_DEFAULT_USERNAME="beanChatUser"
-    USER_DEFAULT_IDENTITY="beanChatIdentity"
     USER_DEFAULT_SERVER_IP=""
     USER_DEFAULT_SERVER_PORT=9987
     USER_DEFAULT_SERVER_PORT_STR="9987" #this also hardcoded in QML's add server popup
@@ -315,7 +319,6 @@ target_compile_definitions(appBeanChat PRIVATE
 )
 
 
-
 # app default configs for devices such as mic,camera,speaker
 target_compile_definitions(appBeanChat PRIVATE
 
@@ -345,6 +348,10 @@ target_compile_definitions(appBeanChat PRIVATE
     SPEAKER_SETTING_DEVICE="AudioOutput/Device"
     SPEAKER_SETTING_EFFECTS_VOLUME="AudioOutput/EffectsVolume"
 
+
+    #user info
+    USER_SETTING_USERNAME="User/Username"
+    USER_SETTING_LAST_IDENTITY_NAME="User/LastIdentity"
 
     #camera input default config
     CAMERA_DEFAULT_DEVICE_INDEX=0

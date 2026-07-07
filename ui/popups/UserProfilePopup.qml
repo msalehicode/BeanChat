@@ -15,6 +15,7 @@ Popup
     property string cachedName: ""
     property string cachedAvatar: ""
     property int cachedId: 0
+    property string cachedIdentity: ""
 
     onClientUserChanged:
     {
@@ -24,6 +25,7 @@ Popup
         cachedName = clientUser.username
         cachedAvatar = clientUser.avatarPath
         cachedId = clientUser.id
+        cachedIdentity= clientUser.identity
     }
 
     onClosed:
@@ -31,10 +33,11 @@ Popup
         cachedAvatar=""
         cachedName=""
         cachedId=-1
+        cachedIdentity=""
     }
 
     width: 380
-    height: 490
+    height: 600
 
     modal: true
     focus: true
@@ -56,7 +59,7 @@ Popup
 
         anchors.top: parent.top
         width: parent.width
-        height: 110
+        height: 80
 
         radius: 14
         color: "#5865F2"
@@ -137,7 +140,7 @@ Popup
         }
     }
 
-    Column
+    ScrollView
     {
         anchors
         {
@@ -146,242 +149,389 @@ Popup
 
             left: parent.left
             right: parent.right
+            bottom: parent.bottom
 
             margins: 18
         }
-
-        spacing: 14
-
-        Text
+        clip:true
+        ScrollBar.vertical.policy: ScrollBar.AsNeeded
+        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+        Column
         {
             width: parent.width
+            spacing: 14
 
-            horizontalAlignment: Text.AlignHCenter
-
-            text: clientUser
-                  ? clientUser.username
-                  : cachedId == -1
-                    ? "Offline User"
-                    : cachedName
-
-            color: "white"
-
-            font.pixelSize: 24
-            font.bold: true
-        }
-
-        Text
-        {
-            width: parent.width
-
-            horizontalAlignment: Text.AlignHCenter
-
-            text: "ID: " + (clientUser ? clientUser.id : cachedId)
-
-            color: "#B5BAC1"
-
-            font.pixelSize: 13
-        }
-
-        Rectangle
-        {
-            width: parent.width
-            height: 1
-            color: "#404249"
-        }
-
-        Rectangle
-        {
-            width: parent.width
-            radius: 8
-            color: "#1E1F22"
-
-            implicitHeight: infoColumn.implicitHeight + 20
-
-            Column
+            Text
             {
-                id: infoColumn
+                width: parent.width
 
-                anchors.fill: parent
-                anchors.margins: 10
+                horizontalAlignment: Text.AlignHCenter
 
-                spacing: 8
+                text: clientUser
+                      ? clientUser.username
+                      : cachedId == -1
+                        ? "Offline User"
+                        : cachedName
 
-                Text
+                color: "white"
+
+                font.pixelSize: 24
+                font.bold: true
+            }
+
+            Text
+            {
+                width: parent.width
+
+                horizontalAlignment: Text.AlignHCenter
+
+                text: "About me... some description text..."
+
+                color: "#B5BAC1"
+
+                font.pixelSize: 13
+            }
+
+            Rectangle
+            {
+                width: parent.width
+                height: 1
+                color: "#404249"
+            }
+
+            Rectangle
+            {
+                width: parent.width
+                radius: 8
+                color: "#1E1F22"
+
+                implicitHeight: infoColumn.implicitHeight + 20
+
+                Column
                 {
-                    text: "STATUS"
-                    color: "#949BA4"
-                    font.pixelSize: 11
-                    font.bold: true
-                }
+                    id: infoColumn
 
-                Text
-                {
-                    text: UiHelpers.statusText(
-                              clientUser
-                              ? clientUser.status
-                              : ClientUser.Offline)
+                    anchors.fill: parent
+                    anchors.margins: 10
 
-                    color: UiHelpers.statusColor(
-                               clientUser
-                               ? clientUser.status
-                               : ClientUser.Offline)
+                    spacing: 8
 
-                    font.pixelSize: 15
-                    font.bold: true
-                }
-
-                Text
-                {
-                    text: "CURRENT CHANNEL"
-                    color: "#949BA4"
-                    visible: clientUser ? true : false
-                    font.pixelSize: 11
-                    font.bold: true
-                }
-                Rectangle
-                {
-                    width: parent.width
-                    height: 38
-                    radius: 10
-                    color: "#2B2D31"
-                    visible: clientUser ? true : false
                     Text
                     {
-                        id:channelName
-                        text: clientUser
-                              ? (clientUser.channelId===0? "None" : (user.getChannelName(clientUser.channelId)))
-                              : "Offline"
-                        anchors
-                        {
-                            left:parent.left
-                            leftMargin:10
-                            verticalCenter: parent.verticalCenter
-                        }
-
-                        color: "white"
-                        font.pixelSize: 15
-                        width: parent.width-leftMargin
-                        elide: Text.ElideRight
+                        text: "ID (" + (clientUser ? clientUser.id : cachedId) +")"
+                        color: "#949BA4"
+                        font.pixelSize: 11
+                        font.bold: true
                     }
+
                     Rectangle
                     {
-                        width: (parent.width-10)/3
+                        width: parent.width
                         height: 38
-                        visible: clientUser ? clientUser.channelId>0 && clientUser.self!==true: false //don't show join button for ourself OR channelid=0 means not in anychannel yet.
-                        anchors.right: parent.right
-                        anchors.verticalCenter: parent.verticalCenter
-                        radius: 8
-
-                        color: "#5865F2"
-
-                        Text
+                        radius: 10
+                        color: "#2B2D31"
+                        visible: clientUser ? true : false
+                        clip: true
+                        Flickable
                         {
-                            anchors.centerIn: parent
-                            text: "Join"
-                            color: "white"
-                            font.bold: true
-                        }
-
-                        MouseArea
-                        {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-
-                            onClicked:
+                            anchors
                             {
-                                if(clientUser)
-                                {
-                                    var channelId = clientUser.channelId;
-                                    console.log("try to join channel id:" , channelId, " via join button from profile.")
-                                    if(user.isChannelLocked(channelId))
-                                    {
-                                        //show popup enter password
-                                        channelPasswordPopup.channelId=channelId;
-                                        channelPasswordPopup.channelName=channelName.text;
-                                        channelPasswordPopup.open()
-                                    }
-                                    else
-                                        user.joinChannel(channelId,"") //non locked passwords default password is empty ""
+                                left: parent.left
+                                right: parent.right
+                                verticalCenter: parent.verticalCenter
+                                leftMargin: 5
+                            }
 
-                                    //close this popup
-                                    close()
-                                }
+                            height: 24
 
+                            contentWidth: identityText.contentWidth
+                            contentHeight: identityText.contentHeight
+
+                            clip: true
+                            flickableDirection: Flickable.HorizontalFlick
+
+                            TextEdit
+                            {
+                                id: identityText
+
+                                text: clientUser ? clientUser.identity : cachedIdentity
+
+                                readOnly: true
+
+                                color: "white"
+                                font.pixelSize: 10
+
+                                wrapMode: TextEdit.NoWrap
+
+                                selectByMouse: true
                             }
                         }
                     }
 
 
-                }
+                   Item
+                   {
+                       width: parent.width
+                       height: 60
+                       Column
+                       {
+                           Text
+                           {
+                               text: "STATUS"
+                               color: "#949BA4"
+                               font.pixelSize: 11
+                               font.bold: true
+                           }
+
+                           Text
+                           {
+                               text: UiHelpers.statusText(
+                                         clientUser
+                                         ? clientUser.status
+                                         : ClientUser.Offline)
+
+                               color: UiHelpers.statusColor(
+                                          clientUser
+                                          ? clientUser.status
+                                          : ClientUser.Offline)
+
+                               font.pixelSize: 15
+                               font.bold: true
+                           }
+                       }
+
+                       Rectangle
+                       {
+                           anchors.right: parent.right
+                           anchors.verticalCenter: parent.verticalCenter
+                           color: "transparent"
+                           width: 60
+                           height: 50
+                           Row
+                           {
+                               spacing: 10
+                               Image
+                               {
+                                   // color:"green"
+                                   width: 25
+                                   height: width
+                                   source: "../icons/user-add-friend.png"
+                                   // radius: width
+                                   MouseArea
+                                   {
+                                       anchors.fill: parent
+                                       cursorShape: Qt.PointingHandCursor
+                                       onClicked: console.log("add/remove friend")
+                                   }
+                               }
+                               Image
+                               {
+                                   // color:"red"
+                                   width: 25
+                                   height: width
+                                   // radius: width
+                                   source: "../icons/user-add-block.png"
+                                   MouseArea
+                                   {
+                                       anchors.fill: parent
+                                       cursorShape: Qt.PointingHandCursor
+                                       onClicked: console.log("block him")
+                                   }
+                               }
+                           }
+                       }
 
 
+                   }
 
-            }
-        }
-
-        Row
-        {
-            width: parent.width
-            spacing: 10
-
-            Rectangle
-            {
-                width: (parent.width-10)/2
-                height: 38
-
-                radius: 8
-
-                color: "#5865F2"
-
-                Text
-                {
-                    anchors.centerIn: parent
-                    text: "Message"
-                    color: "white"
-                    font.bold: true
-                }
-
-                MouseArea
-                {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-
-                    onClicked:
+                    Text
                     {
-                        // TODO
+                        text: "CURRENT CHANNEL"
+                        color: "#949BA4"
+                        visible: clientUser ? true : false
+                        font.pixelSize: 11
+                        font.bold: true
+                    }
+                    Rectangle
+                    {
+                        width: parent.width
+                        height: 38
+                        radius: 10
+                        color: "#2B2D31"
+                        visible: clientUser ? true : false
+                        Text
+                        {
+                            id:channelName
+                            text: clientUser
+                                  ? (clientUser.channelId===0? "None" : (user.getChannelName(clientUser.channelId)))
+                                  : "Offline"
+                            anchors
+                            {
+                                left:parent.left
+                                leftMargin:10
+                                verticalCenter: parent.verticalCenter
+                            }
+
+                            color: "white"
+                            font.pixelSize: 15
+                            width: parent.width-leftMargin
+                            elide: Text.ElideRight
+                        }
+                        Rectangle
+                        {
+                            width: (parent.width-10)/3
+                            height: 38
+                            visible: clientUser ? clientUser.channelId>0 && clientUser.self!==true: false //don't show join button for ourself OR channelid=0 means not in anychannel yet.
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            radius: 8
+
+                            color: "#5865F2"
+
+                            Text
+                            {
+                                anchors.centerIn: parent
+                                text: "Join"
+                                color: "white"
+                                font.bold: true
+                            }
+
+                            MouseArea
+                            {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+
+                                onClicked:
+                                {
+                                    if(clientUser)
+                                    {
+                                        var channelId = clientUser.channelId;
+                                        console.log("try to join channel id:" , channelId, " via join button from profile.")
+                                        if(user.isChannelLocked(channelId))
+                                        {
+                                            //show popup enter password
+                                            channelPasswordPopup.channelId=channelId;
+                                            channelPasswordPopup.channelName=channelName.text;
+                                            channelPasswordPopup.open()
+                                        }
+                                        else
+                                            user.joinChannel(channelId,"") //non locked passwords default password is empty ""
+
+                                        //close this popup
+                                        close()
+                                    }
+
+                                }
+                            }
+                        }
+
+
+                    }
+
+
+
+                    Text
+                    {
+                        text: "APP VERSION"
+                        color: "#949BA4"
+                        visible: clientUser ? true : false
+                        font.pixelSize: 11
+                        font.bold: true
+                    }
+                    Rectangle
+                    {
+                        width: parent.width
+                        height: 38
+                        radius: 10
+                        color: "#2B2D31"
+                        visible: clientUser ? true : false
+                        Text
+                        {
+                            text: clientUser
+                                  ? (clientUser.appVersion + " on " + clientUser.osName)
+                                  : "version"
+                            anchors
+                            {
+                                left:parent.left
+                                leftMargin:10
+                                verticalCenter: parent.verticalCenter
+                            }
+
+                            color: "white"
+                            font.pixelSize: 15
+                            width: parent.width-leftMargin
+                            elide: Text.ElideRight
+                        }
+                    }
+
+                }
+            }
+
+            Row
+            {
+                width: parent.width
+                spacing: 10
+
+                Rectangle
+                {
+                    width: (parent.width-10)/2
+                    height: 38
+
+                    radius: 8
+
+                    color: "#5865F2"
+
+                    Text
+                    {
+                        anchors.centerIn: parent
+                        text: "Send Message"
+                        color: "white"
+                        font.bold: true
+                    }
+
+                    MouseArea
+                    {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+
+                        onClicked:
+                        {
+                            // TODO
+                        }
+                    }
+                }
+
+                Rectangle
+                {
+                    width: (parent.width-10)/2
+                    height: 38
+
+                    radius: 8
+
+                    color: "#3A3C42"
+
+                    Text
+                    {
+                        anchors.centerIn: parent
+                        text: "Call"
+                        color: "white"
+                        font.bold: true
+                    }
+
+                    MouseArea
+                    {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+
+                        onClicked:
+                        {
+                            // TODO
+                        }
                     }
                 }
             }
 
-            Rectangle
-            {
-                width: (parent.width-10)/2
-                height: 38
-
-                radius: 8
-
-                color: "#3A3C42"
-
-                Text
-                {
-                    anchors.centerIn: parent
-                    text: "Mention"
-                    color: "white"
-                    font.bold: true
-                }
-
-                MouseArea
-                {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-
-                    onClicked:
-                    {
-                        // TODO
-                    }
-                }
-            }
         }
+
     }
 }

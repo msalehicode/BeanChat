@@ -397,6 +397,11 @@ Item {
         id: profilePopup
     }
 
+    GetValuePopup
+    {
+        id:getValuePopup
+    }
+
 
 
     Connections

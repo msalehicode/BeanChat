@@ -45,22 +45,24 @@ using namespace BeanChatCommon;
 
 #include "managers/avatarmanager.h"
 #include "managers/clientusermanager.h"
+#include "managers/identitymanager.h"
 
+#include "models/identity.h"
 #include <QStandardPaths>
 #define SAVE_AVATAR_PATH QStandardPaths::writableLocation(QStandardPaths::CacheLocation)+"/servers/"
 
 
 
-enum class UserConnectionStatus
-{
-    Unknown,
-    Connecting,
-    Connected,
-    ConnectionLost,
-    Rejected,
-    Error,
-    Disconnected
-};
+// enum class UserConnectionStatus
+// {
+//     Unknown,
+//     Connecting,
+//     Connected,
+//     ConnectionLost,
+//     Rejected,
+//     Error,
+//     Disconnected
+// };
 
 
 //this should matches with ui/constants/NotificationTypes.qml
@@ -109,7 +111,8 @@ class User : public QObject
 public:
     explicit User(ChannelModel *channelModel,ChatModel* chatModel,
                   ParticipantModel* currentChannelParticipant,ConnectedUsersModel* connectedUsersModel, MyServersModel* myServersModel,
-                  SoundManager* sounderManager, SettingsManager* settingsManager, ClientUserManager* clientuserManager,
+                  SoundManager* sounderManager, SettingsManager* settingsManager,
+                  ClientUserManager* clientuserManager, IdentityManager* identityManager,
                   CameraCapture* cam, AudioCapture* mic, AudioSpeaker* speaker,
                   QObject *parent = nullptr);
 
@@ -170,7 +173,7 @@ public:
     bool isConnectedToServer() const;
     void setIsConnectedToServer(bool newConnectedToServer);
 
-    QString myIdentity() const;
+    QString myIdentity();
     void setMyIdentity(const QString &newIdentity);
 
     bool isChatOpen() const;
@@ -193,8 +196,8 @@ public:
     void initOrLoadSettings();
     QString myAppVersion() const;
     QString buildType() const;
-    UserConnectionStatus connectionStatus() const;
-    void setConnectionStatus(UserConnectionStatus newConnectionStatus);
+    // UserConnectionStatus connectionStatus() const;
+    // void setConnectionStatus(UserConnectionStatus newConnectionStatus);
 
     bool myChannelSavesChat() const;
     void setMyChannelSavesChat(bool newMyChannelSavesChat);
@@ -203,7 +206,7 @@ public:
     QString appTitle() const;
 
 
-    Q_INVOKABLE void updateMyProfile(const QString &username, const QString &identity, const QString &avatarPath="");
+    Q_INVOKABLE void updateMyProfile(const QString &username, const QString &avatarPath="");
     QString checkAvatar(quint64 userId, const QString& avatarHash, bool askForAvatar=true); //if file avatar (hash.extention) found in server's directory returns QML like path otherwise would reutrn null
 
 
@@ -273,7 +276,7 @@ signals:
 
     void myVideoPacketLossChanged();
 
-    void connectionStatusChanged();
+    // void connectionStatusChanged();
 
     void myChannelSavesChatChanged();
 
@@ -309,6 +312,7 @@ public slots:
     void onUdpReadyRead();
     void sendVideoFrame(const QByteArray& videoData);
 
+    void currentIdentityChangedTo(const QString& name);
 private:
     QString platformName();
     void resetVariables(); //when wanna disconnect and get ready for next connection
@@ -320,7 +324,7 @@ private:
     SettingsManager* m_settingsManager;
     ClientUserManager* m_clientUserManager;
     OpusCodec m_opus;
-
+    IdentityManager* m_identityManager;
 
     //avatar
     AvatarManager m_avatarManager;
@@ -328,8 +332,7 @@ private:
 
 
     //user can modify
-    QString m_myUsername = USER_DEFAULT_USERNAME;
-    QString m_myIdentity = USER_DEFAULT_IDENTITY;
+    QString m_myUsername;
     QString m_myAvatarPath = ""; //used to set when server connects to server, server responses a avatarHash and we know it ours so set it here to load in different parts of app, such as modifyProfile, userStuff's avatar
 
     //user cant modify, would receive from target server
@@ -339,7 +342,7 @@ private:
     QString m_myChannelName = ""; //current channel
     bool m_myChannelSavesChat=false;
     QString m_myServerName= ""; //current server connected to (name that saved by user inside myServers, can be modified, only shown to this user)
-    UserConnectionStatus m_connectionStatus=UserConnectionStatus::Unknown;
+    // UserConnectionStatus m_connectionStatus=UserConnectionStatus::Unknown;
     int m_connectedServerId_onDb=-1; //(serverDbIndex) to use for path of avatars. e.g path/to/Cached/avatars/0  <- this 0 is server id (directory to hold that server user's avatar files)
 
 
@@ -416,7 +419,7 @@ private:
     Q_PROPERTY(int myPing READ myPing WRITE setMyPing NOTIFY myPingChanged FINAL)
     Q_PROPERTY(float myVoicePacketLoss READ myVoicePacketLoss WRITE setMyVoicePacketLoss NOTIFY myVoicePacketLossChanged FINAL)
     Q_PROPERTY(float myVideoPacketLoss READ myVideoPacketLoss WRITE setMyVideoPacketLoss NOTIFY myVideoPacketLossChanged FINAL)
-    Q_PROPERTY(UserConnectionStatus connectionStatus READ connectionStatus WRITE setConnectionStatus NOTIFY connectionStatusChanged FINAL)
+    // Q_PROPERTY(UserConnectionStatus connectionStatus READ connectionStatus WRITE setConnectionStatus NOTIFY connectionStatusChanged FINAL)
     Q_PROPERTY(bool myChannelSavesChat READ myChannelSavesChat WRITE setMyChannelSavesChat NOTIFY myChannelSavesChatChanged FINAL)
     Q_PROPERTY(int connectedServerId READ connectedServerId WRITE setConnectedServerId NOTIFY connectedServerIdChanged FINAL) //using m_connectedServerId_onDb
     Q_PROPERTY(QString myAvatarPath READ myAvatarPath WRITE setMyAvatarPath NOTIFY myAvatarPathChanged FINAL)

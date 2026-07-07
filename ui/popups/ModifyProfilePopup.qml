@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
 import QtQuick.Dialogs
-
+import "../settingPages"
 Popup
 {
     id: profilePopup
@@ -302,29 +302,136 @@ Popup
 
                 Label
                 {
-                    text: "IDENTITY"
+                    text: !user.isConnectedToServer ? "IDENTITY" : "IDENTITY (CANNOT MODIFY WHEN YOU ARE CONNECTED)"
                     color: "#B5BAC1"
                     font.bold: true
                 }
-
-                TextField
+                SettingCombo
                 {
-                    id: identityField
-
-                    Layout.fillWidth: true
-
-                    placeholderText: "Identity"
-                    placeholderTextColor: "white"
-                    text:user.myIdentity
-
-                    color: "white"
-
-                    background: Rectangle
+                    id:identityCombobox
+                    width: parent.width
+                    height: parent.width
+                    model: identityManager.identityNames
+                    currentIndex: identityManager.currentIdentityIndex
+                    enabled: !user.isConnectedToServer
+                    onActivated:
                     {
-                        radius: 6
-                        color: "#1E1F22"
+                        identityManager.setCurrentIdentityIndex(currentIndex)
+                        // settings.setValue
+                        // (
+                        //     "IDENTITITITITI",
+                        //     speaker.audioOutputId(currentIndex)
+                        // )
                     }
                 }
+                Row
+                {
+                    id:rowManagerIdentities
+                    visible: identityCombobox.enabled
+                    width: 70
+                    height: parent.height
+                    Layout.alignment: Qt.AlignRight
+                    Button
+                    {
+                        id: deleteIdentity
+                        text: "Delete Current Identity"
+                        onClicked: identityManager.removeCurrentIdentity()
+                        background: Rectangle
+                        {
+                            radius: 4
+                            color: deleteIdentity.down
+                                   ? "darkred"
+                                   : "red"
+
+                            border.width: 1
+                            border.color: "#555"
+                        }
+
+                        contentItem: Text
+                        {
+                            text: parent.text
+                            color: "white"
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+                    Button
+                    {
+                        id: renameIdentity
+                        text: "Rename Identity"
+                        onClicked:
+                        {
+                            getValuePopup.titleText="Rename Identity"
+                            getValuePopup.fieldTitle="NEW NAME"
+                            getValuePopup.descriptionText="enter a new name for "+ identityManager.identityNames[identityCombobox.currentIndex]
+                            getValuePopup.valueFieldPlaceHolder="enter a new name"
+                            getValuePopup.currentValue=identityManager.identityNames[identityCombobox.currentIndex]
+                            getValuePopup.acceptButtonText="Rename"
+                            getValuePopup.onOk = function(identityName)
+                            {
+                                identityManager.renameCurrentIdentity(identityName)
+                            }
+                            getValuePopup.open()
+                        }
+
+                        background: Rectangle
+                        {
+                            radius: 4
+                            color: renameIdentity.down
+                                   ? "#3F4147"
+                                   : "transparent"
+
+                            border.width: 1
+                            border.color: "#555"
+                        }
+
+                        contentItem: Text
+                        {
+                            text: parent.text
+                            color: "white"
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+                    Button
+                    {
+                        id: createIdentity
+                        text: "Create Identity"
+                        onClicked:
+                        {
+                            getValuePopup.titleText="Create Identity"
+                            getValuePopup.fieldTitle="NAME"
+                            getValuePopup.descriptionText="enter a name for new identity"
+                            getValuePopup.valueFieldPlaceHolder="enter a name unique name"
+                            getValuePopup.acceptButtonText="Create"
+                            getValuePopup.onOk  = function(identityName)
+                            {
+                                identityManager.createIdentity(identityName)
+                            }
+                            getValuePopup.open()
+                        }
+
+                        background: Rectangle
+                        {
+                            radius: 4
+                            color: createIdentity.down
+                                   ? "#3F4147"
+                                   : "transparent"
+
+                            border.width: 1
+                            border.color: "#555"
+                        }
+
+                        contentItem: Text
+                        {
+                            text: parent.text
+                            color: "white"
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+                }
+
 
 
                 Item
@@ -407,14 +514,9 @@ Popup
 
 
                         if(profilePopup.imageHasChanged)
-                            user.updateMyProfile(
-                                        usernameField.text,
-                                        identityField.text,
-                                        profilePopup.avatarSource)
+                            user.updateMyProfile(usernameField.text, profilePopup.avatarSource)
                         else
-                            user.updateMyProfile(
-                                        usernameField.text,
-                                        identityField.text)
+                            user.updateMyProfile(usernameField.text)
 
                         //reset for later use.
                         profilePopup.imageHasChanged = false
