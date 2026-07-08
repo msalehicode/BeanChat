@@ -1237,7 +1237,11 @@ void User::processPacket(const Packet& packet)
         if(user)
         {
             QString avatarPath = checkAvatar(u.id, u.avatarHash);
-
+            if(avatarPath.isEmpty())
+            {
+                //send request to server for all not found avatars
+                askForNotFoundAvatars();
+            }
             qDebug() << "add user to connected list: " <<  u.appVersion << "-"
                      << u.buildType << "-" << u.osName
                      << "-" << u.osVersion << "- avatar hash= " << u.avatarHash
