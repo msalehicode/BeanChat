@@ -404,11 +404,6 @@ if(WIN32)
 
     set(DEPLOY_DIR "${CMAKE_BINARY_DIR}/deploy/${APP_TitleName}-${APP_CURRENT_VERSION}-Windows")
 
-    install(FILES
-        $<TARGET_FILE:OpenSSL::Crypto>
-        DESTINATION ${CMAKE_INSTALL_BINDIR}
-    )
-
     add_custom_command(TARGET appBeanChat POST_BUILD
 
         # recreate deployment directory
@@ -454,13 +449,12 @@ if(WIN32)
             "C:/Libraries/rnnoise/bin/librnnoise-0.dll"
             "${DEPLOY_DIR}"
 
-        COMMENT "Deploying BeanChat..."
-
-
         #crypto
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                $<TARGET_FILE:OpenSSL::Crypto>
-                "${DEPLOY_DIR}"
+            "C:/msys64/mingw64/bin/libcrypto-3-x64.dll"
+            "${DEPLOY_DIR}"
+
+        COMMENT "Deploying BeanChat..."
     )
 
 endif()
