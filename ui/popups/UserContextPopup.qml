@@ -70,12 +70,17 @@ Popup {
                    ? root.clientUser.volume
                    : 100
 
-            onMoved: {
+            onMoved:
+            {
                 if (root.clientUser)
+                {
                     root.clientUser.volume = value
+                    relationshipManager.setVoiceVolume(root.clientUser.identity, value)
+                }
             }
 
-            background: Rectangle {
+            background: Rectangle
+            {
                 x: volumeSlider.leftPadding
                 y: volumeSlider.topPadding + volumeSlider.availableHeight / 2 - height / 2
 
@@ -145,13 +150,16 @@ Popup {
 
             text: root.clientUser &&
                   root.clientUser.localMuted
-                  ? "Unmute for me"
-                  : "Mute for me"
+                  ? "Unmute"
+                  : "Mute"
 
-            onClicked: {
+            onClicked:
+            {
                 if (root.clientUser)
-                    root.clientUser.localMuted =
-                            !root.clientUser.localMuted
+                {
+                    root.clientUser.localMuted = !root.clientUser.localMuted
+                    relationshipManager.setMuted(root.clientUser.identity, root.clientUser.localMuted)
+                }
             }
 
             contentItem: Text {

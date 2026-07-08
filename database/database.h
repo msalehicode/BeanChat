@@ -12,7 +12,7 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <QDebug>
-
+#include "../models/userrelationship.h"
 
 class Database : public QObject
 {
@@ -56,6 +56,13 @@ public:
 
     // Generic query
     QVariantList query(const QString &sql);
+
+
+
+    //user relation
+    bool saveUserRelationship(const UserRelationship &relationship);
+    bool removeUserRelationship(const QString &identity);
+    QList<UserRelationship> loadUserRelationships();
 
 private:
     QSqlDatabase m_db;

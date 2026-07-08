@@ -28,6 +28,9 @@ QVariant ParticipantModel::data(const QModelIndex &index, int role) const
     case UserAvatarPathRole:
         return entry.user->avatarPath();
 
+    case RelationRole:
+        return entry.user->relationship();
+
     case IsTalkingRole:
         return entry.user->isTalking();
 
@@ -60,6 +63,7 @@ QHash<int, QByteArray> ParticipantModel::roleNames() const
         {UserAvatarPathRole, "avatarPath"},
         {IsTalkingRole,"isTalking"},
         {IsCameraOpenRole,"isCameraOpen"},
+        {RelationRole, "relation"},
         {VideoSinkRole,"videoSink"},
         {UserId,"userId"},
         {IsLocalMuteRole, "isLocalMuted"},
@@ -234,6 +238,17 @@ void ParticipantModel::observeUser(ClientUser *user)
 
                 if (row >= 0)
                     emit dataChanged(index(row), index(row), { UserId });
+            });
+
+    connect(user,
+            &ClientUser::relationshipChanged,
+            this,
+            [this, user]()
+            {
+                int row = findRow(user);
+
+                if (row >= 0)
+                    emit dataChanged(index(row), index(row), { RelationRole });
             });
 
 

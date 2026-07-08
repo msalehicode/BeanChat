@@ -163,6 +163,7 @@ Item
 
                 Rectangle
                 {
+                    id:userInfo
                     width: 40
                     height: 40
                     radius: 20
@@ -182,7 +183,8 @@ Item
                         id:userAvatar
                         anchors.fill: parent
                         visible: model.senderAvatarPath.length>0
-                        source: model.senderAvatarPath
+                        source: model.senderRelation===Relationship.Blocked? "" //dont show blocked user's avatar
+                                        : model.senderAvatarPath
                     }
                     MouseArea
                     {
@@ -234,8 +236,8 @@ Item
 
                         Text
                         {
-                            text: model.senderName + "("+model.senderId+")"
-                            color: "white"
+                            text: model.senderName
+                            color: UiHelpers.relationColor(model.senderRelation)
                             font.bold: true
                             font.pixelSize: 15
                             MouseArea
@@ -261,92 +263,145 @@ Item
                     }
 
 
-                    Item
+                    Column
                     {
-                        visible: delegatedItem.isImage
-
-                        width: 300
-                        height: delegatedItem.isImage ? 150 : 0
-
-                        Image
+                        id:messageContentBase
+                        width: parent.width
+                        height: visible? implicitHeight : 0
+                        visible: model.senderRelation === Relationship.Blocked
+                                 && !blockedOverlay.revealed? false : true
+                        Item
                         {
-                            id: chatImage
+                            visible: delegatedItem.isImage
 
-                            anchors.fill: parent
+                            width: 300
+                            height: delegatedItem.isImage ? 150 : 0
 
-                            source: delegatedItem.isImage ? model.textMessage : ""
+                            Image
+                            {
+                                id: chatImage
 
-                            fillMode: Image.PreserveAspectFit
-                            cache: true
+                                anchors.fill: parent
+
+                                source: delegatedItem.isImage ? model.textMessage : ""
+
+                                fillMode: Image.PreserveAspectFit
+                                cache: true
+
+                                MouseArea
+                                {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+
+                                    onClicked:
+                                    {
+                                        if (chatImage.status === Image.Ready)
+                                        {
+                                            showImagePopup.imageSource = model.textMessage
+                                            showImagePopup.open()
+                                        }
+                                    }
+                                }
+                            }
+
+
+                            BusyIndicator
+                            {
+                                anchors.centerIn: parent
+                                running: chatImage.status === Image.Loading
+                                visible: running
+                            }
+                        }
+
+                        TextEdit
+                        {
+                            id: messageText
+
+                            textFormat: TextEdit.RichText
+                            readOnly: true
+                            selectByMouse: true
+
+                            font.pixelSize: !delegatedItem.isImage? 14 : 7
+                            width: parent.width
+                            wrapMode: TextArea.Wrap
+                            color: "#DBDEE1"
+                            text: delegatedItem.makeLinksClickable(model.textMessage)
+
+                            //make sure show end of long messages
+                            onContentHeightChanged:
+                            {
+                                if (chatView.atYEnd)
+                                    Qt.callLater(chatView.positionViewAtEnd)
+                            }
+
+                            cursorDelegate: null
 
                             MouseArea
                             {
                                 anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
+                                acceptedButtons: Qt.NoButton
 
-                                onClicked:
-                                {
-                                    if (chatImage.status === Image.Ready)
-                                    {
-                                        showImagePopup.imageSource = model.textMessage
-                                        showImagePopup.open()
-                                    }
-                                }
+                                cursorShape: messageText.hoveredLink.length > 0
+                                             ? Qt.PointingHandCursor
+                                             : Qt.IBeamCursor
+
+                                hoverEnabled: true
                             }
-                        }
 
-                        BusyIndicator
-                        {
-                            anchors.centerIn: parent
-                            running: chatImage.status === Image.Loading
-                            visible: running
+                            onLinkActivated: function(link)
+                            {
+                                Qt.openUrlExternally(link)
+                            }
                         }
                     }
 
-                    TextEdit
+                    // Overlay
+                    Rectangle
                     {
-                        id: messageText
+                        id: blockedOverlay
 
-                        textFormat: TextEdit.RichText
-                        readOnly: true
-                        selectByMouse: true
-
-                        font.pixelSize: !delegatedItem.isImage? 14 : 7
                         width: parent.width
-                        wrapMode: TextArea.Wrap
-                        color: "#DBDEE1"
-                        text: delegatedItem.makeLinksClickable(model.textMessage)
+                        height: messageContentBase.visible ? 0
+                                  : (messageContentBase.implicitHeight>50
+                                        ?messageContentBase.implicitHeight : 50)
 
-                        //make sure show end of long messages
-                        onContentHeightChanged:
+                        color: "black"   // dark transparent
+                        opacity: 0.5
+
+                        property bool revealed: false
+
+                        Column
                         {
-                            if (chatView.atYEnd)
-                                Qt.callLater(chatView.positionViewAtEnd)
-                        }
+                            anchors.centerIn: parent
+                            spacing: 8
 
-                        cursorDelegate: null
+                            Text
+                            {
+                                text: "Blocked content"
+                                color: "white"
+                                font.bold: true
+                                horizontalAlignment: Text.AlignHCenter
+                            }
+
+                            Text
+                            {
+                                text: "Click to reveal"
+                                color: "#cccccc"
+                                horizontalAlignment: Text.AlignHCenter
+                            }
+                        }
 
                         MouseArea
                         {
                             anchors.fill: parent
-                            acceptedButtons: Qt.NoButton
-
-                            cursorShape: messageText.hoveredLink.length > 0
-                                         ? Qt.PointingHandCursor
-                                         : Qt.IBeamCursor
-
-                            hoverEnabled: true
-                        }
-
-                        onLinkActivated: function(link)
-                        {
-                            Qt.openUrlExternally(link)
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: blockedOverlay.revealed = true
                         }
                     }
-
                 }
             }
         }
+
     }
 
 

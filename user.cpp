@@ -4,6 +4,7 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
            ParticipantModel* currentChannelParticipant, ConnectedUsersModel *connectedUsersModel, MyServersModel* myServersModel,
            SoundManager* sounderManager, SettingsManager* settingsManager,
            ClientUserManager *clientuserManager, IdentityManager *identityManager,
+           RelationshipManager* relationshipManager, Database* database,
            CameraCapture* cam, AudioCapture *mic, AudioSpeaker* speaker,
            QObject *parent)
     : QObject{parent}, m_channelModel(channelModel), m_chatModel(chatModel),
@@ -11,6 +12,7 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
     m_myServersModel(myServersModel),
     m_soundManager(sounderManager), m_settingsManager(settingsManager),
     m_clientUserManager(clientuserManager), m_identityManager(identityManager),
+    m_relationshipManager(relationshipManager), m_database(database),
     m_cam(cam), m_mic(mic), m_speaker(speaker)
 {
     qInfo() << "using BeanChatCommon version " << BeanChatCommon::Protocol::Version;
@@ -75,7 +77,7 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
 
 
     //setup database stuff
-    m_database.createTable(R"(
+    m_database->createTable(R"(
         CREATE TABLE IF NOT EXISTS MyServers
         (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -87,10 +89,26 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
         )");
 
 
+    m_database->createTable(R"(
+        CREATE TABLE IF NOT EXISTS UserRelations
+        (
+            identity TEXT PRIMARY KEY,
+
+            nickname TEXT,
+            note TEXT,
+
+            relationship INTEGER NOT NULL DEFAULT 0,
+
+            muted INTEGER NOT NULL DEFAULT 0,
+            voiceVolume INTEGER NOT NULL DEFAULT 100,
+            createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+        )");
+
 
     //load all saved servers from database.
     qDebug() << "loading all saved servers.";
-    QVariantList servers = m_database.getAll("MyServers");
+    QVariantList servers = m_database->getAll("MyServers");
     for (const QVariant &v : servers)
     {
         QVariantMap row = v.toMap();
@@ -300,7 +318,7 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
         if(saveThisConnection)
         {
             //save server into local storage
-            bool result = m_database.insert("MyServers",
+            bool result = m_database->insert("MyServers",
                       {
                           {"name", serverName},
                           {"ip", serverIp},
@@ -309,7 +327,7 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
             if(result)
             {
                 qDebug() << "server saved to myServers";
-                QVariantMap serverInfo = m_database.getServer(serverIp,str_serverPort);
+                QVariantMap serverInfo = m_database->getServer(serverIp,str_serverPort);
 
                 if (serverInfo.isEmpty())
                 {
@@ -343,7 +361,7 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
     //update servername for QML
     if(serverId!=-1) //server exists just try to read server name from myServers table. otherwise when adding server would setServerName.
     {
-        QVariantMap serverInfo = m_database.getServer(serverIp,str_serverPort);
+        QVariantMap serverInfo = m_database->getServer(serverIp,str_serverPort);
         if (!serverInfo.isEmpty())
             setMyServerName(serverInfo["name"].toString());
         else
@@ -411,7 +429,7 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
 
 void User::updateSavedServer(quint64 serverId, quint64 dbIndex, const QString& name, const QString& ip, const QString& port)
 {
-    bool res = m_database.update("MyServers",
+    bool res = m_database->update("MyServers",
                     dbIndex,
                     {
                         {"name", name},
@@ -441,7 +459,7 @@ void User::deleteSavedServer(quint64 serverId, quint64 serverDbIndex)
 {
     if(serverDbIndex!=-1) //server is not saved in database. just delete it from model.
     {
-        bool res = m_database.remove("MyServers",serverDbIndex);
+        bool res = m_database->remove("MyServers",serverDbIndex);
         if(res)
         {
             qDebug() << "server deleted from MyServers.";
@@ -724,7 +742,7 @@ void User::newAvatarArrived(quint64 userId,
             //update datbase for that myServer id. to when didnt connected to servers load their avatar if found.
             QVariantMap values;
             values["avatarPath"] = avatarPath;
-            if(m_database.update("MyServers", m_connectedServerId_onDb, values))
+            if(m_database->update("MyServers", m_connectedServerId_onDb, values))
                 qDebug() << "server avatarPath updated on myServers' table.";
             else
                 qDebug() << "failed to update avatarPath on myServers' table.";
@@ -919,7 +937,7 @@ void User::processPacket(const Packet& packet)
                                        "Your channel has been deleted.");
             m_currentChannelParticipant->clear();
             setMyChannelName("");
-            m_myChannelId=-1; //default vlaue for homeless users :D
+            setMyChannelId(0); //default vlaue for homeless users :D
             setMyChannelSavesChat(false);
             setChatUnreadMessages(0);
         }
@@ -1096,7 +1114,7 @@ void User::processPacket(const Packet& packet)
             m_channelModel->resetChannelTalkingStatus(resp.oldChannelId);
 
             //set channel name for Chat and other parts to know current channel name
-            m_myChannelId = resp.channelId;
+            setMyChannelId(resp.channelId);
             m_channelModel->setCurrentChannelId(m_myChannelId); //for update isTalking status users
             setMyChannelName(m_channelModel->getChannelName(m_myChannelId)); //to show on top of Chat also on userConnectedServer.
             setMyChannelSavesChat(m_channelModel->getChannelSaveChats(m_myChannelId)); //to show on top of Chat
@@ -1247,6 +1265,30 @@ void User::processPacket(const Packet& packet)
             user->setOsName(u.osName);
             user->setOsVersion(u.osVersion);
 
+            //load info about this user. from our UserRelationship
+            if(!user->self())
+            {
+                const UserRelationship *relationship = m_relationshipManager->find(u.identity);
+                if (relationship)
+                {
+                    user->setRelationship(relationship->relationship);
+                    user->setNickname(relationship->nickname);
+                    user->setNote(relationship->note);
+                    user->setVolume(relationship->voiceVolume);
+                    user->setLocalMuted(relationship->muted);
+                }
+                else
+                {
+                    user->setRelationship(Relationship::Type::None);
+                    user->setNickname({});
+                    user->setNote({});
+                    user->setVolume(SPEAKER_DEFAULT_CHANNEL_USERS_VOLUME);
+                    user->setLocalMuted(false);
+                }
+
+            }
+
+            //add him to list.
             m_connectedUsersModel->addUser(user);
 
             qDebug() << "user added to connectedusrs id="<<u.id;
@@ -1417,6 +1459,29 @@ void User::processPacket(const Packet& packet)
                 user->setOsName(u.osName);
                 user->setOsVersion(u.osVersion);
 
+                if(!user->self())
+                {
+                    //load info about this user. from our UserRelationship
+                    const UserRelationship* relationship = m_relationshipManager->find(u.identity);
+                    if (relationship)
+                    {
+                        user->setRelationship(relationship->relationship);
+                        user->setNickname(relationship->nickname);
+                        user->setNote(relationship->note);
+                        user->setVolume(relationship->voiceVolume);
+                        user->setLocalMuted(relationship->muted);
+                    }
+                    else
+                    {
+                        user->setRelationship(Relationship::Type::None);
+                        user->setNickname({});
+                        user->setNote({});
+                        user->setVolume(SPEAKER_DEFAULT_CHANNEL_USERS_VOLUME);
+                        user->setLocalMuted(false);
+                    }
+                }
+
+                //add him to list
                 m_connectedUsersModel->addUser(user);
 
                 qDebug() << "user added to connectedusrs id="<<u.id;
@@ -1492,6 +1557,19 @@ void User::loginToUdpSocket()
                  << ":"
                  << m_serverPort;
     }
+}
+
+quint64 User::myChannelId() const
+{
+    return m_myChannelId;
+}
+
+void User::setMyChannelId(quint64 newMyChannelId)
+{
+    if (m_myChannelId == newMyChannelId)
+        return;
+    m_myChannelId = newMyChannelId;
+    emit myChannelIdChanged();
 }
 
 ClientUser::Status User::myStatus() const
@@ -1918,6 +1996,7 @@ void User::resetVariables()
     //reset variables
     setMyServerName("");
     setMyChannelName("");
+    setMyChannelId(0);
     setMyChannelSavesChat(false);
     setIsConnectedToServer(false);
     setConnectedServerId(-1); //this is serverIndexDb which would use in saving user's avatar in each server's directory

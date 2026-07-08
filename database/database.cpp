@@ -243,3 +243,109 @@ QVariantList Database::query(const QString &sql)
 
     return rows;
 }
+
+
+bool Database::saveUserRelationship(const UserRelationship &relationship)
+{
+    QSqlQuery query;
+
+    query.prepare(R"(
+        INSERT INTO UserRelations
+        (
+            identity,
+            nickname,
+            note,
+            relationship,
+            muted,
+            voiceVolume
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(identity)
+        DO UPDATE SET
+            nickname     = excluded.nickname,
+            note         = excluded.note,
+            relationship = excluded.relationship,
+            muted        = excluded.muted,
+            voiceVolume  = excluded.voiceVolume
+    )");
+
+    query.addBindValue(relationship.identity);
+    query.addBindValue(relationship.nickname);
+    query.addBindValue(relationship.note);
+    query.addBindValue(static_cast<int>(relationship.relationship));
+    query.addBindValue(relationship.muted);
+    query.addBindValue(relationship.voiceVolume);
+
+    if (!query.exec())
+    {
+        qDebug() << query.lastError();
+        return false;
+    }
+
+    return true;
+}
+
+bool Database::removeUserRelationship(const QString &identity)
+{
+    QSqlQuery query;
+
+    query.prepare(
+        "DELETE FROM UserRelations "
+        "WHERE identity=?");
+
+    query.addBindValue(identity);
+
+    if (!query.exec())
+    {
+        qDebug() << query.lastError();
+        return false;
+    }
+
+    return true;
+}
+
+QList<UserRelationship> Database::loadUserRelationships()
+{
+    QList<UserRelationship> relationships;
+
+    QSqlQuery query;
+
+    if (!query.exec(
+            "SELECT identity,"
+            " nickname,"
+            " note,"
+            " relationship,"
+            " muted,"
+            " voiceVolume "
+            "FROM UserRelations"))
+    {
+        qDebug() << query.lastError();
+        return relationships;
+    }
+
+    while (query.next())
+    {
+        UserRelationship relationship;
+
+        relationship.identity =
+            query.value("identity").toString();
+
+        relationship.nickname =
+            query.value("nickname").toString();
+
+        relationship.note =
+            query.value("note").toString();
+
+        relationship.relationship =  static_cast<Relationship::Type>(query.value("relationship").toInt());
+
+        relationship.muted =
+            query.value("muted").toBool();
+
+        relationship.voiceVolume =
+            query.value("voiceVolume").toInt();
+
+        relationships.append(relationship);
+    }
+
+    return relationships;
+}

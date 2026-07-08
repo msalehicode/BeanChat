@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls.Material
 
 import QtQuick.Layouts
+import BeanChatClient 1.0
 
 import "constants/"
 Item
@@ -102,7 +103,8 @@ Item
 
                         Image
                         {
-                            source: model.userAvatarPath
+                            source: model.userRelation===Relationship.Blocked ? "" //dont show blocked user's avatar
+                                            : model.userAvatarPath
                             anchors.fill: parent
                         }
 
@@ -137,7 +139,7 @@ Item
 
                     Text
                     {
-                        color: "white"
+                        color: UiHelpers.relationColor(model.userRelation)
                         text: userName
                         anchors.verticalCenter: parent.verticalCenter
                     }

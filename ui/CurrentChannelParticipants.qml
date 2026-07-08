@@ -2,8 +2,8 @@ import QtQuick
 import QtQuick.Layouts
 import CustomVideo 1.0
 import QtQuick.Controls
-
-
+import BeanChatClient 1.0
+import "constants/"
 Item
 {
     width: parent.width-(rightPanel.width+(channelList.width)+leftPanel.width)
@@ -100,7 +100,7 @@ Item
                     radius: parent.radius
                     color: model.isCameraOpen ? "transparent" : "purple"
                     border.width: model.isTalking ? 4 : 0
-                    border.color: model.isLocalMuted ? "red" : "lime"
+                    border.color: UiHelpers.isTalkingColor(model.isLocalMuted, model.relation)
 
                     Rectangle
                     {
@@ -122,7 +122,8 @@ Item
                         Image
                         {
                             anchors.fill: parent
-                            source: model.avatarPath
+                            source: model.relation===Relationship.Blocked ? "" //dont show blocked user's avatar
+                                            : model.avatarPath
                         }
                     }
                     Rectangle
@@ -145,7 +146,7 @@ Item
                             {
                                 text: model.username
                                 font.pixelSize: 15
-                                color: "white"
+                                color: UiHelpers.relationColor(model.relation)
                                 font.bold:model.userId === user.myId
                                 Layout.alignment: Qt.AlignVCenter
                             }

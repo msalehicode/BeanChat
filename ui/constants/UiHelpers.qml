@@ -27,6 +27,29 @@ QtObject
         }
     }
 
+    function relationColor(relation)
+    {
+        switch(relation)
+        {
+            case Relationship.None: return "white"
+            case Relationship.Blocked: return "#FF7070"
+            case Relationship.Friend: return "lime"
+        }
+    }
+
+    function isTalkingColor(isMuted=false,relation=Relationship.None)
+    {
+        if(isMuted)
+            return "#FF0000"
+
+        switch(relation)
+        {
+            case Relationship.Blocked: return "#FF7070"
+            case Relationship.None: return "yellow"
+            case Relationship.Friend: return "lime"
+        }
+    }
+
     function statusText(status)
     {
         switch (status)

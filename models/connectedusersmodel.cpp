@@ -41,6 +41,9 @@ QVariant ConnectedUsersModel::data(
     case UserStatusRole:
         return static_cast<int>(user->status());
 
+    case UserRelationRole:
+        return static_cast<int>(user->relationship());
+
     case UserIconsRole:
         return user->iconsId();
 
@@ -70,6 +73,7 @@ ConnectedUsersModel::roleNames() const
             { UserNameRole, "userName" },
             { UserAvatarPathRole, "userAvatarPath"},
             { UserStatusRole, "userStatus" },
+            { UserRelationRole, "userRelation"},
             { UserIconsRole, "userIcons"},
             { UserOsVersionRole, "userOsVersion"},
             { USerOsNameRole, "userOsName"},
@@ -135,6 +139,18 @@ void ConnectedUsersModel::observeUser(ClientUser* user)
 
                 if (row >= 0)
                     emit dataChanged(index(row), index(row), { UserNameRole });
+            });
+
+
+    connect(user,
+            &ClientUser::relationshipChanged,
+            this,
+            [this, user]()
+            {
+                int row = m_connectedUsers.indexOf(user);
+
+                if (row >= 0)
+                    emit dataChanged(index(row), index(row), { UserRelationRole });
             });
 
 

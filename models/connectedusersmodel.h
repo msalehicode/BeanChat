@@ -21,6 +21,7 @@ public:
         UserAvatarPathRole,
         UserStatusRole,
         UserIconsRole,
+        UserRelationRole,
         UserOsVersionRole,
         USerOsNameRole,
         UserAppVersionRole,

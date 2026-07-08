@@ -252,3 +252,55 @@ void ClientUser::setIdentity(const QString &newIdentity)
     m_identity = newIdentity;
     emit identityChanged();
 }
+
+Relationship::Type ClientUser::relationship() const
+{
+    return m_relationship;
+}
+
+void ClientUser::setRelationship(Relationship::Type newRelationship)
+{
+    if (m_relationship == newRelationship)
+        return;
+    m_relationship = newRelationship;
+    emit relationshipChanged();
+}
+
+QString ClientUser::nickname() const
+{
+    return m_nickname;
+}
+
+void ClientUser::setNickname(const QString &newNickname)
+{
+    if (m_nickname == newNickname)
+        return;
+    m_nickname = newNickname;
+    emit nicknameChanged();
+}
+
+QString ClientUser::note() const
+{
+    return m_note;
+}
+
+void ClientUser::setNote(const QString &newNote)
+{
+    if (m_note == newNote)
+        return;
+    m_note = newNote;
+    emit noteChanged();
+}
+
+QString ClientUser::description() const
+{
+    return m_description;
+}
+
+void ClientUser::setDescription(const QString &newDescription)
+{
+    if (m_description == newDescription)
+        return;
+    m_description = newDescription;
+    emit descriptionChanged();
+}

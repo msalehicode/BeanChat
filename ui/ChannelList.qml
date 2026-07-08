@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls.Material
 
 import QtQuick.Layouts
+import BeanChatClient 1.0
 
 import "constants/"
 Item
@@ -338,7 +339,8 @@ Item
                                     {
                                         id: avatar
                                         anchors.fill: parent
-                                        source: modelData.avatarPath
+                                        source: modelData.relationship===Relationship.Blocked ? "" //dont show blocked user's avatar
+                                                        : modelData.avatarPath
                                     }
 
                                     Rectangle
@@ -354,7 +356,8 @@ Item
                                         color: "transparent"
 
                                         border.width: 4
-                                        border.color: modelData.isLocalMuted ? "red" : "lime"
+
+                                        border.color: UiHelpers.isTalkingColor(modelData.isLocalMuted,modelData.relationship)
 
                                         visible: modelData.isTalking
 
@@ -366,7 +369,7 @@ Item
                                     id: userName
                                     text: modelData.username
                                     font.pixelSize: 13
-                                    color: "white"
+                                    color: UiHelpers.relationColor(modelData.relationship)
                                     font.bold:modelData.userid === user.myId
                                     Layout.alignment: Qt.AlignVCenter
                                     Layout.preferredWidth: implicitWidth>200 ? 200 : implicitWidth

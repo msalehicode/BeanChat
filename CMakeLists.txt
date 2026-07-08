@@ -5,7 +5,7 @@ project(BeanChat VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(APP_CURRENT_VERSION "0.20.8")
+set(APP_CURRENT_VERSION "0.21.14")
 set(APP_TitleName "BeanChat")
 set(APP_OrganizationName "orgBeanChat")
 set(APP_ApplicationName "appBeanChat")
@@ -108,6 +108,7 @@ qt_add_qml_module(appBeanChat
         ui/popups/ModifyProfilePopup.qml
         ui/popups/UserProfilePopup.qml
         ui/popups/UserContextPopup.qml
+        ui/popups/GetValuePopup.qml #to ask for a Field with dynamic action
 
         # settingsPage pages/components
         ui/settingPages/SettingSection.qml
@@ -131,6 +132,7 @@ qt_add_qml_module(appBeanChat
         managers/avatarmanager.h managers/avatarmanager.cpp
         managers/clientusermanager.h managers/clientusermanager.cpp
         managers/identitymanager.h managers/identitymanager.cpp
+        managers/relationshipmanager.h managers/relationshipmanager.cpp
 
         #video
         video/videosink.h
@@ -157,7 +159,7 @@ qt_add_qml_module(appBeanChat
         models/myserversmodel.h models/myserversmodel.cpp
         models/clientuser.h models/clientuser.cpp
         models/identity.h models/identity.cpp
-
+        models/userrelationship.h
 
     # icons
     RESOURCES
@@ -183,7 +185,6 @@ qt_add_qml_module(appBeanChat
     ui/icons/screen.png ui/icons/screen-closed.png ui/icons/screen-red.png
     ui/icons/signal.png ui/icons/signal-green.png ui/icons/signal-orange.png ui/icons/signal-red.png ui/icons/signal-yellow.png
     ui/icons/os/android.png ui/icons/os/ios.png ui/icons/os/linux.png ui/icons/os/macos.png ui/icons/os/windows.png
-    QML_FILES ui/popups/GetValuePopup.qml
 
 )
 

@@ -2,6 +2,8 @@
 
 #include <QObject>
 
+#include "userrelationship.h"
+
 class ClientUser : public QObject
 {
     Q_OBJECT
@@ -25,6 +27,10 @@ class ClientUser : public QObject
     Q_PROPERTY(bool hasCamera READ hasCamera NOTIFY hasCameraChanged FINAL)
     Q_PROPERTY(bool localMuted READ localMuted WRITE setLocalMuted NOTIFY localMutedChanged FINAL)
     Q_PROPERTY(QString identity READ identity WRITE setIdentity NOTIFY identityChanged FINAL)
+    Q_PROPERTY(Relationship::Type relationship READ relationship WRITE setRelationship NOTIFY relationshipChanged FINAL)
+    Q_PROPERTY(QString nickname READ nickname WRITE setNickname NOTIFY nicknameChanged FINAL)
+    Q_PROPERTY(QString note READ note WRITE setNote NOTIFY noteChanged FINAL)
+    Q_PROPERTY(QString description READ description WRITE setDescription NOTIFY descriptionChanged FINAL)
 
 public:
     explicit ClientUser(QObject *parent = nullptr);
@@ -99,6 +105,18 @@ public:
     QString identity() const;
     void setIdentity(const QString &newIdentity);
 
+    Relationship::Type relationship() const;
+    void setRelationship(Relationship::Type newRelationship);
+
+    QString nickname() const;
+    void setNickname(const QString &newNickname);
+
+    QString note() const;
+    void setNote(const QString &newNote);
+
+    QString description() const;
+    void setDescription(const QString &newDescription);
+
 signals:
 
 
@@ -140,6 +158,14 @@ signals:
 
     void identityChanged();
 
+    void relationshipChanged();
+
+    void nicknameChanged();
+
+    void noteChanged();
+
+    void descriptionChanged();
+
 private:
 
     //info
@@ -149,9 +175,16 @@ private:
     QString m_identity;
     QString m_avatarPath;
     QString m_iconsId="";
+    QString m_description="";
+
+
+    //local
     int m_volume = SPEAKER_DEFAULT_CHANNEL_USERS_VOLUME;
     bool m_localMuted=false;
     bool m_self=false;
+    Relationship::Type m_relationship=Relationship::Type::None;
+    QString m_nickname =""; //can save a user with different name for local
+    QString m_note=""; //can save note for a user and show only in local
 
     //user's app info
     QString m_appVersion;

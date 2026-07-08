@@ -51,6 +51,10 @@ QVariant ChannelModel::data(
         for(const auto& user :
              channel.users)
         {
+
+            if(!user.user)
+                continue;
+
             QVariantMap map;
 
             map["userid"] =
@@ -70,6 +74,9 @@ QVariant ChannelModel::data(
 
             map["deafened"] =
                 user.user->deafened();
+
+            map["relationship"] =
+                user.user->relationship();
 
             map["isLocalMuted"] =
                 user.user->localMuted();
@@ -207,6 +214,11 @@ void ChannelModel::observeUser(ClientUser *user)
 
     connect(user,
             &ClientUser::localMutedChanged,
+            this,
+            updateRoles);
+
+    connect(user,
+            &ClientUser::relationshipChanged,
             this,
             updateRoles);
 

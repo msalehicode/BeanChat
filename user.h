@@ -46,6 +46,7 @@ using namespace BeanChatCommon;
 #include "managers/avatarmanager.h"
 #include "managers/clientusermanager.h"
 #include "managers/identitymanager.h"
+#include "managers/relationshipmanager.h"
 
 #include "models/identity.h"
 #include <QStandardPaths>
@@ -113,6 +114,7 @@ public:
                   ParticipantModel* currentChannelParticipant,ConnectedUsersModel* connectedUsersModel, MyServersModel* myServersModel,
                   SoundManager* sounderManager, SettingsManager* settingsManager,
                   ClientUserManager* clientuserManager, IdentityManager* identityManager,
+                  RelationshipManager* relationshipManager, Database* database,
                   CameraCapture* cam, AudioCapture* mic, AudioSpeaker* speaker,
                   QObject *parent = nullptr);
 
@@ -235,6 +237,9 @@ public:
     ClientUser::Status myStatus() const;
     void setMyStatus(const ClientUser::Status &newMyStatus);
 
+    quint64 myChannelId() const;
+    void setMyChannelId(quint64 newMyChannelId);
+
 signals:
 
     void myIdChanged();
@@ -304,6 +309,8 @@ signals:
 
     void myStatusChanged();
 
+    void myChannelIdChanged();
+
 public slots:
     void onTcpReadyRead();
     void onDisconnected();
@@ -319,12 +326,13 @@ private:
     void processPacket(const Packet& packet);
     void loginToUdpSocket();
 
-    Database m_database;
+    Database* m_database;
     SoundManager* m_soundManager;
     SettingsManager* m_settingsManager;
     ClientUserManager* m_clientUserManager;
     OpusCodec m_opus;
     IdentityManager* m_identityManager;
+    RelationshipManager* m_relationshipManager;
 
     //avatar
     AvatarManager m_avatarManager;
@@ -338,7 +346,7 @@ private:
     //user cant modify, would receive from target server
     int m_myId =-1;
     ClientUser::Status m_myStatus=ClientUser::Status::Offline;
-    quint64 m_myChannelId=-2; //channelId -1 is default value for those users didn't connect to any channel just connected to server.
+    quint64 m_myChannelId=0; //channelId 0 is default value for those users didn't connect to any channel just connected to server.
     QString m_myChannelName = ""; //current channel
     bool m_myChannelSavesChat=false;
     QString m_myServerName= ""; //current server connected to (name that saved by user inside myServers, can be modified, only shown to this user)
@@ -428,6 +436,7 @@ private:
     Q_PROPERTY(QString buildType READ buildType CONSTANT)
     Q_PROPERTY(QString appTitle READ appTitle CONSTANT)
     Q_PROPERTY(ClientUser::Status myStatus READ myStatus WRITE setMyStatus NOTIFY myStatusChanged FINAL)
+    Q_PROPERTY(quint64 myChannelId READ myChannelId WRITE setMyChannelId NOTIFY myChannelIdChanged FINAL)
 };
 
 #endif // USER_H

@@ -76,7 +76,6 @@ Popup
     Rectangle
     {
         id: avatarFrame
-
         width: 96
         height: 96
         radius: width/2
@@ -97,7 +96,7 @@ Popup
             id: avatarImage
 
             anchors.fill: parent
-            visible: clientUser ? clientUser.avatarPath.length>0 : false
+            visible: source!==""
 
             source: clientUser
                     ? clientUser.avatarPath
@@ -163,6 +162,7 @@ Popup
 
             Text
             {
+                id:userName
                 width: parent.width
 
                 horizontalAlignment: Text.AlignHCenter
@@ -173,7 +173,7 @@ Popup
                         ? "Offline User"
                         : cachedName
 
-                color: "white"
+                color:  clientUser ? UiHelpers.relationColor(clientUser.relationship) : "white"
 
                 font.pixelSize: 24
                 font.bold: true
@@ -181,15 +181,56 @@ Popup
 
             Text
             {
+                id:userDescription
                 width: parent.width
-
+                visible: clientUser ? true : false
                 horizontalAlignment: Text.AlignHCenter
 
-                text: "About me... some description text..."
+                text: clientUser.description.length>0? clientUser.description : "Default description"
 
                 color: "#B5BAC1"
 
                 font.pixelSize: 13
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+            }
+
+            Label
+            {
+                text: "NOTE"
+                color: "#B5BAC1"
+                visible: clientUser ? (clientUser.self?false:true): false //show when user is available or not self
+                font.bold: true
+                width: parent.width
+            }
+
+            TextField
+            {
+                id: userNoteField
+                placeholderText: "enter note for this user"
+                placeholderTextColor: "white"
+                width: parent.width
+                visible: clientUser ? (clientUser.self?false:true): false
+                text: clientUser ? (clientUser.note.length>0? clientUser.note : "") : ""
+                color: "white"
+                function updateNote()
+                {
+                    if(clientUser)
+                    {
+                        relationshipManager.setNote(clientUser.identity, userNoteField.text)
+                        clientUser.note=userNoteField.text
+                    }
+                    else
+                        console.log("cannot set note for null user")
+                }
+
+                onAccepted: userNoteField.updateNote()
+                onTextChanged: userNoteField.updateNote()
+
+                background: Rectangle
+                {
+                    radius: 6
+                    color: "#1E1F22"
+                }
             }
 
             Rectangle
@@ -197,6 +238,14 @@ Popup
                 width: parent.width
                 height: 1
                 color: "#404249"
+            }
+
+            Label
+            {
+                text: "INFO"
+                color: "#B5BAC1"
+                font.bold: true
+                width: parent.width
             }
 
             Rectangle
@@ -226,11 +275,11 @@ Popup
 
                     Rectangle
                     {
+                        id:userIdentityBase
                         width: parent.width
                         height: 38
                         radius: 10
                         color: "#2B2D31"
-                        visible: clientUser ? true : false
                         clip: true
                         Flickable
                         {
@@ -271,10 +320,13 @@ Popup
 
                    Item
                    {
+                       id:userStatusAndRelationBase
                        width: parent.width
                        height: 60
+                       visible: clientUser ? true : false
                        Column
                        {
+                           id:userStatusBase
                            Text
                            {
                                text: "STATUS"
@@ -302,43 +354,97 @@ Popup
 
                        Rectangle
                        {
+                           id:baseFriendOrBlock
                            anchors.right: parent.right
+                           anchors.rightMargin: 10
                            anchors.verticalCenter: parent.verticalCenter
+                           visible: clientUser ? (clientUser.self? false : true) : false//only show when user is avaiable and not self
                            color: "transparent"
                            width: 60
                            height: 50
-                           Row
+                           Image
                            {
-                               spacing: 10
-                               Image
+                               id:friendUserButton
+                               anchors.right: parent.right
+                               width: visible ? 25 : 0
+                               height: width
+                               visible: clientUser ?
+                                            (clientUser.relationship===Relationship.None
+                                            ||clientUser.relationship===Relationship.Friend) : false
+
+                               source: clientUser ?
+                                           clientUser.relationship===Relationship.Friend ?
+                                               "../icons/user-is-friend.png" : "../icons/user-add-friend.png" : ""
+                               MouseArea
                                {
-                                   // color:"green"
-                                   width: 25
-                                   height: width
-                                   source: "../icons/user-add-friend.png"
-                                   // radius: width
-                                   MouseArea
+                                   anchors.fill: parent
+                                   cursorShape: Qt.PointingHandCursor
+                                   onClicked:
                                    {
-                                       anchors.fill: parent
-                                       cursorShape: Qt.PointingHandCursor
-                                       onClicked: console.log("add/remove friend")
-                                   }
-                               }
-                               Image
-                               {
-                                   // color:"red"
-                                   width: 25
-                                   height: width
-                                   // radius: width
-                                   source: "../icons/user-add-block.png"
-                                   MouseArea
-                                   {
-                                       anchors.fill: parent
-                                       cursorShape: Qt.PointingHandCursor
-                                       onClicked: console.log("block him")
+                                       if(clientUser)
+                                       {
+                                           if(clientUser.relationship===Relationship.None)
+                                           {
+                                               relationshipManager.addFriend(clientUser.identity)
+                                               clientUser.relationship=Relationship.Friend
+                                           }
+                                           else if(clientUser.relationship===Relationship.Friend)
+                                           {
+                                               relationshipManager.removeFriend(clientUser.identity)
+                                               clientUser.relationship=Relationship.None
+                                           }
+                                       }
+                                       else
+                                           console.log("user is null, cant add/remove friend him.")
                                    }
                                }
                            }
+                           Image
+                           {
+                               id:blockUserButton
+                               anchors.right: friendUserButton.visible
+                                                  ? friendUserButton.left
+                                                  : parent.right
+                               anchors.rightMargin: friendUserButton.visible ? 10 : 0
+                                   width: visible ? 25 : 0
+                                   height: width
+
+                               visible: clientUser ?
+                                            (clientUser.relationship===Relationship.None
+                                            ||clientUser.relationship===Relationship.Blocked) : false
+
+                               source: clientUser ?
+                                           (clientUser.relationship==Relationship.Blocked
+                                            ? "../icons/user-is-blocked" : "../icons/user-add-block.png") : ""
+                               MouseArea
+                               {
+                                   anchors.fill: parent
+                                   cursorShape: Qt.PointingHandCursor
+                                   onClicked:
+                                   {
+                                       if(clientUser)
+                                       {
+                                           if(clientUser.relationship===Relationship.None)
+                                           {
+                                               relationshipManager.blockUser(clientUser.identity)
+                                               clientUser.relationship=Relationship.Blocked
+                                               relationshipManager.setMuted(clientUser.identity,true)
+                                               clientUser.localMuted=true
+                                           }
+                                           else if(clientUser.relationship===Relationship.Blocked)
+                                           {
+                                               relationshipManager.unblockUser(clientUser.identity)
+                                               clientUser.relationship=Relationship.None
+                                               relationshipManager.setMuted(clientUser.identity,false)
+                                               clientUser.localMuted=false
+                                           }
+                                       }
+                                       else
+                                           console.log("user is null, cant block/unblock him.")
+                                   }
+                               }
+                           }
+
                        }
 
 
@@ -354,6 +460,7 @@ Popup
                     }
                     Rectangle
                     {
+                        id:currentChannelBox
                         width: parent.width
                         height: 38
                         radius: 10
@@ -379,9 +486,14 @@ Popup
                         }
                         Rectangle
                         {
+                            id:buttonJoinHisChannel
                             width: (parent.width-10)/3
                             height: 38
-                            visible: clientUser ? clientUser.channelId>0 && clientUser.self!==true: false //don't show join button for ourself OR channelid=0 means not in anychannel yet.
+                            visible: clientUser ?
+                                         clientUser.channelId>0 //don't show when user isn't in any channel.
+                                         && clientUser.self!==true //don't show join when profile is self.
+                                         && clientUser.channelId!==user.myChannelId //don't show when we're on the same channel
+                                         : false
                             anchors.right: parent.right
                             anchors.verticalCenter: parent.verticalCenter
                             radius: 8
@@ -425,7 +537,6 @@ Popup
                             }
                         }
 
-
                     }
 
 
@@ -440,6 +551,7 @@ Popup
                     }
                     Rectangle
                     {
+                        id:appVersionBox
                         width: parent.width
                         height: 38
                         radius: 10
@@ -469,8 +581,10 @@ Popup
 
             Row
             {
+                id:messageOrCallBox
                 width: parent.width
                 spacing: 10
+                visible: clientUser ? (clientUser.self?false:true) : false //show only when user is available or not self
 
                 Rectangle
                 {

@@ -15,6 +15,7 @@ public:
         UserAvatarPathRole,
         VideoSinkRole,
         IsTalkingRole,
+        RelationRole,
         IsCameraOpenRole,
         IsLocalMuteRole,
         UserId,

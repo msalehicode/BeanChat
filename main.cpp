@@ -24,6 +24,7 @@
 #include "models/connectedusersmodel.h"
 #include "models/myserversmodel.h"
 #include "models/participantmodel.h"
+#include "models/userrelationship.h"
 
 //QML components
 #include "video/myvideoitem.h"
@@ -35,7 +36,9 @@
 #include "managers/settingsmanager.h"
 #include "managers/clientusermanager.h"
 #include "managers/identitymanager.h"
+#include "managers/relationshipmanager.h"
 #include "audio/audiomixer.h"
+
 
 
 int main(int argc, char *argv[])
@@ -56,10 +59,12 @@ int main(int argc, char *argv[])
     AudioSpeaker speaker;
 
     //etc
+    Database database;
     SoundManager soundManager; //play effects
     SettingsManager settingsManager;
     ClientUserManager clientuserManager;
     IdentityManager identityManager;
+    RelationshipManager relationshipManager(&database);
     AudioMixer mixer;
 
 
@@ -75,6 +80,7 @@ int main(int argc, char *argv[])
     //----------
     User usr(&channelModel, &chatModel, &participantsModel, &connectedUsersModel, &myServersModel,
              &soundManager, &settingsManager, &clientuserManager, &identityManager,
+             &relationshipManager, &database,
              &cam, &audio, &speaker);
 
     //---------- camera connection ----------
@@ -212,6 +218,7 @@ int main(int argc, char *argv[])
     qmlRegisterType<MyVideoItem>("CustomVideo", 1, 0, "VideoItem");
     qmlRegisterUncreatableType<VideoSink>("CustomVideo", 1, 0, "VideoSink", "VideoSink cannot be created from QML");
     qmlRegisterUncreatableType<ClientUser>("BeanChatClient", 1, 0, "ClientUser", "Created by C++ only");
+    qmlRegisterUncreatableType<Relationship>("BeanChatClient", 1, 0, "Relationship", "Enum Only");
 
     //qml
     QQmlApplicationEngine engine;
@@ -227,7 +234,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("soundManager",&soundManager);
     engine.rootContext()->setContextProperty("settings",&settingsManager);
     engine.rootContext()->setContextProperty("identityManager",&identityManager);
-
+    engine.rootContext()->setContextProperty("relationshipManager",&relationshipManager);
 
     QObject::connect(
         &engine,

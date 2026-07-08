@@ -20,6 +20,7 @@ public:
         SenderAvatarPathRole,
         SenderStatusRole,
         SenderNameRole,
+        SenderRelationRole,
         TextRole,
         TypeRole,
         MediaPathRole,
