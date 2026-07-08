@@ -9,6 +9,7 @@
 #include <QSGRendererInterface>
 #include <QBuffer>
 #include <QTimer>
+#include <QIcon>
 
 //resources
 #include "audio/audiospeaker.h"
@@ -45,6 +46,7 @@ int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
 
+    app.setWindowIcon(QIcon(":/icons/BeanChat.png"));
 
 
     //reading these from cmake

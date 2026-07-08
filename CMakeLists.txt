@@ -5,7 +5,7 @@ project(BeanChat VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(APP_CURRENT_VERSION "0.21.14")
+set(APP_CURRENT_VERSION "0.21.17")
 set(APP_TitleName "BeanChat")
 set(APP_OrganizationName "orgBeanChat")
 set(APP_ApplicationName "appBeanChat")
@@ -51,11 +51,14 @@ qt_standard_project_setup(REQUIRES 6.8)
 
 qt_add_executable(appBeanChat
     main.cpp
+    app.rc #windows icon for .exe
 )
 
 qt_add_resources(appBeanChat resources
     PREFIX "/"
     FILES
+        icons/BeanChat.png
+
         ui/soundeffects/message.wav
         ui/soundeffects/user-join.wav
         ui/soundeffects/user-left.wav
