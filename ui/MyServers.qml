@@ -6,7 +6,7 @@ import QtQuick.Controls
 
 Item
 {
-    width:60
+    width:65
     height:parent.height
     Rectangle
     {
@@ -16,25 +16,30 @@ Item
     Column
     {
         anchors.fill: parent
+        readonly property int spacerHeight:5
+        Rectangle
+        {
+            //spacer
+            width: parent.width
+            height: parent.spacerHeight
+            color: "transparent"
+        }
+
         Rectangle
         {
             id:beanChatButton
-            color:"black"
-            width:60
-            height: 60
+            color:"transparent"
+            width:65
+            height: 65
             anchors.horizontalCenter: parent.horizontalCenter
-            Image
-            {
-                width: 60
+            Image {
+                width: 65
                 height: 60
-                source:"icons/beanChatIcon.png"
-                anchors.centerIn: parent
-            }
-            MouseArea
-            {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: console.log("clicked on beanchat.")
+                source: "icons/beanChatIcon.png"
+                fillMode: Image.PreserveAspectFit
+                smooth: true
+                mipmap: true
+                antialiasing: true
             }
             Rectangle
             {
@@ -50,20 +55,52 @@ Item
                     leftMargin: -20
                 }
                 Text {
-                    text: "5"
+                    text: "64"
                     anchors.centerIn: parent
                     color:"white"
                     font.bold: true
                     font.pixelSize: 12
                 }
             }
+            MouseArea
+            {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: console.log("clicked on beanchat.")
+            }
         }
+
+        Rectangle
+        {
+            //spacer
+            width: parent.width
+            height: parent.spacerHeight
+            color: "transparent"
+        }
+
+        Rectangle
+        {
+            width: parent.width
+            height: 1
+            color: "#404249"
+        }
+
+        Rectangle
+        {
+            //spacer
+            width: parent.width
+            height: parent.spacerHeight
+            color: "transparent"
+        }
+
+
+
 
         ListView
         {
             id:myServers
             width: parent.width
-            height: parent.height-(beanChatButton.height+addServer.height+10)
+            height: parent.height-(beanChatButton.height+addServer.height+parent.spacerHeight*4)
             clip: true
             model: myServersModel
             spacing: 5
@@ -77,8 +114,7 @@ Item
                 height: width
                 radius: width / 2
 
-                // Dark base instead of full green/orange
-                color: "#2B2D31"
+                color: "#0B1018"
 
 
                 Image
@@ -109,7 +145,7 @@ Item
                     radius: parent.radius
                     color: "transparent"
                     border.width: 3
-                    border.color: model.isActive ? "#57F287" : "#404249"
+                    border.color: model.isActive ? "#57F287" : "#25314B"
                 }
 
                 Behavior on scale
@@ -125,8 +161,16 @@ Item
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onEntered: delegateRoot.scale = 1.12
-                    onExited: delegateRoot.scale = 1.0
+                    onEntered:
+                    {
+                        delegateRoot.color = "#182033"
+                        delegateRoot.scale = 1.12
+                    }
+                    onExited:
+                    {
+                        delegateRoot.color = "#101624"
+                        delegateRoot.scale = 1.0
+                    }
 
                     acceptedButtons: Qt.LeftButton | Qt.RightButton
                     onDoubleClicked:

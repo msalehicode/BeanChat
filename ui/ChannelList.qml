@@ -21,7 +21,7 @@ Item
     Rectangle
     {
         anchors.fill: parent
-        color: bg1
+        color: "#141C2B"
     }
     Column
     {
@@ -33,7 +33,7 @@ Item
             width: parent.width
             height: 60
             visible: user.isConnectedToServer
-            color: bg2
+            color: "#080B10"
 
             property bool opened: false
 
@@ -121,12 +121,12 @@ Item
                 {
                     width: 4
                     radius: width / 2
-                    color: "#66676a"
+                    color: "#839ac7"
                 }
 
                 background: Rectangle
                 {
-                    color: bg2
+                    color: "#3c5484"
                 }
             }
             delegate: Column
@@ -142,8 +142,11 @@ Item
                     height: 43
                     radius: height
                     anchors.horizontalCenter: parent.horizontalCenter
-                    border.color: "green"
-                    border.width: model.saveChats ? 1 : 0
+                    border.color: model.saveChats ? "green" : "#2C3B57"
+                    border.width: 2
+                    color: dragHover
+                           ? "#243149"
+                           : (channelMouseArea.containsMouse ? "#1C273A" : "#0B1018")
 
                     Row
                     {
@@ -204,9 +207,6 @@ Item
 
                     property bool dragHover: false
 
-                    color: dragHover
-                           ? "#4f545c"
-                           : (channelMouseArea.containsMouse ? "#222427" : "#2f3136")
 
                     DropArea
                     {
@@ -296,7 +296,7 @@ Item
                         width: parent.width
                         anchors.left:parent.left
                         anchors.leftMargin: 25
-                        height: 40
+                        height: 43
                         color:"transparent"
 
                         DragHandler
@@ -308,11 +308,16 @@ Item
                             width: parent.width-35
                             height: parent.height
                             radius: height
-                            color: userMouseArea.containsMouse ? "#525356":"#66676a"
+
+                            border.color: "#2C3B57"
+                            border.width: 1
+                            color: userMouseArea.containsMouse
+                                   ? "#192436"
+                                   : "#101722"
                             RowLayout
                             {
                                 anchors.fill: parent
-                                anchors.leftMargin: 15
+                                anchors.leftMargin: 17
                                 anchors.rightMargin: 10
                                 spacing: 10
 
@@ -324,10 +329,11 @@ Item
                                     Layout.preferredHeight: 27
 
                                     radius: width / 2
-                                    color: "#1E1F22"
+                                    color: noAvatarLetter.visible ? "#839ac7" : "transparent"
 
                                     Text
                                     {
+                                        id:noAvatarLetter
                                         anchors.centerIn: parent
                                         visible: modelData.avatarPath === ""
                                         text: "?"
@@ -341,6 +347,8 @@ Item
                                         anchors.fill: parent
                                         source: modelData.relationship===Relationship.Blocked ? "" //dont show blocked user's avatar
                                                         : modelData.avatarPath
+                                        fillMode: Image.PreserveAspectFit
+                                        mipmap: true
                                     }
 
                                     Rectangle
@@ -355,11 +363,10 @@ Item
 
                                         color: "transparent"
 
-                                        border.width: 4
+                                        border.width:  modelData.isTalking ? 3 : 1
 
-                                        border.color: UiHelpers.isTalkingColor(modelData.isLocalMuted,modelData.relationship)
-
-                                        visible: modelData.isTalking
+                                        border.color: modelData.isTalking ? UiHelpers.isTalkingColor(modelData.isLocalMuted,modelData.relationship)
+                                                      : "#2C3B57"
 
                                         z: -1
                                     }
@@ -485,7 +492,7 @@ Item
         Rectangle
         {
             id: userStuffOnServer
-            color: "#1e1f23"
+            color: "#080B10"
             width: parent.width
             visible: user.isConnectedToServer
             height: 50
@@ -785,7 +792,7 @@ Item
         Rectangle
         {
             id: userStuff
-            color: bg2
+            color: "#05070b"
             width: parent.width
             height: 65
 
@@ -968,7 +975,7 @@ Item
         height: parent.height
         x: parent.width - width+channelList.handleWidth
         y: 0
-        color: "grey"
+        color: "#05070b"
 
         MouseArea
         {

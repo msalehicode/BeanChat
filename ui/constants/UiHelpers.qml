@@ -45,7 +45,7 @@ QtObject
         switch(relation)
         {
             case Relationship.Blocked: return "#FF7070"
-            case Relationship.None: return "yellow"
+            case Relationship.None: return "#acbbd9"
             case Relationship.Friend: return "lime"
         }
     }

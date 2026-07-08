@@ -9,7 +9,7 @@ Item
 {
     Rectangle
     {
-        color: "#313338"
+        color: "transparent"
         anchors.fill: parent
     }
 
@@ -25,7 +25,7 @@ Item
             width: parent.width
             height: 60
 
-            color: "#222427"
+            color: "#080B10"
 
             Text
             {
@@ -60,22 +60,26 @@ Item
                 {
                     implicitWidth: 8
                     radius: width / 2
-                    color: "#72767d"
+                    color: "#839ac7"
                 }
 
                 background: Rectangle
                 {
-                    color: "#202225"
+                    color: "#3c5484"
                 }
             }
 
             delegate: Rectangle
             {
-                width: connectedUsersView.width/1.11
-                anchors.horizontalCenter: connectedUsersView.horizontalCenter
+                width: connectedUsersView.width/1.20
+                anchors.horizontalCenter: parent.horizontalCenter
                 height: 60
                 radius: height
-                color: "#202225"
+                border.color: "#2C3B57"
+                border.width: 2
+                color: userMouseArea.containsMouse
+                       ? "#1C273A"
+                       : "#0B1018"
 
                 Row
                 {
@@ -90,10 +94,11 @@ Item
                         height: width
                         radius: width / 2
 
-                        color: "#1E1F22"
+                        color: noAvatarLetter.visible ? "#839ac7" : "transparent"
 
                         Text
                         {
+                            id:noAvatarLetter
                             anchors.centerIn: parent
                             visible: model.userAvatarPath === ""
                             text: "?"
@@ -106,13 +111,8 @@ Item
                             source: model.userRelation===Relationship.Blocked ? "" //dont show blocked user's avatar
                                             : model.userAvatarPath
                             anchors.fill: parent
-                        }
-
-
-                        MouseArea
-                        {
-                            anchors.fill: parent
-                            onClicked: console.log("prof")
+                            fillMode: Image.PreserveAspectFit
+                            mipmap: true
                         }
 
                         // Status indicator
@@ -144,36 +144,36 @@ Item
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
+                }
 
-                    Image
+
+                Image
+                {
+                    id:iconUserOs
+                    source: getOsIcon(model.userOsName)
+                    width: 20
+                    height: 20
+                    anchors
                     {
-                        id:iconUserOs
-                        function getOsIcon(name)
+                        right:parent.right
+                        rightMargin: 20
+                        verticalCenter:parent.verticalCenter
+                    }
+
+                    function getOsIcon(name)
+                    {
+                        switch(name)
                         {
-                            switch(name)
-                            {
                             case "Android": return "icons/os/android.png";
                             case "Windows": return "icons/os/windows.png";
                             case "iOS": return "icons/os/ios.png";
                             case "macOS": return "icons/os/macos.png";
                             case "Linux": return "icons/os/linux.png";
                             default: return "";
-                            }
                         }
-
-                        source: getOsIcon(model.userOsName)
-                        width: 20
-                        height: 20
-                        anchors.verticalCenter: parent.verticalCenter
                     }
-
-                    // Text
-                    // {
-                    //     text: userOsVersion + " " +userAppVersion + " " +userAppBuildType
-                    //     color: "white"
-                    //     anchors.verticalCenter: parent.verticalCenter
-                    // }
                 }
+
 
 
                 MouseArea

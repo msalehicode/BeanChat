@@ -15,7 +15,7 @@ Item
         anchors.fill: parent
         anchors.left: parent.left
         anchors.leftMargin: channelList.handleWidth
-        color: "transparent"
+        color: "#141C2B"
 
 
         GridView
@@ -70,7 +70,7 @@ Item
                 width: channelClientsGridView.cellWidth - 10
                 height: channelClientsGridView.cellHeight - 10
                 radius: 30
-                color: "grey"
+                color: "transparent"
 
                 Rectangle
                 {
@@ -84,7 +84,7 @@ Item
                     {
                         anchors.fill: parent
                         sink: model.videoSink
-                        radius: 45 //due to its C++ Property radius value may be varied to normal qml radiuses. e.g 30 has to be 45 too looks simular
+                        radius: 90 //due to its C++ Property radius value may be varied to normal qml radiuses. e.g 30 has to be 45 too looks simular
                         Component.onCompleted:
                         {
                             console.log("building VideItem, username=",username, "sink=",videoSink, "isCameraOpen=",isCameraOpen)
@@ -98,21 +98,26 @@ Item
                     id:baseUserParticipantInfo
                     anchors.fill: parent
                     radius: parent.radius
-                    color: model.isCameraOpen ? "transparent" : "purple"
-                    border.width: model.isTalking ? 4 : 0
-                    border.color: UiHelpers.isTalkingColor(model.isLocalMuted, model.relation)
+                    color: model.isCameraOpen ? "transparent" : "#0B1018"
+                    border.width: 4
+                    border.color: model.isTalking ?
+                                      UiHelpers.isTalkingColor(model.isLocalMuted, model.relation)
+                                      : "#2C3B57"
 
                     Rectangle
                     {
                         id:userAvatarCenterParticipant
-                        width: 50
-                        height: 50
-                        radius: 30
+                        width: 75
+                        height: width
+                        radius: width/2
                         visible: !model.isCameraOpen
                         anchors.centerIn: parent
-                        color: "#1E1F22"
+                        color: noAvatarLetter.visible ? "#839ac7" : "transparent"
+                        border.color: "#2C3B57"
+                        border.width: 1
                         Text
                         {
+                            id:noAvatarLetter
                             anchors.centerIn: parent
                             visible: model.avatarPath === ""
                             text: "?"
@@ -124,6 +129,8 @@ Item
                             anchors.fill: parent
                             source: model.relation===Relationship.Blocked ? "" //dont show blocked user's avatar
                                             : model.avatarPath
+                            fillMode: Image.PreserveAspectFit
+                            mipmap: true
                         }
                     }
                     Rectangle

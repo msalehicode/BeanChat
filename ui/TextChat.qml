@@ -16,7 +16,7 @@ Item
     Rectangle
     {
         anchors.fill: parent
-        color: "#313338"
+        color: "transparent"
     }
 
     Rectangle
@@ -30,7 +30,7 @@ Item
         }
 
         height: 60
-        color: "#222427"
+        color: "#080B10"
         clip: true
 
         Row
@@ -90,12 +90,12 @@ Item
             {
                 width: 4
                 radius: width / 2
-                color: "#66676a"
+                color: "#839ac7"
             }
 
             background: Rectangle
             {
-                color: bg2
+                color: "#3c5484"
             }
         }
 
@@ -138,7 +138,7 @@ Item
             {
                 anchors.fill: parent
                 color: hoverHandler.hovered
-                       ? "#222427"
+                       ? "#080B10"
                        : "transparent"
                 z: -1
             }
@@ -168,12 +168,16 @@ Item
                     height: 40
                     radius: 20
 
-                    color: "#5865F2"
+                    color: noAvatarLetter.visible ? "#839ac7" : "transparent"
+                    border.width: 1
+
+                    border.color: "#2C3B57"
 
                     Text
                     {
+                        id:noAvatarLetter
                         anchors.centerIn: parent
-                        text: model.senderName.charAt(0)
+                        text:"?"
                         visible: !userAvatar.visible
                         color: "white"
                         font.bold: true
@@ -215,7 +219,7 @@ Item
                         anchors.bottomMargin: -1
 
                         border.width: 2
-                        border.color: bg2   // same as panel background
+                        border.color: bg2
 
                         color: UiHelpers.statusColor(model.senderStatus)
                     }
@@ -367,6 +371,7 @@ Item
 
                         color: "black"   // dark transparent
                         opacity: 0.5
+                        radius: 15
 
                         property bool revealed: false
 
@@ -419,8 +424,8 @@ Item
 
         anchors.bottomMargin: 12
         radius: width / 2
-        color: "#2B2D31"
-        border.color: "#4A4D52"
+        color: "#141C2B"
+        border.color: "#2C3B57"
         z:100
         Image
         {
@@ -463,7 +468,7 @@ Item
             bottom: parent.bottom
         }
 
-        color: "#313338"
+        color: "#05070b"
 
         height: inputBackground.height + 16
 
@@ -482,7 +487,7 @@ Item
             }
 
             radius: 8
-            color: "#383A40"
+            color: "#080B10"
 
             height: Math.min(
                         Math.max(messageInput.contentHeight + 24, 48),
@@ -519,7 +524,7 @@ Item
 
                         background: Rectangle
                         {
-                            color:"#4a4c51"
+                            color:"transparent"
                         }
 
                         topPadding: 10

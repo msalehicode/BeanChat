@@ -21,7 +21,7 @@ Item {
     Rectangle
     {
         anchors.fill: parent
-        color:"black"
+        color: "#05070b"
     }
 
 
@@ -104,30 +104,30 @@ Item {
                 width: 250
                 height: parent.height
                 clip: true
-                visible: user.isConnectedToServer
                 property int currentTab: 0
 
                 Rectangle
                 {
                     anchors.fill: parent
-                    color: "black"
+                    color: "#141C2B"
                     ColumnLayout
                     {
                         anchors.fill: parent
-
+                        visible: user.isConnectedToServer
                         RowLayout
                         {
                             id:indicatorStackView
                             Layout.fillWidth: true
+                            Layout.preferredHeight: 40
                             visible: user.myChannelName.length>0
-                            spacing: 2
+                            // spacing: 2
 
                             Rectangle
                             {
                                 Layout.fillWidth: true
-                                height: 40
+                                Layout.preferredHeight: 40
 
-                                color: rightPanel.currentTab === 0 ? "#2a82da" : "#222"
+                                color: rightPanel.currentTab === 0 ? "#839ac7" : "#05070b"
 
                                 Row
                                 {
@@ -149,6 +149,7 @@ Item {
                                 MouseArea
                                 {
                                     anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
                                     onClicked:
                                     {
                                         rightPanel.currentTab = 0
@@ -161,8 +162,8 @@ Item {
                             Rectangle
                             {
                                 Layout.fillWidth: true
-                                height: 40
-                                color: rightPanel.currentTab === 1 ? "#2a82da" : "#222"
+                                Layout.preferredHeight: 40
+                                color: rightPanel.currentTab === 1 ? "#839ac7" : "#05070b"
 
                                 Row
                                 {
@@ -209,6 +210,7 @@ Item {
                                 MouseArea
                                 {
                                     anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
                                     onClicked:
                                     {
                                         rightPanel.currentTab = 1
@@ -232,7 +234,6 @@ Item {
                             ConnectedUsers {}
 
                             TextChat {}
-
                         }
                     }
 
@@ -242,9 +243,10 @@ Item {
                         id: handleRight
                         width: 15
                         height: parent.height
+                        visible: user.isConnectedToServer
                         x: -width / 2
                         y: 0
-                        color: "grey"
+                        color: "#05070b"
 
                         MouseArea
                         {
