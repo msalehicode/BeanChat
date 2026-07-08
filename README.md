@@ -176,3 +176,17 @@ cmake --install "path/to/build/Desktop_Qt_6_9_3-Release" --prefix "path/to/somew
 
 ## 📄 License
 This project uses Qt under the LGPL v3 license.
+
+
+---
+>[!TIP]
+> Windows location:
+>
+>database,identities is located at:
+> C:\Users\vboxuser\AppData\Roaming\orgBeanChat\appBeanChat
+>
+>avatars cache path is located at:
+>C:\Users\vboxuser\AppData\Local\orgBeanChat\appBeanChat\cache\servers
+>
+>config(QSettings) is located at: WIN+R -> type: regedit. route to:
+>HKEY_CURRENT_USER\Software\orgBeanChat\appBeanChat
