@@ -30,8 +30,8 @@ or browse
 | Platform | Status | Stage | Version |
 |-----------|--------|--------|--------|
 | 🌐 Server | ✅ | Debug | 0.17.13 |
-| 🪟 Windows Client | ✅ | Debug | v0.21.17 |
-| 🐧 Linux Client | ✅ | Debug | v0.21.17 |
+| 🪟 Windows Client | ✅ | Debug | v0.21.20 |
+| 🐧 Linux Client | ? | ? | ? |
 | 🤖 Android Client | 🚧 | 🚧 | ? |
 | 🍎 macOS Client | 🚧 | 🚧 | ? |
 | 📱 iOS Client | 🚧 | 🚧 | ? |
