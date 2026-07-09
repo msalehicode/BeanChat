@@ -42,11 +42,29 @@
 
 
 
+//test video/camera (draw things)
+#include "video/ffmpegencoder.h"
+#include <QPainter>
+#include <QDateTime>
+#include <QTimer>
+
+
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
 
     app.setWindowIcon(QIcon(":/icons/BeanChat.png"));
+
+
+    //options
+    bool testVideo = QGuiApplication::arguments().contains("-testVid");
+    qDebug() << "\n\n"
+                "================================================================";
+    qDebug() << "======================== LAUNCH OPTIONS ========================";
+    qDebug() << "-testVid (draw fake instead of camera data) = " << testVideo;
+    qDebug() << "================================================================"
+                "\n\n";
+
 
 
     //reading these from cmake
@@ -86,30 +104,55 @@ int main(int argc, char *argv[])
              &cam, &audio, &speaker);
 
     //---------- camera connection ----------
-    QObject::connect(
-        &cam,
-        &CameraCapture::videoPacketReady,
-        &usr,
-        &User::sendVideoFrame);
+
+    //just make fake camera feed for test
+    FFmpegEncoder fakeEncoder;
+    QTimer timer;
+    if(testVideo)
+    {
+        fakeEncoder.open(
+            CAMERA_DEFAuLT_WIDTH,
+            CAMERA_DEFAULT_HEIGHT,
+            CAMERA_DEFAULT_FPS,
+            CAMERA_DEFAULT_BITRATE,
+            CAMERA_DEFAULT_KEYFRAME);
+
+        QObject::connect(
+            &fakeEncoder,
+            &FFmpegEncoder::packetReady,
+            &usr,
+            &User::sendVideoFrame);
 
 
-    //just make fake camera feed for test due to camera can use only once
-    // QTimer timer;
-    // QObject::connect(
-    //     &timer,
-    //     &QTimer::timeout,
-    //     [&usr]()
-    //     {
-    //         qDebug() << "generating fake camera ..";
-    //         QImage img(640, 400, QImage::Format_RGB32);
-    //         img.fill(Qt::red);
-    //         QByteArray jpgData;
-    //         QBuffer buffer(&jpgData);
-    //         buffer.open(QIODevice::WriteOnly);
-    //         img.save(&buffer, "JPG", 60);
-    //         usr.sendVideoFrame(jpgData);
-    //     });
-    // timer.start(1000);
+        QObject::connect(
+            &timer,
+            &QTimer::timeout,
+            [&]()
+            {
+                static int frame = 0;
+                QImage img(CAMERA_DEFAuLT_WIDTH, CAMERA_DEFAULT_HEIGHT, QImage::Format_RGB888);
+                img.fill(Qt::black);
+                QPainter p(&img);
+                p.setPen(Qt::white);
+                p.setFont(QFont("Arial", 28));
+                p.drawText(20, 40, QString("Frame %1").arg(frame++));
+                p.drawText( 20, 80, QTime::currentTime().toString());
+                // Moving rectangle
+                p.fillRect((frame * 8) % 500, 150, 100, 100, Qt::red);
+                p.end();
+                fakeEncoder.encode(img);
+            });
+        timer.start(1000 / CAMERA_DEFAULT_FPS); //FPS
+    }
+    else
+    {
+        QObject::connect(
+            &cam,
+            &CameraCapture::videoPacketReady,
+            &usr,
+            &User::sendVideoFrame);
+    }
+
 
 
 

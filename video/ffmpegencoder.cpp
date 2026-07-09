@@ -47,21 +47,19 @@ bool FFmpegEncoder::open(
     m_codec->time_base = AVRational{1, fps};
     m_codec->framerate = AVRational{fps, 1};
 
-    m_codec->bit_rate = bitrate;
-
     m_codec->gop_size = gopSize;
     m_codec->max_b_frames = 0;
 
     // Very important for realtime video
-    av_opt_set(m_codec->priv_data,
-               "preset",
-               "veryfast",
-               0);
+    av_opt_set(m_codec->priv_data, "preset", "ultrafast", 0);
 
-    av_opt_set(m_codec->priv_data,
-               "tune",
-               "zerolatency",
-               0);
+    av_opt_set(m_codec->priv_data, "tune", "zerolatency", 0);
+
+    av_opt_set(m_codec->priv_data, "profile", "baseline", 0);
+
+    av_opt_set(m_codec->priv_data, "repeat-headers", "1", 0);
+
+    av_opt_set(m_codec->priv_data, "crf", "28", 0);
 
     if (avcodec_open2(
             m_codec,

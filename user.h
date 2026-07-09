@@ -11,6 +11,7 @@
 #include <QSysInfo>
 #include <QTimer>
 #include <QHostInfo>
+#include <QQueue>
 
 // include from BeanChatCommon (to server and client speak one language)
 #include <protocol/Packets.h>
@@ -399,7 +400,8 @@ private:
     CameraCapture* m_cam=nullptr;
     bool m_isCameraOpen=false;
     FFmpegDecoder m_videoDecoder;
-    quint64 m_lastVideoSender = 0; //temporary, need to be REPLACED --------------
+    QHash<QString, BeanChatCommon::PendingFrame> m_pendingFrames;
+    QQueue<quint64> m_decodeQueue;
 
     //speaker
     AudioSpeaker* m_speaker=nullptr;

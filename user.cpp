@@ -56,8 +56,12 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
         this,
         [this](const QImage &image)
         {
-            ClientUser* sender =
-                m_currentChannelParticipant->findUser(m_lastVideoSender);
+            if(m_decodeQueue.isEmpty())
+                return;
+
+            quint64 senderId = m_decodeQueue.dequeue();
+
+            ClientUser *sender = m_currentChannelParticipant->findUser(senderId);
 
             if(!sender)
                 return;
@@ -1843,30 +1847,65 @@ void User::onUdpReadyRead()
 
         case PacketType::UdpVideoData: //video
         {
-            VideoPacket packet;
+            VideoFragment frag;
 
-            in >> packet;
+            in >> frag;
 
-            // qDebug()
-            //     << "Video received from "
-            //     << packet.senderId
-            //     << "seq="
-            //     << packet.sequence
-            //     << "size="
-            //     << packet.videoData.size();
+            //Create a unique key
+            QString key = QString("%1:%2").arg(frag.senderId).arg(frag.frameId);
 
-            ClientUser* senderParticipant = m_currentChannelParticipant->findUser(packet.senderId);
-            if(!senderParticipant)
+            //Get the PendingFrame
+            BeanChatCommon::PendingFrame& pending = m_pendingFrames[key];
+
+            //Initialize it once
+            if (pending.fragments.isEmpty())
             {
-                qDebug() << "could not find sender as participant..";
-                continue;
+                pending.expectedFragments =
+                    frag.fragmentCount;
+
+                pending.fragments.resize(
+                    frag.fragmentCount);
             }
 
-            //decode.
-            m_lastVideoSender = packet.senderId;
-            m_videoDecoder.decode(packet.videoData);
+            //Before storing, validate it:
+            if (frag.fragmentIndex >= pending.fragments.size())
+            {
+                qDebug() << "Invalid fragment index";
+                break;
+            }
 
-            // emit videoReceived(packet.videoData);
+            //avoid counting duplicates
+            if (pending.fragments[frag.fragmentIndex].isEmpty())
+            {
+                pending.fragments[frag.fragmentIndex] =
+                    frag.payload;
+
+                pending.received++;
+            }
+
+            //Wait until complete
+            if (pending.received != pending.expectedFragments)
+            {
+                break;
+            }
+
+            //Rebuild the packet
+            QByteArray packetData;
+            for (const QByteArray &piece : pending.fragments)
+            {
+                packetData += piece;
+            }
+
+            //queue the sender
+            m_decodeQueue.enqueue(frag.senderId);
+
+            //decode
+            m_videoDecoder.decode(packetData);
+
+
+            //cleanup
+            m_pendingFrames.remove(key);
+
             break;
         }
 
@@ -1921,47 +1960,45 @@ void User::sendVideoFrame(const QByteArray &videoData)
     if(myId() < 0)
         return;
 
-    VideoPacket videoPacket;
+    const int chunkSize = 1100;
 
-    videoPacket.senderId = static_cast<quint64>(myId());
+    quint32 frameId = ++m_videoSequence;
 
-    videoPacket.sequence = ++m_videoSequence;
+    int count = (videoData.size() + chunkSize - 1) / chunkSize;
 
-    videoPacket.videoData = videoData;
-
-    QByteArray data;
-
-    QDataStream out(
-        &data,
-        QIODevice::WriteOnly);
-
-    out << PacketType::UdpVideoData;
-    out << videoPacket;
-
-#if D_PRINT_VIDEO_INFO
-    qDebug() << "Sending Video JPEG bytes:" << videoData.size();
-    qDebug() << "Video UDP datagram bytes:" << data.size();
-
-    qDebug()
-        << "VIDEO DEST:"
-        << QHostAddress(m_serverIp) << m_serverPort;
-#endif
-
-    qint64 sent = m_udpSocket.writeDatagram(
-        data,
-        m_serverLookedupAddress,
-        m_serverPort);
-
-#if D_PRINT_VIDEO_INFO
-    qDebug() << "sending video writeDatagram returned:" << sent;
-
-    if (sent == -1)
+    for (int i = 0; i < count; i++)
     {
-        qDebug() << "Error:"
-                 << m_udpSocket.error()
-                 << m_udpSocket.errorString();
-    }
+        VideoFragment frag;
+
+        frag.senderId = myId();
+        frag.frameId = frameId;
+        frag.fragmentIndex = i;
+        frag.fragmentCount = count;
+        frag.payload = videoData.mid(i * chunkSize, chunkSize);
+
+        QByteArray datagram;
+        QDataStream out(&datagram, QIODevice::WriteOnly);
+
+        out << PacketType::UdpVideoData;
+        out << frag;
+
+#if D_PRINT_VIDEO_INFO
+        qDebug()
+            << "Frame"
+            << frameId
+            << "Fragment"
+            << i + 1
+            << "/"
+            << count
+            << "Payload"
+            << frag.payload.size();
 #endif
+
+        m_udpSocket.writeDatagram(
+            datagram,
+            m_serverLookedupAddress,
+            m_serverPort);
+    }
 }
 
 void User::currentIdentityChangedTo(const QString &name)

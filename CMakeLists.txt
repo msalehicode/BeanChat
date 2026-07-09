@@ -5,7 +5,7 @@ project(BeanChat VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(APP_CURRENT_VERSION "0.21.17")
+set(APP_CURRENT_VERSION "0.21.19")
 set(APP_TitleName "BeanChat")
 set(APP_OrganizationName "orgBeanChat")
 set(APP_ApplicationName "appBeanChat")
@@ -314,12 +314,11 @@ target_compile_definitions(appBeanChat PRIVATE
 
 
     # camera
-    CAMERA_DEFAuLT_WIDTH=640
-    CAMERA_DEFAULT_HEIGHT=480
+    CAMERA_DEFAuLT_WIDTH=320
+    CAMERA_DEFAULT_HEIGHT=240
     CAMERA_DEFAULT_FPS=15
-    CAMERA_DEFAULT_BITRATE=50000 #bitrate -> 100000 / 8 = 12500 bytes/sec ≈ 12.5 KB/sec
+    CAMERA_DEFAULT_BITRATE=400000 #bitrate 50,000 / 8 = 6,250 bytes/sec ≈ 6.1 KB/sec
     CAMERA_DEFAULT_KEYFRAME=15 #keyframe every 15 frames (1 second)
-
 )
 
 
