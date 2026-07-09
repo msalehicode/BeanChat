@@ -198,6 +198,8 @@ public:
 
     void initOrLoadSettings();
     QString myAppVersion() const;
+    void setMyAppVersion(const QString &newAppVersion);
+
     QString buildType() const;
     // UserConnectionStatus connectionStatus() const;
     // void setConnectionStatus(UserConnectionStatus newConnectionStatus);
@@ -240,6 +242,7 @@ public:
 
     quint64 myChannelId() const;
     void setMyChannelId(quint64 newMyChannelId);
+
 
 signals:
 
@@ -290,7 +293,7 @@ signals:
 
     void connectedServerIdChanged();
 
-
+    void myAppVersionChanged();
 
     /* notificationRequested's ID NOTE:
      *
@@ -353,7 +356,7 @@ private:
     QString m_myServerName= ""; //current server connected to (name that saved by user inside myServers, can be modified, only shown to this user)
     // UserConnectionStatus m_connectionStatus=UserConnectionStatus::Unknown;
     int m_connectedServerId_onDb=-1; //(serverDbIndex) to use for path of avatars. e.g path/to/Cached/avatars/0  <- this 0 is server id (directory to hold that server user's avatar files)
-
+    QString m_appVersion;
 
     //store connected server info received from Server, then feed to QML
     ServerInfo m_receivedServerInfo;
@@ -434,7 +437,7 @@ private:
     Q_PROPERTY(int connectedServerId READ connectedServerId WRITE setConnectedServerId NOTIFY connectedServerIdChanged FINAL) //using m_connectedServerId_onDb
     Q_PROPERTY(QString myAvatarPath READ myAvatarPath WRITE setMyAvatarPath NOTIFY myAvatarPathChanged FINAL)
 
-    Q_PROPERTY(QString myAppVersion READ myAppVersion CONSTANT)
+    Q_PROPERTY(QString myAppVersion READ myAppVersion NOTIFY myAppVersionChanged FINAL)
     Q_PROPERTY(QString buildType READ buildType CONSTANT)
     Q_PROPERTY(QString appTitle READ appTitle CONSTANT)
     Q_PROPERTY(ClientUser::Status myStatus READ myStatus WRITE setMyStatus NOTIFY myStatusChanged FINAL)

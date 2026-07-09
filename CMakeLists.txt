@@ -334,6 +334,8 @@ target_compile_definitions(appBeanChat PRIVATE
     MIC_DEFAULT_RNNOISE_VALUE=0.0
     MIC_DEFUALT_DEVICE_INDEX=0
 
+    APP_SETTING_VER="App/Version"
+
     # qsettings group and keys , also these values are inside ui/settingPages/AudioInputPage.qml too
     MIC_SETTING_DEVICE="AudioInput/Device"
     MIC_SETTING_RNN_STATUS="AudioInput/NoiseSuppression"

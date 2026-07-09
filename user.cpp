@@ -1567,6 +1567,12 @@ void User::loginToUdpSocket()
     }
 }
 
+void User::setMyAppVersion(const QString &newAppVersion)
+{
+    m_appVersion = newAppVersion;
+    emit myAppVersionChanged();
+}
+
 quint64 User::myChannelId() const
 {
     return m_myChannelId;
@@ -2110,6 +2116,15 @@ void User::initOrLoadSettings()
     //load all saved settings such as saved devices index for audio input/output, volumes and ... and set to variables
 
 
+    //try to read appversion if not exists use build version
+    if(m_settingsManager->contains(APP_SETTING_VER))
+        setMyAppVersion(m_settingsManager->value(APP_SETTING_VER, APP_VERSION).toString());
+    else //set default setting.
+    {
+        m_settingsManager->setValue(APP_SETTING_VER, APP_VERSION);
+        setMyAppVersion(APP_VERSION);
+    }
+
     // =================================== read and set audioinput settings
     if(m_settingsManager->contains(MIC_SETTING_RNN_STATUS))
         m_mic->setRnnoiseStatus(m_settingsManager->value(MIC_SETTING_RNN_STATUS, MIC_DEFAULT_RNNOISE_STATUS).toBool());
@@ -2268,7 +2283,7 @@ void User::initOrLoadSettings()
 
 QString User::myAppVersion() const
 {
-    return QCoreApplication::applicationVersion();
+    return m_appVersion;
 }
 
 QString User::buildType() const
