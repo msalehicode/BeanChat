@@ -399,6 +399,7 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
 
     //system info.
     login.appVersion = myAppVersion();
+    login.appProtocolVersion = BeanChatCommon::Protocol::Version;
     login.buildType = buildType();
     login.machineId = QString(QSysInfo::machineUniqueId().toHex());
     login.machineName = QSysInfo::machineHostName();
