@@ -79,37 +79,6 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
     initOrLoadSettings();
 
 
-
-    //setup database stuff
-    m_database->createTable(R"(
-        CREATE TABLE IF NOT EXISTS MyServers
-        (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
-            avatarPath TEXT,
-            ip TEXT,
-            port TEXT
-        )
-        )");
-
-
-    m_database->createTable(R"(
-        CREATE TABLE IF NOT EXISTS UserRelations
-        (
-            identity TEXT PRIMARY KEY,
-
-            nickname TEXT,
-            note TEXT,
-
-            relationship INTEGER NOT NULL DEFAULT 0,
-
-            muted INTEGER NOT NULL DEFAULT 0,
-            voiceVolume INTEGER NOT NULL DEFAULT 100,
-            createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
-        );
-        )");
-
-
     //load all saved servers from database.
     qDebug() << "loading all saved servers.";
     QVariantList servers = m_database->getAll("MyServers");

@@ -57,6 +57,7 @@ public:
     // Generic query
     QVariantList query(const QString &sql);
 
+    QSqlDatabase& database();
 
 
     //user relation

@@ -1,9 +1,11 @@
 #include "database.h"
+#include "databasemigrator.h"
 
 Database::Database(QObject *parent)
     : QObject(parent)
 {
-    open();
+    if (!open())
+        qFatal("Failed to initialize database.");
 }
 
 Database::~Database()
@@ -32,6 +34,15 @@ bool Database::open()
     }
 
     qDebug() << "Database:" << dbPath;
+
+
+    //
+    DatabaseMigrator migrator(this);
+    if (!migrator.migrate())
+    {
+        qDebug() << "Database migration failed.";
+        return false;
+    }
 
     return true;
 }
@@ -242,6 +253,12 @@ QVariantList Database::query(const QString &sql)
     }
 
     return rows;
+}
+
+
+QSqlDatabase& Database::database()
+{
+    return m_db;
 }
 
 
