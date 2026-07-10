@@ -5,7 +5,7 @@ project(BeanChat VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(APP_CURRENT_VERSION "0.24.22")
+set(APP_CURRENT_VERSION "0.25.23")
 set(APP_TitleName "BeanChat")
 set(APP_OrganizationName "orgBeanChat")
 set(APP_ApplicationName "appBeanChat")
@@ -140,6 +140,9 @@ qt_add_qml_module(appBeanChat
         managers/identitymanager.h managers/identitymanager.cpp
         managers/relationshipmanager.h managers/relationshipmanager.cpp
 
+
+
+
         #video
         video/videosink.h
         video/myvideoitem.h video/myvideoitem.cpp
@@ -158,6 +161,9 @@ qt_add_qml_module(appBeanChat
         database/database.h database/database.cpp
         database/databasemigrator.h database/databasemigrator.cpp
 
+        #update checker
+        update/updatechecker.h update/updatechecker.cpp
+        update/latestresponse.h update/latestresponse.cpp
 
         #sharing (share server) (ip:port to a serverCode) (server's address [domain or ip:port] to qrcode/image)
         sharing/servercode.h sharing/servercode.cpp

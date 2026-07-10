@@ -32,27 +32,77 @@ Item {
         Item
         {
             id:importantNotifierBar
+            property string nColor:"red"
+            property string nText: "Example important notification text"
+            property string nActionButtonText: "Button"
+            property var nActionButtonTask:null
             width: parent.width
             visible: false
             height:25
             Rectangle
             {
                 anchors.fill: parent
-                color: "red"
+                color: importantNotifierBar.nColor
                 Text
                 {
-                    // text:"You are offline"
-                    text: "Audio Input not found."
+                    id:importantNotifierBarText
+                    text:  importantNotifierBar.nText
                     anchors.centerIn: parent
                     color:"white"
                     font.bold: true
                 }
+
                 Rectangle
                 {
-                    id:closeButtonNotifierBar
-                    width: 20
-                    height: 20
-                    color: "black"
+                    id: actionButtonImportantNotificationBar
+                    width: 100
+                    height: parent.height-6
+                    radius: 6
+                    color:  "black"
+                    visible: importantNotifierBar.nActionButtonTask!==null
+                    anchors
+                    {
+                        verticalCenter:parent.verticalCenter
+                        left:importantNotifierBarText.right
+                        leftMargin:15
+                    }
+
+                    Text
+                    {
+                        anchors.centerIn: parent
+                        text: importantNotifierBar.nActionButtonText
+                        color: "white"
+                        font.bold: true
+                    }
+
+                    MouseArea
+                    {
+                        id: actionImportantMouseArea
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        hoverEnabled: true
+                        onClicked:
+                        {
+                            if(importantNotifierBar.nActionButtonTask)
+                            {
+                                importantNotifierBar.visible=false
+                                importantNotifierBar.nActionButtonTask()
+                            }
+                            else
+                                console.log("action not defined.")
+                        }
+                    }
+                }
+
+
+
+                Rectangle
+                {
+                    id: closeButtonNotifierBar
+                    width: 22
+                    height: 22
+                    radius: 6
+                    color:  "black"
                     anchors
                     {
                         right:parent.right
@@ -60,17 +110,24 @@ Item {
                         verticalCenter:parent.verticalCenter
                     }
 
-                    Text {
-                        text: "X"
+                    Text
+                    {
                         anchors.centerIn: parent
-                        color:"white"
+                        text: "X"
+                        color: "white"
+                        font.bold: true
                     }
+
                     MouseArea
                     {
                         anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        hoverEnabled: true
                         onClicked: importantNotifierBar.visible=false
                     }
                 }
+
+
             }
         }
 
@@ -449,6 +506,21 @@ Item {
         {
             if(user.myChannelName==="") //channel not exists or deleted.
                 rightPanel.currentTab=0
+        }
+
+        function onShowImportantNotifierBar(nText,nColor)
+        {
+            if(nColor===3) //bluc update,
+            {
+                importantNotifierBar.nColor="#5865F2"
+                importantNotifierBar.nText=nText
+                importantNotifierBar.nActionButtonText="UPDATE NOW"
+                importantNotifierBar.nActionButtonTask= function()
+                {
+                    user.updateApp()
+                }
+                importantNotifierBar.visible=true
+            }
         }
     }
 }

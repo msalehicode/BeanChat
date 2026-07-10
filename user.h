@@ -54,6 +54,9 @@ using namespace BeanChatCommon;
 #define SAVE_AVATAR_PATH QStandardPaths::writableLocation(QStandardPaths::CacheLocation)+"/servers/"
 
 
+#include <QProcess>
+#include "update/updatechecker.h"
+
 
 // enum class UserConnectionStatus
 // {
@@ -66,6 +69,14 @@ using namespace BeanChatCommon;
 //     Disconnected
 // };
 
+enum class ImportantNotificationColor
+{
+    Unknown=0,
+    Red,
+    Green,
+    Blue,
+    Yellow
+};
 
 //this should matches with ui/constants/NotificationTypes.qml
 enum class NotificationType
@@ -133,6 +144,8 @@ public:
 
     Q_INVOKABLE ClientUser *clientUser(quint64 id);
 
+
+    Q_INVOKABLE void updateApp();
     //connect,disconnect
     Q_INVOKABLE void connectToServer(bool saveThisConnection, const QString& serverIp, const QString& str_serverPort);
     Q_INVOKABLE void switchOrConnectToServer(const QString& serverIp, const QString& str_serverPort, int serverId);
@@ -308,6 +321,9 @@ signals:
         NotificationId id=NotificationId::None,
         NotificationDuration duration=NotificationDuration::Normal);
 
+    void showImportantNotifierBar(const QString& text,
+                                                                    ImportantNotificationColor color);
+
 
     void receivedServerInfoChanged();
 
@@ -416,6 +432,11 @@ private:
     ParticipantModel* m_currentChannelParticipant=nullptr;
     MyServersModel* m_myServersModel=nullptr;
     ConnectedUsersModel* m_connectedUsersModel=nullptr;
+
+
+
+    //update
+    UpdateChecker m_updateChecker;
 
 
     Q_PROPERTY(int myId READ myId WRITE setMyId NOTIFY myIdChanged FINAL)

@@ -76,6 +76,8 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
             sink->setImage(image);
         });
 
+
+    //settings
     initOrLoadSettings();
 
 
@@ -161,6 +163,49 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
                 if (ClientUser *user = m_clientUserManager->user(userId))
                     user->setIsTalking(talking);
             });
+
+
+
+
+
+    //setup update checker
+    connect(&m_updateChecker,
+            &UpdateChecker::updateAvailable,
+            this,
+            [this](const LatestResponse &response)
+            {
+                qDebug() << "update available, update to " << response.latestVersion().toString() << "current version = " << myAppVersion();
+                emit showImportantNotifierBar("Update "+ response.latestVersion().toString() + " is available",
+                                                                         ImportantNotificationColor::Blue);
+            });
+
+    connect(&m_updateChecker,
+            &UpdateChecker::noUpdateAvailable,
+            this,
+            []()
+            {
+                qDebug() << "Already up to date.";
+            });
+
+    connect(&m_updateChecker,
+            &UpdateChecker::errorOccurred,
+            this,
+            [this](const QString &err)
+            {
+                qDebug() << "error to check for update err=" << err;
+                // emit showImportantNotifierBar("Failed to check for update, "+err,
+                //                               ImportantNotificationColor::Red);
+            });
+
+
+    //check for update at startup
+    QString targetPlatform;
+    if(platformName()=="Windows")
+        targetPlatform="windows-x64";
+    else
+        targetPlatform="windows-x64"; //for test
+
+    m_updateChecker.checkForUpdates(targetPlatform, myAppVersion());
 }
 
 
@@ -644,6 +689,21 @@ void User::deleteChannel(quint64 channelId)
 ClientUser *User::clientUser(quint64 id)
 {
     return m_clientUserManager->user(id);
+}
+
+void User::updateApp()
+{
+    qDebug() << "updateApp clicked";
+    QString exe = QCoreApplication::applicationDirPath() + "/BeanChatUpdater.exe";
+    qDebug() << "trying to launch updater, path=" << exe;
+    if (!QProcess::startDetached(exe))
+    {
+        qDebug() << "failed to launch updater.";
+        return;
+    }
+
+    qDebug() << "updater launched, lets close self.";
+    QCoreApplication::quit();
 }
 
 void User::askForServerState()
@@ -1539,7 +1599,21 @@ void User::loginToUdpSocket()
 
 void User::setMyAppVersion(const QString &newAppVersion)
 {
-    m_appVersion = newAppVersion;
+    const QVersionNumber savedVersion = QVersionNumber::fromString(newAppVersion);
+    const QVersionNumber buildVersion = QVersionNumber::fromString(APP_VERSION);
+
+    //check if saved version is lower than build version?
+    if (savedVersion < buildVersion)
+    {
+        m_appVersion = APP_VERSION;
+
+        //also update setting's version
+        m_settingsManager->setValue(APP_SETTING_VER, APP_VERSION);
+    }
+    else
+        m_appVersion = newAppVersion;
+
+
     emit myAppVersionChanged();
 }
 
