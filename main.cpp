@@ -49,6 +49,10 @@
 #include <QTimer>
 
 
+#include "sharing/qrcodeimageprovider.h"
+#include "sharing/servercode.h"
+#include "sharing/clipboardhelper.h"
+
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
@@ -87,6 +91,10 @@ int main(int argc, char *argv[])
     RelationshipManager relationshipManager(&database);
     AudioMixer mixer;
 
+
+    //sharing
+    ServerCode serverCode; //encode/decode (ipv4:port -> XXX-XXX-XXX)
+    ClipboardHelper clipboardHelper;
 
 
 
@@ -280,6 +288,10 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("settings",&settingsManager);
     engine.rootContext()->setContextProperty("identityManager",&identityManager);
     engine.rootContext()->setContextProperty("relationshipManager",&relationshipManager);
+    engine.rootContext()->setContextProperty("serverCode", &serverCode);
+    engine.rootContext()->setContextProperty("clipboardHelper", &clipboardHelper);
+
+    engine.addImageProvider("qrcode", new QRCodeImageProvider);
 
     QObject::connect(
         &engine,

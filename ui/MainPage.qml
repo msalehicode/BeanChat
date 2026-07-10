@@ -323,12 +323,32 @@ Item {
             modifySavedServerPopup.open()
         }
 
+        shareQRcodeButton.onClicked:
+        {
+            close()
+            showQRcodePopup.qrData=ip+":"+port
+            showQRcodePopup.titleText="Join Me (" + serverName + ")"
+            showQRcodePopup.descriptionText="Scan this QR Code to join " + serverName
+            showQRcodePopup.open()
+        }
+
+
+        shareServerCodeButton.onClicked:
+        {
+            close()
+            showToCopyPopup.value=serverCode.encode(ip,Number(port))
+            showToCopyPopup.titleText="Share via ServerCode"
+            showToCopyPopup.descriptionText="Share this code with others to join you\nwithout entering Ip and Port"
+            showToCopyPopup.open()
+        }
+
         deleteButton.onClicked:
         {
             user.deleteSavedServer(id,dbIndex)
             close()
         }
     }
+
 
     UserContextPopup
     {
@@ -404,6 +424,15 @@ Item {
         id:getValuePopup
     }
 
+    ShowQRcode
+    {
+        id:showQRcodePopup
+    }
+
+    ShowToCopyPopup
+    {
+        id:showToCopyPopup
+    }
 
 
     Connections

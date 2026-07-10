@@ -278,44 +278,109 @@ Popup
                         id:userIdentityBase
                         width: parent.width
                         height: 38
-                        radius: 10
+                        radius: 8
                         color: "#2B2D31"
-                        clip: true
-                        Flickable
+                        border.color: "#1e1f22"
+                        clip:true
+                        Text
                         {
+                            id:identityText
+                            text: clientUser ? clientUser.identity : cachedIdentity
+                            color: "white"
+                            width: parent.width-65
+                            font.family: "Consolas"    // or "monospace"
+                            font.pixelSize: 12
+                            font.bold: true
+
+                            elide: Text.ElideMiddle
                             anchors
                             {
-                                left: parent.left
-                                right: parent.right
-                                verticalCenter: parent.verticalCenter
-                                leftMargin: 5
-                            }
-
-                            height: 24
-
-                            contentWidth: identityText.contentWidth
-                            contentHeight: identityText.contentHeight
-
-                            clip: true
-                            flickableDirection: Flickable.HorizontalFlick
-
-                            TextEdit
-                            {
-                                id: identityText
-
-                                text: clientUser ? clientUser.identity : cachedIdentity
-
-                                readOnly: true
-
-                                color: "white"
-                                font.pixelSize: 10
-
-                                wrapMode: TextEdit.NoWrap
-
-                                selectByMouse: true
+                                verticalCenter:parent.verticalCenter
+                                left:parent.left
+                                leftMargin:5
                             }
                         }
+
+                        Rectangle
+                        {
+                            id: copyButton
+                            width: 55
+                            height: parent.height-6
+                            radius: 6
+                            color: copyLabel.text === "Copied!" ? "#3BA55D" : "#5865F2"
+                            anchors
+                            {
+                                right:parent.right
+                                rightMargin:5
+                                verticalCenter:parent.verticalCenter
+                            }
+
+                            Behavior on color
+                            {
+                                ColorAnimation
+                                {
+                                    duration: 180
+                                }
+                            }
+
+                            scale: copyMouseArea.pressed ? 0.96 : 1.0
+
+                            Behavior on scale
+                            {
+                                NumberAnimation
+                                {
+                                    duration: 100
+                                }
+                            }
+
+                            Text
+                            {
+                                id: copyLabel
+                                anchors.centerIn: parent
+                                text: "Copy"
+                                color: "white"
+                                font.bold: true
+
+                                Behavior on opacity
+                                {
+                                    NumberAnimation
+                                    {
+                                        duration: 120
+                                    }
+                                }
+                            }
+
+                            MouseArea
+                            {
+                                id: copyMouseArea
+
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+
+                                hoverEnabled: true
+
+                                onClicked:
+                                {
+                                    clipboardHelper.copy(identityText.text)
+
+                                    copyLabel.text = "Copied!"
+                                    copiedTimer.restart()
+                                }
+                            }
+                            Timer
+                            {
+                                id: copiedTimer
+                                interval: 1500
+                                repeat: false
+
+                                onTriggered: copyLabel.text = "Copy"
+                            }
+                        }
+
+
                     }
+
+
 
 
                    Item

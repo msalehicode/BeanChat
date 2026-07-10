@@ -15,11 +15,12 @@ Popup
     property alias connectButton: connectItem
     property alias disconnectButton : disconnectItem
     property alias modifyButton: modifyItem
+    property alias shareQRcodeButton: shareServerQRCode
+    property alias shareServerCodeButton: shareServerCode
     property alias deleteButton: deleteItem
 
     width: 250
-    height: modifyItem.visible && disconnectItem.visible ? 252 :
-            (disconnectItem.visible||modifyItem.visible? 214 : 176 )
+    height: implicitHeight
     padding: 8
 
     modal: false
@@ -112,8 +113,6 @@ Popup
             width: parent.width
             height: 36
 
-            text: "Connect"
-
             leftPadding: 12
 
             background: Rectangle
@@ -138,8 +137,6 @@ Popup
             width: parent.width
             height: 36
             visible: root.isConnected
-
-            text: "Disconnect"
 
             leftPadding: 12
 
@@ -178,6 +175,58 @@ Popup
             contentItem: Text
             {
                 text: "✏️  Modify"
+                color: "white"
+                font.pixelSize: 14
+                verticalAlignment: Text.AlignVCenter
+            }
+        }
+
+
+
+        ItemDelegate
+        {
+            id: shareServerQRCode
+
+            width: parent.width
+            height: 36
+
+            leftPadding: 12
+
+            background: Rectangle
+            {
+                radius: 5
+                color: shareServerQRCode.hovered ? "#4752C4" : "transparent"
+            }
+
+            contentItem: Text
+            {
+                text: "🔗 Share via QR Code"
+                color: "white"
+                font.pixelSize: 14
+                verticalAlignment: Text.AlignVCenter
+            }
+        }
+
+        ItemDelegate
+        {
+            id: shareServerCode
+
+            width: parent.width
+            height: 36
+
+            visible: serverCode.isIPv4(root.ip)
+
+            leftPadding: 12
+
+            background: Rectangle
+            {
+                radius: 5
+                color: shareServerCode.hovered ? "#4752C4" : "transparent"
+            }
+
+            contentItem: Text
+            {
+                text: "🔗 Share via ServerCode"
                 color: "white"
                 font.pixelSize: 14
                 verticalAlignment: Text.AlignVCenter

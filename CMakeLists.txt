@@ -5,7 +5,7 @@ project(BeanChat VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(APP_CURRENT_VERSION "0.21.21")
+set(APP_CURRENT_VERSION "0.24.22")
 set(APP_TitleName "BeanChat")
 set(APP_OrganizationName "orgBeanChat")
 set(APP_ApplicationName "appBeanChat")
@@ -58,6 +58,7 @@ qt_add_resources(appBeanChat resources
     PREFIX "/"
     FILES
         icons/BeanChat.png
+        icons/BeanChatQR.png
 
         ui/soundeffects/message.wav
         ui/soundeffects/user-join.wav
@@ -112,6 +113,8 @@ qt_add_qml_module(appBeanChat
         ui/popups/UserProfilePopup.qml
         ui/popups/UserContextPopup.qml
         ui/popups/GetValuePopup.qml #to ask for a Field with dynamic action
+        ui/popups/ShowQRcode.qml
+        ui/popups/ShowToCopyPopup.qml #e.g copy Servercode
 
         # settingsPage pages/components
         ui/settingPages/SettingSection.qml
@@ -156,6 +159,16 @@ qt_add_qml_module(appBeanChat
         database/databasemigrator.h database/databasemigrator.cpp
 
 
+        #sharing (share server) (ip:port to a serverCode) (server's address [domain or ip:port] to qrcode/image)
+        sharing/servercode.h sharing/servercode.cpp
+        sharing/clipboardhelper.h
+
+        #sharing -> qrcode generator
+        sharing/third-party/nayuki-qr-code-generator/qrcodegen.hpp
+        sharing/third-party/nayuki-qr-code-generator/qrcodegen.cpp
+        sharing/qrcodegenerator.h sharing/qrcodegenerator.cpp
+        sharing/qrcodeimageprovider.h sharing/qrcodeimageprovider.cpp
+
         # C++ models for qml
         models/channelmodel.h models/channelmodel.cpp
         models/chatmodel.h models/chatmodel.cpp
@@ -190,7 +203,6 @@ qt_add_qml_module(appBeanChat
     ui/icons/screen.png ui/icons/screen-closed.png ui/icons/screen-red.png
     ui/icons/signal.png ui/icons/signal-green.png ui/icons/signal-orange.png ui/icons/signal-red.png ui/icons/signal-yellow.png
     ui/icons/os/android.png ui/icons/os/ios.png ui/icons/os/linux.png ui/icons/os/macos.png ui/icons/os/windows.png
-
 )
 
 add_subdirectory(

@@ -10,21 +10,26 @@ Popup
     focus: true
 
     width: 420
-    height: 480
+    height: 550
 
     anchors.centerIn: Overlay.overlay
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+
+    onClosed:
+    {
+        //reset inputs
+        serverCodeField.clear()
+        serverIp.clear()
+        serverPort.text="9987"
+        saveThisServerStatus.checked;
+        buttonConnect.enabled=false
+    }
 
     background: Rectangle
     {
         color: "#313338"
         radius: 8
         border.color: "#1e1f22"
-    }
-
-    function connectToServer()
-    {
-
     }
 
     ColumnLayout
@@ -44,7 +49,7 @@ Popup
 
         Text
         {
-            text: "Enter the server address and port."
+            text: "Enter the serverCode or Address and Port to connect"
             color: "#b5bac1"
             font.pixelSize: 14
             Layout.alignment: Qt.AlignHCenter
@@ -54,7 +59,7 @@ Popup
 
         Text
         {
-            text: "SERVER IP"
+            text: "SERVER CODE"
             color: "#b5bac1"
             font.bold: true
             font.pixelSize: 12
@@ -62,45 +67,13 @@ Popup
 
         TextField
         {
-            id: serverIp
-            Layout.fillWidth: true
-            placeholderText: "127.0.0.1"
-            placeholderTextColor: "white"
-            color: "white"
-            text:""
-            onAccepted: buttonConnect.clicked()
-
-            background: Rectangle
-            {
-                radius: 4
-                color: "#1e1f22"
-                border.color: parent.activeFocus ? "#5865f2" : "#111214"
-            }
-        }
-
-        Text
-        {
-            text: "PORT"
-            color: "#b5bac1"
-            font.bold: true
-            font.pixelSize: 12
-        }
-
-        TextField
-        {
-            id: serverPort
+            id: serverCodeField
 
             Layout.fillWidth: true
 
-            // placeholderText: "9987"
-            // placeholderTextColor: "white"
-            text: "9987"
-
-            validator: IntValidator
-            {
-                bottom: 1
-                top: 65535
-            }
+            placeholderText: "ABCD-EFGH-IJKL"
+            placeholderTextColor: "#888"
+            property bool isDecoded:false;
 
             color: "white"
 
@@ -108,11 +81,153 @@ Popup
             {
                 radius: 4
                 color: "#1e1f22"
-                border.color: parent.activeFocus ? "#5865f2" : "#111214"
+                border.color: parent.activeFocus ? "#5865F2" : "#111214"
+            }
+            onAccepted: serverCodeField.isDecoded===true ? buttonConnect.clicked() : null
+
+            onTextChanged:
+            {
+                let result = serverCode.decode(text);
+
+                serverCodeField.isDecoded=result.ok
+                if (result.ok)
+                {
+                    serverIp.text = result.ip;
+                    serverPort.text = result.port.toString();
+                    buttonConnect.enabled=true
+                }
             }
         }
 
+        Item { Layout.fillHeight: true }
 
+        //or seperator
+        RowLayout
+        {
+            Layout.fillWidth: true
+            spacing: 10
+
+            Rectangle
+            {
+                Layout.fillWidth: true
+                height: 4
+                color: "#444"
+            }
+
+            Text
+            {
+                text: "OR"
+                color: "#b5bac1"
+                font.bold: true
+            }
+
+            Rectangle
+            {
+                Layout.fillWidth: true
+                height: 4
+                color: "#444"
+            }
+        }
+
+        Item { Layout.fillHeight: true }
+
+
+        //============================= enter ip and port or domain
+        RowLayout
+        {
+            Layout.fillWidth: true
+            spacing: 12
+
+            ColumnLayout
+            {
+                Layout.fillWidth: true
+                spacing: 4
+
+                Text
+                {
+                    text: "ADDRESS"
+                    color: "#b5bac1"
+                    font.bold: true
+                    font.pixelSize: 12
+                }
+
+                TextField
+                {
+                    id: serverIp
+
+                    Layout.fillWidth: true
+
+                    placeholderText: "example.com or 0.0.0.0"
+                    placeholderTextColor: "#888"
+                    color: "white"
+
+                    onAccepted: buttonConnect.clicked()
+
+                    background: Rectangle
+                    {
+                        radius: 4
+                        color: "#1e1f22"
+                        border.color: parent.activeFocus ? "#5865f2" : "#111214"
+                    }
+
+                    onTextChanged:
+                    {
+                        buttonConnect.enabled=true
+                    }
+                }
+            }
+
+            ColumnLayout
+            {
+                Layout.preferredWidth: 90
+                spacing: 4
+
+                Text
+                {
+                    text: "PORT"
+                    color: "#b5bac1"
+                    font.bold: true
+                    font.pixelSize: 12
+                }
+
+                TextField
+                {
+                    id: serverPort
+
+                    Layout.fillWidth: true
+
+                    text: "9987"
+                    placeholderText: "9987"
+                    placeholderTextColor: "#888"
+
+                    validator: IntValidator
+                    {
+                        bottom: 1
+                        top: 65535
+                    }
+
+                    color: "white"
+
+                    onAccepted: buttonConnect.clicked()
+
+                    onTextChanged:
+                    {
+                        buttonConnect.enabled=true
+                    }
+
+                    background: Rectangle
+                    {
+                        radius: 4
+                        color: "#1e1f22"
+                        border.color: parent.activeFocus ? "#5865f2" : "#111214"
+                    }
+                }
+            }
+        }
+        Item { Layout.fillHeight: true }
+
+
+        //actions
         CheckBox
         {
             id: saveThisServerStatus
@@ -158,78 +273,96 @@ Popup
             }
         }
 
-
-        Item { Layout.fillHeight: true }
-
         RowLayout
         {
             Layout.fillWidth: true
 
-            Button
+            Rectangle
             {
                 id:buttonCancel
-                text: "Cancel"
-
                 Layout.fillWidth: true
+                height: 38
 
-                onClicked: root.close()
+                radius: 8
 
-                background: Rectangle
-                {
-                    radius: 4
-
-                    color: buttonCancel.down
+                color: cancelArea.containsMouse
                            ? "#3F4147"
                            : "transparent"
 
-                    border.width: 1
-                    border.color: "#555"
+                border.width: 1
+                border.color: "#555"
+
+                Layout.alignment: Qt.AlignVCenter
+
+
+                Text
+                {
+                    anchors.centerIn: parent
+                    text: "Cancel"
+                    color: "white"
+                    font.bold: true
                 }
 
-                contentItem: Text
+                MouseArea
                 {
-                    text: parent.text
-                    color: "white"
+                    id:cancelArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
 
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                    onClicked: root.close()
                 }
             }
 
-            Button
+
+            Rectangle
             {
                 id:buttonConnect
-                text: "Connect"
-
                 Layout.fillWidth: true
+                height: 38
 
-                onClicked:
+                radius: 8
+                enabled: false
+
+                color: !buttonConnect.enabled
+                       ? "#444"
+                       : connectArea.containsMouse ? "#4752C4" : "#5865F2"
+
+                border.width: 1
+                border.color: "#555"
+
+                Layout.alignment: Qt.AlignVCenter
+
+                function clicked()
                 {
+                    if(!buttonConnect.enabled)
+                        return;
                     user.connectToServer( saveThisServerStatus.checked, serverIp.text, serverPort.text)
                     root.close()
                 }
 
-                background: Rectangle
+                Text
                 {
-                    radius: 4
-
-                    color: !buttonConnect.enabled
-                           ? "#444"
-                           : buttonConnect.down
-                             ? "#4752C4"
-                             : "#5865F2"
-                }
-
-                contentItem: Text
-                {
-                    text: parent.text
+                    anchors.centerIn: parent
+                    text: "Connect"
                     color: "white"
                     font.bold: true
+                }
 
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                MouseArea
+                {
+                    id:connectArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+
+                    onClicked:
+                    {
+                        buttonConnect.clicked()
+                    }
                 }
             }
+
         }
     }
 }
