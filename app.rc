@@ -1,1 +1,38 @@
+#include <winver.h>
+
 IDI_APP_ICON ICON "icons/BeanChat.ico"
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION 0,25,23,0
+PRODUCTVERSION 0,25,23,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS VS_FF_DEBUG
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS VOS_NT_WINDOWS32
+ FILETYPE VFT_APP
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "CompanyName",      "BeanChat"
+            VALUE "FileDescription",  "Voice, video and text communication application"
+            VALUE "FileVersion",      "0.25.23"
+            VALUE "InternalName",     "BeanChat"
+            VALUE "OriginalFilename", "BeanChat.exe"
+            VALUE "ProductName",      "BeanChat"
+            VALUE "ProductVersion",   "0.25.23"
+            VALUE "LegalCopyright",   "© 2026 BeanChat"
+            VALUE "Comments",         "Official BeanChat desktop client"
+        END
+    END
+
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0409, 1200
+    END
+END

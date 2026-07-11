@@ -5,10 +5,11 @@ project(BeanChat VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(APP_CURRENT_VERSION "0.25.23")
+set(APP_CURRENT_VERSION "0.25.24")
 set(APP_TitleName "BeanChat")
 set(APP_OrganizationName "orgBeanChat")
 set(APP_ApplicationName "appBeanChat")
+set(APP_OrganizationDomain "beanchat.ir")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Quick Multimedia Network Sql QuickDialogs2)
 
@@ -51,14 +52,19 @@ qt_standard_project_setup(REQUIRES 6.8)
 
 qt_add_executable(appBeanChat
     main.cpp
-    app.rc #windows icon for .exe
 )
+
+#for windows to set icon, pulisher info..
+if(WIN32)
+    target_sources(appBeanChat PRIVATE app.rc)
+endif()
 
 qt_add_resources(appBeanChat resources
     PREFIX "/"
     FILES
         icons/BeanChat.png
         icons/BeanChatQR.png
+        icons/BeanChat.ico
 
         ui/soundeffects/message.wav
         ui/soundeffects/user-join.wav
@@ -285,6 +291,7 @@ target_compile_definitions(appBeanChat PRIVATE
     APP_TITLE="${APP_TitleName}"
     APP_ORGANIZATION="${APP_OrganizationName}"
     APP_NAME="${APP_ApplicationName}"
+    APP_ORG_DOMAIN="${APP_OrganizationDomain}"
 )
 
 

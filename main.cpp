@@ -73,8 +73,10 @@ int main(int argc, char *argv[])
 
     //reading these from cmake
     QCoreApplication::setOrganizationName(QString::fromUtf8(APP_ORGANIZATION));
+    QCoreApplication::setOrganizationDomain(QString::fromUtf8(APP_ORG_DOMAIN));
     QCoreApplication::setApplicationName(QString::fromUtf8(APP_NAME));
     QCoreApplication::setApplicationVersion(QString::fromUtf8(APP_VERSION));
+
 
 
     //---------- resources ----------
