@@ -29,10 +29,10 @@ or browse
 
 | Platform | Status | Stage | Version |
 |-----------|--------|--------|--------|
-| 🌐 Server | ✅ | Debug | 0.17.13 |
-| 🪟 Windows Client | ✅ | Debug | v0.21.20 |
-| 🐧 Linux Client | ? | ? | ? |
-| 🤖 Android Client | 🚧 | 🚧 | ? |
+| 🌐 Server | ✅ | Debug | 0.17.16 |
+| 🪟 Windows Client | ✅ | Beta | v0.25.24 |
+| 🐧 Linux Client | ✅ | Beta | v0.25.24 |
+| 🤖 Android Client | ✅️ | Debug | v0.25.24 |
 | 🍎 macOS Client | 🚧 | 🚧 | ? |
 | 📱 iOS Client | 🚧 | 🚧 | ? |
 
