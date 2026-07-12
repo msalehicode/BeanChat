@@ -85,12 +85,14 @@ https://github.com/user-attachments/assets/9dd1aafb-20a4-4aa3-b21d-816efbbe39e1
 18. **User Profile**, can open User's profile by clicking on their name/avatar to see their data (statis,name,id,current channel with button join his channel).
 19. **Mute/Unmute** users' voice locally, also can **adjust voice volume** of users by right click on their name in user's setting popup.
 20. **identity** system for login into accounts. also can switch/rename/create/delete identities when user is disconnected from any server.
-21. **share server via serverCode** (servers with ip:port), enter serverCode to connect to server.
-22. **share server via QR code image** (ip:port or domain address) [THIS IS FOR FUTURE TO SHARE SERVER WITH PHONE]
-23. **copy to clipboard** (for serverCode to copy code, and UserProfile to copy identity)
-24. Updater is on **BeanChatUpdater** repository to checks for missing/different files then download changes and install them.
-25. **check for new updates on start** if its available show on importantNotificationBar with UPDATE NOW button, when clicked on update now, try open updater then close self to let BeanChatUpdater do the rest.
-
+21. **Add Friend, Block User, Save Note for User**
+    21.1 blocked user -> change username to red, hide their avatar, mute locally, blur their text messages (only can be shown by clock reveal per message. 
+    21.2 added friend users -> change their username and isTalking to green.
+    21.3 enter note/details for eavh user, to recognize them later. it would shown on any server because it saved for that user's identity.
+22. **share server via serverCode** (servers with ip:port), enter serverCode to connect to server.
+23. **share server via QR code image** (ip:port or domain address) [THIS IS FOR FUTURE TO SHARE SERVER WITH PHONE]
+24. **copy to clipboard** (for serverCode to copy code, and UserProfile to copy identity)
+25. **check for new updates on start** if its available show on importantNotificationBar with UPDATE NOW button, when clicked on update now, try open updater then close self to let update. (**BeanChatUpdater** repository to checks for missing/different files then download changes and install them). 
 ---
 
 # 🛠 Building
