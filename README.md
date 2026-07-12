@@ -32,7 +32,7 @@ or browse
 | 🌐 Server | ✅ | Debug | 0.17.16 |
 | 🪟 Windows Client | ✅ | Beta | v0.25.24 |
 | 🐧 Linux Client | ✅ | Beta | v0.25.24 |
-| 🤖 Android Client | ✅️ | Debug | v0.25.24 |
+| 🤖 Android Client | ✅️ | Debug | v0.1.0 |
 | 🍎 macOS Client | 🚧 | 🚧 | ? |
 | 📱 iOS Client | 🚧 | 🚧 | ? |
 
