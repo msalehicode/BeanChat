@@ -3,6 +3,7 @@
 #include <QAbstractListModel>
 
 #include <QElapsedTimer>
+#include <QPointer>
 
 #include "clientuser.h"
 
@@ -54,6 +55,6 @@ public:
 private:
     void observeUser(ClientUser *user);
     int findRowById(quint64 userId) const;
-    QList<ClientUser*> m_connectedUsers;
+    QList<QPointer<ClientUser>> m_connectedUsers;
     QSet<ClientUser*> m_observedUsers;
 };

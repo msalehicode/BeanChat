@@ -1,11 +1,13 @@
 #include "database.h"
 #include "databasemigrator.h"
 
+#include "logging/loggingcategories.h"
+
 Database::Database(QObject *parent)
     : QObject(parent)
 {
     if (!open())
-        qFatal("Failed to initialize database.");
+        qCFatal(_database) << "Failed to initialize database.";
 }
 
 Database::~Database()
@@ -29,21 +31,19 @@ bool Database::open()
 
     if (!m_db.open())
     {
-        qDebug() << m_db.lastError();
+        qCCritical(_database) << "couldn't open database, error= " << m_db.lastError();
         return false;
     }
-
-    qDebug() << "Database:" << dbPath;
-
 
     //
     DatabaseMigrator migrator(this);
     if (!migrator.migrate())
     {
-        qDebug() << "Database migration failed.";
+        qCCritical(_database) << "Database migration failed.";
         return false;
     }
 
+    qCInfo(_database) << "database opened, path=" << dbPath;
     return true;
 }
 
@@ -53,7 +53,7 @@ bool Database::exec(const QString &sql)
 
     if (!query.exec(sql))
     {
-        qDebug() << query.lastError();
+        qCCritical(_database) << "database exec error = " <<  query.lastError();
         return false;
     }
 
@@ -92,7 +92,7 @@ bool Database::insert(const QString &table,
 
     if (!query.exec())
     {
-        qDebug() << query.lastError();
+        qCCritical(_database) << "database insert failed error: " <<  query.lastError();
         return false;
     }
 
@@ -124,7 +124,7 @@ bool Database::update(const QString &table,
 
     if (!query.exec())
     {
-        qDebug() << query.lastError();
+        qCCritical(_database) << "database update failed error: " << query.lastError();
         return false;
     }
 
@@ -143,7 +143,7 @@ bool Database::remove(const QString &table,
 
     if (!query.exec())
     {
-        qDebug() << query.lastError();
+        qCCritical(_database) << "database remove failed error: " << query.lastError();
         return false;
     }
 
@@ -295,7 +295,7 @@ bool Database::saveUserRelationship(const UserRelationship &relationship)
 
     if (!query.exec())
     {
-        qDebug() << query.lastError();
+        qCCritical(_database) << "database saveUserRelationship failed error: " <<  query.lastError();
         return false;
     }
 
@@ -314,7 +314,7 @@ bool Database::removeUserRelationship(const QString &identity)
 
     if (!query.exec())
     {
-        qDebug() << query.lastError();
+        qCCritical(_database) << "database removeUserRelationship failed error: " << query.lastError();
         return false;
     }
 
@@ -336,7 +336,7 @@ QList<UserRelationship> Database::loadUserRelationships()
             " voiceVolume "
             "FROM UserRelations"))
     {
-        qDebug() << query.lastError();
+        qCCritical(_database) << "database loadUserRelationships failed error: " << query.lastError();
         return relationships;
     }
 

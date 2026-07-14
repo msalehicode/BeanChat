@@ -1,5 +1,7 @@
 #include "opuscodec.h"
 
+#include "logging/loggingcategories.h"
+
 OpusCodec::OpusCodec(QObject *parent)
     : QObject(parent)
 {
@@ -44,7 +46,7 @@ bool OpusCodec::initialize(
         break;
 
     default:
-        qWarning() << "Unsupported sample rate:" << sampleRate;
+        qCWarning(_opus) <<  "Unsupported sample rate:" << sampleRate;
         return false;
     }
 
@@ -58,9 +60,7 @@ bool OpusCodec::initialize(
 
     if (error != OPUS_OK || !m_encoder)
     {
-        qWarning()
-        << "Failed to create Opus encoder:"
-        << opus_strerror(error);
+        qCCritical(_opus)  << "Failed to create Opus encoder:" << opus_strerror(error);
 
         shutdown();
         return false;
@@ -73,9 +73,7 @@ bool OpusCodec::initialize(
 
     if (error != OPUS_OK || !m_decoder)
     {
-        qWarning()
-        << "Failed to create Opus decoder:"
-        << opus_strerror(error);
+        qCWarning(_opus) << "Failed to create Opus decoder:" << opus_strerror(error);
 
         shutdown();
         return false;
@@ -117,7 +115,7 @@ bool OpusCodec::initialize(
         m_encoder,
         OPUS_SET_PACKET_LOSS_PERC(10));
 
-    qDebug()
+    qCInfo(_opus)
         << "Opus initialized"
         << "SampleRate:" << m_sampleRate
         << "Channels:" << m_channels
@@ -133,12 +131,14 @@ void OpusCodec::shutdown()
     {
         opus_encoder_destroy(m_encoder);
         m_encoder = nullptr;
+        qCInfo(_opus) << "Shutting down encoder";
     }
 
     if (m_decoder)
     {
         opus_decoder_destroy(m_decoder);
         m_decoder = nullptr;
+        qCInfo(_opus) << "Shutting down decoder";
     }
 }
 
@@ -196,16 +196,16 @@ QByteArray OpusCodec::encode(const QByteArray &pcm)
 
     if (pcm.size() != expectedBytes)
     {
-        qWarning()
-        << "Opus encode expects"
-        << expectedBytes
-        << "bytes but got"
-        << pcm.size();
+        qCWarning(_opus)
+            << "Opus encode expects"
+            << expectedBytes
+            << "bytes but got"
+            << pcm.size();
 
         return {};
     }
 
-    constexpr int MaxPacketSize = 4000;
+    constexpr int MaxPacketSize = OPUS_MAX_PACKET_SIZE;
 
     QByteArray encoded;
     encoded.resize(MaxPacketSize);
@@ -222,9 +222,7 @@ QByteArray OpusCodec::encode(const QByteArray &pcm)
 
     if (bytes < 0)
     {
-        qWarning()
-        << "opus_encode failed:"
-        << opus_strerror(bytes);
+        qCWarning(_opus) << "opus_encode failed:" << opus_strerror(bytes);
 
         return {};
     }
@@ -258,9 +256,7 @@ QByteArray OpusCodec::decode(const QByteArray &opusData)
 
     if (samples < 0)
     {
-        qWarning()
-        << "opus_decode failed:"
-        << opus_strerror(samples);
+        qCWarning(_opus) << "opus_decode failed:" << opus_strerror(samples);
 
         return {};
     }

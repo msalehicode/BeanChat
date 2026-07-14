@@ -14,6 +14,7 @@ class ClientUserManager : public QObject
 
 public:
     explicit ClientUserManager(QObject *parent = nullptr);
+    ~ClientUserManager();
 
     ClientUser *createUser(quint64 id);
     ClientUser *user(quint64 id) const;

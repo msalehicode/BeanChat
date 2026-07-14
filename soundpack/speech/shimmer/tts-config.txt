@@ -1,0 +1,18 @@
+#website:
+https://ttsmp3.com/ai
+
+#ai voice:
+shimmer (female)
+
+#AI Instruction for some small words:
+Speak clearly with precise pronunciation.
+Use a natural pace (around 150 words per minute).
+Keep each phrase short and concise.
+No emotion, excitement, or friendliness.
+No dramatic emphasis.
+No background noise, music, reverb, or effects.
+Record in a quiet studio environment.
+Leave approximately 300 ms of silence before and after each phrase.
+
+
+

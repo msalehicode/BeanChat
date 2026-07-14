@@ -1,5 +1,7 @@
 #include "chatmodel.h"
 
+#include "logging/loggingcategories.h"
+
 ChatModel::ChatModel(QObject *parent)
     : QAbstractListModel(parent)
 {
@@ -18,7 +20,10 @@ QVariant ChatModel::data(
     if (!index.isValid() ||
         index.row() < 0 ||
         index.row() >= m_messages.size())
+    {
+        qCCritical(_models) << "invalid index to get chat data";
         return {};
+    }
 
 
     const ChatItem &item = m_messages[index.row()];
@@ -66,6 +71,8 @@ QVariant ChatModel::data(
             return item.message.timestamp;
     }
 
+
+    qCWarning(_models) << "chat data, return {}";
     return {};
 }
 
@@ -97,6 +104,7 @@ void ChatModel::updateUserMessages(ClientUser *user, const QList<int> &roles)
 
 void ChatModel::clear()
 {
+    qCInfo(_models) << "clear chatModel";
     beginResetModel();
 
     m_messages.clear();
@@ -107,6 +115,13 @@ void ChatModel::clear()
 
 void ChatModel::addMessage(const ChatMessagePacket &message, ClientUser* sender)
 {
+    qCInfo(_models) << "add message to chat.";
+    if(!sender)
+    {
+        qCCritical(_models) << "failed to add message, invalid sender object.";
+        return;
+    }
+
     ChatItem item;
     item.message = message;
     item.sender = sender;
@@ -125,8 +140,13 @@ void ChatModel::addMessage(const ChatMessagePacket &message, ClientUser* sender)
 
 void ChatModel::observeUser(ClientUser *user)
 {
+
     if (!user || m_observedUsers.contains(user))
+    {
+        // qCCritical(_models) << "failed to observe user, invalid user OR user has already exist in observedUsers.";
         return;
+    }
+    qCInfo(_models) << "add user to observe for chat";
     m_observedUsers.insert(user);
 
     connect(user,
@@ -166,6 +186,7 @@ void ChatModel::observeUser(ClientUser *user)
 void ChatModel::removeMessage(
     quint64 messageId)
 {
+    qCInfo(_models) << "remove message, msg-id=" << messageId;
     for(int i=0;i<m_messages.size();i++)
     {
         if (m_messages[i].message.messageId == messageId)
@@ -182,4 +203,6 @@ void ChatModel::removeMessage(
             return;
         }
     }
+
+    qCWarning(_models) << "failed to remove message from chat";
 }

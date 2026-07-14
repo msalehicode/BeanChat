@@ -53,22 +53,96 @@
 #include "sharing/servercode.h"
 #include "sharing/clipboardhelper.h"
 
+
+//logger
+#include <QStandardPaths>
+#include "logging/logger.h"
+#include "logging/loggingcategories.h"
+#include "logging/crashreporter.h"
+#include "managers/logmanager.h"
+
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
 
+    QString logsPath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/logs";
+
+    // ---------------------- log manager and report crashes  ----------------------
+    qDebug() << "log manager -> cleanup old ones"
+                     "and check for any crashes";
+
+    LogManager logManager(logsPath);
+    logManager.cleanupOldLogs();
+
+    //find crashes
+    const auto crashes = logManager.crashLogs();
+    for (const LogFile &log : crashes)
+    {
+        qDebug() << "Crash log:" << log.fileName;
+    }
+
+    //setup crash reporter
+    CrashReporter reporter;
+    reporter.setUploadUrl(CRASH_API_URL);
+    reporter.setApiKey(CRASH_API_KEY);
+
+    QObject::connect(&reporter,
+            &CrashReporter::uploadFinished,
+            [&](const QString &file,
+                bool success,
+                const QString &errorString)
+            {
+                if (success)
+                    logManager.markUploaded(file);
+                else
+                    qDebug() << "upload crash failed. error=" << errorString;
+            }
+        );
+
+    //upload them.
+    qDebug() << "Reporting crashes count: " << logManager.crashLogs().count();
+    if( logManager.crashLogs().count()>0)
+    {
+        for (const LogFile &log : logManager.crashLogs())
+        {
+            qDebug() << "uploading log file: " << log.filePath;
+            reporter.upload(log.filePath);
+        }
+    }
+
+
+
+
+    //------------------------- logger -------------------------
+    Logger logger;
+
+    // QLoggingCategory::setFilterRules(R"(
+    // ffmpeg.debug=false
+    // identity.debug=true
+    // database.debug=true
+    // udp.debug=false
+    // settings.debug=true
+    // app.debug=true
+    // )"); //*.debug=false
+
+    if (!logger.initialize(logsPath))
+        qFatal() << "Failed to initialize logger.";
+
+
+    QObject::connect(
+        &app,
+        &QCoreApplication::aboutToQuit,
+        &logger,
+        &Logger::shutdown);
+
+    //set icon
     app.setWindowIcon(QIcon(":/icons/BeanChat.png"));
 
 
-    //options
+    //------------------------- options -------------------------
     bool testVideo = QGuiApplication::arguments().contains("-testVid");
-    qDebug() << "\n\n"
-                "================================================================";
-    qDebug() << "======================== LAUNCH OPTIONS ========================";
-    qDebug() << "-testVid (draw fake instead of camera data) = " << testVideo;
-    qDebug() << "================================================================"
-                "\n\n";
-
+    qCInfo(_main) << "============== LAUNCH OPTIONS ==============";
+    qCInfo(_main) << "-testVid (draw fake instead of camera data) = " << testVideo;
 
 
     //reading these from cmake
@@ -177,31 +251,19 @@ int main(int argc, char *argv[])
 
 
 
-    //---------- sound effects connection //----------
-    QObject::connect(
-        &usr,
-        &User::userJoined,
-        &soundManager,
-        &SoundManager::playUserJoin);
+    //---------- sound pack connection ----------
+    QObject::connect(&usr, &User::newMessage, &soundManager, &SoundManager::playNewMessage);
 
-    QObject::connect(
-        &usr,
-        &User::userLeft,
-        &soundManager,
-        &SoundManager::playUserLeave);
+    QObject::connect(&usr, &User::youConnected, &soundManager, &SoundManager::playConnected);
+    QObject::connect(&usr, &User::youDisconnected, &soundManager, &SoundManager::playDisconnected);
+    QObject::connect(&usr, &User::youConnectionLost, &soundManager, &SoundManager::playConnectionLost);
 
-    QObject::connect(
-        &usr,
-        &User::messageSent,
-        &soundManager,
-        &SoundManager::playMessage);
+    QObject::connect(&usr, &User::youChannelSwitched, &soundManager, &SoundManager::playChannelSwitched);
+    QObject::connect(&usr, &User::youWereMoved, &soundManager, &SoundManager::playYouWereMoved);
 
-    QObject::connect(
-        &usr,
-        &User::newMessage,
-        &soundManager,
-        &SoundManager::playMessageBack);
-
+    QObject::connect(&usr, &User::userJoined, &soundManager, &SoundManager::playUserJoin);
+    QObject::connect(&usr, &User::userLeft, &soundManager, &SoundManager::playUserLeft);
+    QObject::connect(&usr, &User::userTimedOut, &soundManager, &SoundManager::playUserTimedOut);
 
 
 
@@ -277,6 +339,7 @@ int main(int argc, char *argv[])
 
     //qml
     QQmlApplicationEngine engine;
+    engine.rootContext()->setContextProperty("logger", &logger);
     engine.rootContext()->setContextProperty("microphone", &audio);
     engine.rootContext()->setContextProperty("speaker", &speaker);
     engine.rootContext()->setContextProperty("camera", &cam);
@@ -307,7 +370,7 @@ int main(int argc, char *argv[])
 
     //check renderer
     auto *window = qobject_cast<QQuickWindow*>(engine.rootObjects().first());
-    qDebug() << "window graphicsApi renderer Interface : " << window->rendererInterface()->graphicsApi();
+    qCInfo(_main) << "window graphicsApi renderer Interface : " << window->rendererInterface()->graphicsApi();
 
 
     return app.exec();

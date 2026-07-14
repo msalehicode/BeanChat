@@ -5,7 +5,7 @@ project(BeanChat VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(APP_CURRENT_VERSION "0.25.24")
+set(APP_CURRENT_VERSION "0.26.34")
 set(APP_TitleName "BeanChat")
 set(APP_OrganizationName "orgBeanChat")
 set(APP_ApplicationName "appBeanChat")
@@ -66,10 +66,19 @@ qt_add_resources(appBeanChat resources
         icons/BeanChatQR.png
         icons/BeanChat.ico
 
-        ui/soundeffects/message.wav
-        ui/soundeffects/user-join.wav
-        ui/soundeffects/user-left.wav
-        ui/soundeffects/message-back.wav
+        #soundpacks:
+        soundpack/speech/shimmer/newMessage.wav
+
+        soundpack/speech/shimmer/connected.wav
+        soundpack/speech/shimmer/disconnected.wav
+        soundpack/speech/shimmer/connection-lost.wav
+
+        soundpack/speech/shimmer/channel-switched.wav
+        soundpack/speech/shimmer/you-were-moved.wav
+
+        soundpack/speech/shimmer/user-joined-your-channel.wav
+        soundpack/speech/shimmer/user-left-your-channel.wav
+        soundpack/speech/shimmer/user-timed-out.wav
 )
 
 #introduce notification singltones to qml
@@ -145,9 +154,13 @@ qt_add_qml_module(appBeanChat
         managers/clientusermanager.h managers/clientusermanager.cpp
         managers/identitymanager.h managers/identitymanager.cpp
         managers/relationshipmanager.h managers/relationshipmanager.cpp
+        managers/logmanager.h managers/logmanager.cpp
 
-
-
+        #logger
+        logging/logger.h logging/logger.cpp
+        logging/loggingcategories.h logging/loggingcategories.cpp
+        logging/systeminfo.h logging/systeminfo.cpp
+        logging/crashreporter.h logging/crashreporter.cpp
 
         #video
         video/videosink.h
@@ -300,6 +313,7 @@ target_compile_definitions(appBeanChat PRIVATE
     #user configs
     USER_DEFAULT_SOUNDEFFECTS_VOLUME=0.5
     USER_DEFAULT_SERVER_IP=""
+    USER_DEFAULT_SERVER_NAME="The Server"
     USER_DEFAULT_SERVER_PORT=9987
     USER_DEFAULT_SERVER_PORT_STR="9987" #this also hardcoded in QML's add server popup
     USER_BUILD_TYPE_DEBUG="Beta"
@@ -313,6 +327,10 @@ target_compile_definitions(appBeanChat PRIVATE
     #files
     DATABASE_FILENAME="/BeanChat.db"
 
+    #logger, reprot
+    CRASH_API_URL="https://beanchat.ir/bc/api/crashreport.php"
+    CRASH_API_KEY="TEST_API_KEY122"
+
     #debug prints
     D_PRINT_VIDEOSINK_INFO=false
     D_PRINT_CAMERA_INFO=false
@@ -321,11 +339,16 @@ target_compile_definitions(appBeanChat PRIVATE
     D_PRINT_VIDEO_INFO=false
     D_PRINT_AUDIO_INFO=false #audio in and out + mixer
 
+    #microphone
+    MIC_DEFAULT_SAMPLE_RATE=48000
+    MIC_DEFAULT_CHANNELS=1
+
     # opus
     OPUS_DEFAULT_SAMPLE_RATE=48000
     OPUS_DEFAULT_CHANNELS=1
     OPUS_DEFAULT_BITRATE=32000
     OPUS_DEFAULT_FRAMESIZE=960
+    OPUS_MAX_PACKET_SIZE=4000
 
     #speaker
     SPEAKER_DEFAULT_SAMPLE_RATE=48000

@@ -1,5 +1,7 @@
 #include "cameracapture.h"
 
+#include "logging/loggingcategories.h"
+
 CameraCapture::CameraCapture(QObject *parent)
     : QObject(parent)
 {
@@ -12,7 +14,7 @@ CameraCapture::CameraCapture(QObject *parent)
     QObject::connect(&m_cameraDevices, &QMediaDevices::videoInputsChanged, this, [this]()
             {
 
-                qDebug() << "Camera hardware change detected!";
+                qCInfo(_camera) << "Camera hardware change detected!";
 
                 // 1. Refresh your local list
                 refreshCameraInputs();
@@ -21,6 +23,7 @@ CameraCapture::CameraCapture(QObject *parent)
                 if (m_currentCameraInput >= m_cameraInputs.size())
                 {
                     // If the current mic is gone, reset to default 0
+                    qCInfo(_camera) << "current mic is gone, reset to default (0)";
                     setCurrentCameraInput(0);
                 }
             });
@@ -45,11 +48,18 @@ CameraCapture::CameraCapture(QObject *parent)
         });
 }
 
+
+CameraCapture::~CameraCapture()
+{
+    stop();
+}
+
 void CameraCapture::start()
 {
+    qCInfo(_camera) << "start camera.";
     // Check if the current index is actually valid
     if (m_cameraInputs.isEmpty() || m_currentCameraInput>= m_cameraInputs.size()) {
-        qWarning() << "Invalid camera input index!";
+        qCCritical(_camera) << "Invalid camera input index!";
         // device = QMediaDevices::defaultVideoInput();
         return;
     }
@@ -57,6 +67,7 @@ void CameraCapture::start()
     // Clean up existing capture before starting new one
     if (camera)
     {
+        qCInfo(_camera) << "camera exists, lets clean up old one";
         stop();
     }
 
@@ -65,21 +76,16 @@ void CameraCapture::start()
     camera = new QCamera(m_cameraInputs[m_currentCameraInput], this);
 
 
-#if D_PRINT_CAMERA_INFO
-    //test performace
+    //check performace
     auto formats = m_cameraInputs[m_currentCameraInput].videoFormats();
     for(const auto &fmt : formats)
     {
-        qDebug()
-        << "Resolution:"
-        << fmt.resolution()
-        << "FPS:"
-        << fmt.maxFrameRate();
+        qCInfo(_camera) << "current camera input performance/formats are: "
+        << " Resolution:" << fmt.resolution()
+        << " FPS:" << fmt.maxFrameRate();
     }
-    qDebug()
-        << "Video input:"
-        << QMediaDevices::defaultVideoInput().description();
-#endif
+    qCInfo(_camera) << "Video input:" << QMediaDevices::defaultVideoInput().description();
+
 
     sink = new QVideoSink(this);
 
@@ -93,22 +99,22 @@ void CameraCapture::start()
                 return;
 
 
-#if D_PRINT_CAMERA_INFO
-            //test2 performace
-            static QElapsedTimer timer;
-            static int count = 0;
+            #if D_PRINT_CAMERA_INFO
+                        //test performace
+                        static QElapsedTimer timer;
+                        static int count = 0;
 
-            if (!timer.isValid())
-                timer.start();
-            count++;
-            if (timer.elapsed() >= 1000)
-            {
-                qDebug() << "Raw camera FPS:" << count;
+                        if (!timer.isValid())
+                            timer.start();
+                        count++;
+                        if (timer.elapsed() >= 1000)
+                        {
+                            qCDebug(_camera) << "Raw camera FPS:" << count;
 
-                count = 0;
-                timer.restart();
-            }
-#endif
+                            count = 0;
+                            timer.restart();
+                        }
+            #endif
 
 
             QImage img = frame.toImage();
@@ -125,39 +131,39 @@ void CameraCapture::start()
                 // if (counter % 30 != 0)
                 //     return;
 
-                qDebug() << "Cameraa frame:" << img.size();
+                // qCDebug(_camera) << "Cameraa frame:" << img.size();
 
                 m_encoder.encode(img);
 
-#if D_PRINT_CAMERA_INFO
-                qDebug()
-                    << "Resolution JPEG:"
-                    << img.width()
-                    << "x"
-                    << img.height();
-                    // << "JPEG size:" << jpgData.size()/1024.0<< "KB";
-#endif
+                #if D_PRINT_CAMERA_INFO
+                                qCDebug(_camera)
+                                    << "Resolution JPEG:"
+                                    << img.width()
+                                    << "x"
+                                    << img.height();
+                                    // << "JPEG size:" << jpgData.size()/1024.0<< "KB";
+                #endif
 
                 m_frame = img;
 
                 emit frameChanged();
                 emit imageReady(img);
 
-#if D_PRINT_CAMERA_INFO
-                static int count = 0;
-                count++;
+            #if D_PRINT_CAMERA_INFO
+                            static int count = 0;
+                            count++;
 
-                static QElapsedTimer timer;
-                if(!timer.isValid())
-                    timer.start();
+                            static QElapsedTimer timer;
+                            if(!timer.isValid())
+                                timer.start();
 
-                if(timer.elapsed() > 1000)
-                {
-                    qDebug() << "camera FPS:" << count;
-                    count = 0;
-                    timer.restart();
-                }
-#endif
+                            if(timer.elapsed() > 1000)
+                            {
+                                qCDebug(_camera)<< "camera FPS:" << count;
+                                count = 0;
+                                timer.restart();
+                            }
+            #endif
             }
 
             emit frameReady(frame);
@@ -167,19 +173,22 @@ void CameraCapture::start()
     session.setVideoSink(sink);
 
 
-    m_encoder.open(
-        CAMERA_DEFAuLT_WIDTH,
-        CAMERA_DEFAULT_HEIGHT,
-        CAMERA_DEFAULT_FPS,
-        CAMERA_DEFAULT_BITRATE,
-        CAMERA_DEFAULT_KEYFRAME);
-
-
+    if (!m_encoder.open(
+            CAMERA_DEFAuLT_WIDTH,
+            CAMERA_DEFAULT_HEIGHT,
+            CAMERA_DEFAULT_FPS,
+            CAMERA_DEFAULT_BITRATE,
+            CAMERA_DEFAULT_KEYFRAME))
+    {
+        qCCritical(_camera) << "Failed to open FFmpeg encoder.";
+        stop();
+        return;
+    }
 
     camera->start();
 
 #if D_PRINT_CAMERA_INFO
-    qDebug()
+    qCDebug(_camera)
         << "Camera format:"
         << camera->cameraFormat().resolution();
 #endif
@@ -188,12 +197,11 @@ void CameraCapture::start()
 
 void CameraCapture::refreshCameraInputs()
 {
-    qDebug() << "=== CAMERA DEVICES ===";
+    qCInfo(_camera) << "=== CAMERA DEVICES ===";
     QList<QCameraDevice> inputs = QMediaDevices::videoInputs();
     for (int i = 0; i < inputs.size(); i++)
     {
-        qDebug() << i
-                 << inputs[i].description();
+        qCInfo(_camera) << i << inputs[i].description();
     }
 
     setCameraInputs(inputs);
@@ -214,13 +222,17 @@ void CameraCapture::stop()
 {
     if (camera)
     {
+        qCInfo(_camera) << "stopping camera";
         camera->stop();
         delete camera;
         camera = nullptr;
     }
 
+    m_encoder.close();
+
     if (sink)
     {
+        qCInfo(_camera) << "cleaning camera's sink";
         delete sink;
         sink = nullptr;
     }
@@ -248,6 +260,7 @@ void CameraCapture::setCurrentCameraInput(int newCurrentCameraInput)
     if (m_currentCameraInput == newCurrentCameraInput)
         return;
     m_currentCameraInput = newCurrentCameraInput;
+    qCInfo(_camera) << "set current camera input index to " << newCurrentCameraInput;
     emit currentCameraInputChanged();
 }
 

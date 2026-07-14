@@ -1,5 +1,7 @@
 #include "connectedusersmodel.h"
 
+#include "logging/loggingcategories.h"
+
 ConnectedUsersModel::ConnectedUsersModel(QObject *parent)
     : QAbstractListModel(parent)
 {
@@ -20,12 +22,20 @@ QVariant ConnectedUsersModel::data(
     const QModelIndex &index,
     int role) const
 {
-    if(!index.isValid())
+    if (!index.isValid() ||
+        index.row() < 0 ||
+        index.row() >= m_connectedUsers.size())
+    {
+        qCCritical(_models) << "invalid index to get connectedUsers data";
         return {};
+    }
 
-    ClientUser *user = m_connectedUsers.at(index.row());
+    auto user = m_connectedUsers.at(index.row());
     if(!user)
+    {
+        qCCritical(_models) << "failed to read data in connectedUsers model. invalid user obj";
         return{};
+    }
 
     switch(role)
     {
@@ -84,6 +94,7 @@ ConnectedUsersModel::roleNames() const
 
 void ConnectedUsersModel::clear()
 {
+    qCInfo(_models) << "clear connectedUsers";
     beginResetModel();
 
     m_connectedUsers.clear();
@@ -98,9 +109,16 @@ void ConnectedUsersModel::addUser(ClientUser* user)
 {
     if(!user)
     {
-        qDebug() << "fialed to add user to connected users model. invalid user";
+        qCCritical(_models) << "failed to add user to connected users model. invalid user obj";
         return;
     }
+
+    if (m_connectedUsers.contains(user))
+    {
+        qCWarning(_models) << "user already exists";
+        return;
+    }
+
 
     beginInsertRows(QModelIndex(), rowCount(), rowCount());
 
@@ -116,7 +134,11 @@ void ConnectedUsersModel::addUser(ClientUser* user)
 void ConnectedUsersModel::observeUser(ClientUser* user)
 {
     if (!user || m_observedUsers.contains(user))
+    {
+        // qCCritical(_models) << "failed to observe user, invalid user OR user has already exist in observedUsers.";
         return;
+    }
+    qCInfo(_models) << "add user to observe for connectedUsers";
     m_observedUsers.insert(user);
 
     connect(user,
@@ -237,8 +259,12 @@ void ConnectedUsersModel::observeUser(ClientUser* user)
 
 void ConnectedUsersModel::removeUser(quint64 userId)
 {
+    qCInfo(_models) << "remove user from connectedUsers uid=" << userId;;
     for (int row = 0; row < m_connectedUsers.size(); ++row)
     {
+        if (!m_connectedUsers[row])
+            continue;
+
         if (m_connectedUsers[row]->id() == userId)
         {
             beginRemoveRows(QModelIndex(), row, row);
@@ -251,16 +277,21 @@ void ConnectedUsersModel::removeUser(quint64 userId)
             return;
         }
     }
+    qCWarning(_models) << "failed remove user from connectedUsers, user not found";
 }
 
 int ConnectedUsersModel::findRowById(quint64 userId) const
 {
     for (int i = 0; i < m_connectedUsers.size(); ++i)
     {
+        if (!m_connectedUsers[i])
+            continue;
+
         if (m_connectedUsers[i]->id() == userId)
             return i;
     }
 
+    qCWarning(_models) << "failed find user from connectedUsers, user not found uid=" << userId;
     return -1;
 }
 

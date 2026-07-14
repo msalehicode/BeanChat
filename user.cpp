@@ -1,5 +1,7 @@
 #include "user.h"
 
+#include "logging/loggingcategories.h"
+
 User::User(ChannelModel *channelModel, ChatModel *chatModel,
            ParticipantModel* currentChannelParticipant, ConnectedUsersModel *connectedUsersModel, MyServersModel* myServersModel,
            SoundManager* sounderManager, SettingsManager* settingsManager,
@@ -15,37 +17,35 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
     m_relationshipManager(relationshipManager), m_database(database),
     m_cam(cam), m_mic(mic), m_speaker(speaker)
 {
-    qInfo() << "using BeanChatCommon version " << BeanChatCommon::Protocol::Version;
+    qCInfo(_app) << "starting app";
+    qCInfo(_app) << "using BeanChatCommon version " << BeanChatCommon::Protocol::Version;
 
 
     //read or generate identitiy if not exsit
     if(!m_identityManager->load())
     {
-        qFatal() << "failed to load/generate identity.";
+        qCFatal(_identity) << "failed to load and generate default identity.";
     }
 
-    qDebug() << "Loaded identities count= " << m_identityManager->identities().count();
-    qDebug() << "found identities:";
+    qCInfo(_identity) << "Loaded identities count= " << m_identityManager->identities().count();
+    qCDebug(_identity) << "found identities:";
     for(auto& identity : m_identityManager->identities())
     {
-        qDebug() << "name= " <<identity.name  << " pub:" <<identity.publicKeyBase64() << " priv:" << identity.privateKeyBase64() << " craeted at=" <<identity.createdAt;
+        qCDebug(_identity)  << "name= " <<identity.name
+                          << " pub:" <<identity.publicKeyBase64()
+                          << "created at=" <<identity.createdAt;
     }
     //notify QML identity loaded/changed
     emit myIdentityChanged();
-
-
-
-
-    qDebug() << "user starting..";
-
 
 
     if (!m_opus.initialize(OPUS_DEFAULT_SAMPLE_RATE,
                            OPUS_DEFAULT_CHANNELS,
                            OPUS_DEFAULT_BITRATE))
     {
-        qFatal("Failed to initialize Opus");
+        qCFatal(_opus) << "Failed to initialize Opus";
     }
+
 
 
     //video decoder
@@ -82,13 +82,13 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
 
 
     //load all saved servers from database.
-    qDebug() << "loading all saved servers.";
+    qCInfo(_app) << "loading all saved servers.";
     QVariantList servers = m_database->getAll("MyServers");
     for (const QVariant &v : servers)
     {
         QVariantMap row = v.toMap();
 
-        qDebug()
+        qCInfo(_database)
             << row["id"]
             << row["name"]
             << row["avatarPath"]
@@ -106,9 +106,28 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
 
 
 
+    //connect clientUserManager to models when user removed, models obey
+    connect(
+        m_clientUserManager,
+        &ClientUserManager::userRemoved,
+        m_channelModel,
+        &ChannelModel::removeUser);
+
+    connect(
+        m_clientUserManager,
+        &ClientUserManager::userRemoved,
+        m_connectedUsersModel,
+        &ConnectedUsersModel::removeUser);
+
+    connect(
+        m_clientUserManager,
+        &ClientUserManager::userRemoved,
+        m_currentChannelParticipant,
+        &ParticipantModel::removeUser);
+
+
 
     //setup TCP socket
-
     connect(&socket,
             &QTcpSocket::readyRead,
             this,
@@ -122,7 +141,9 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
 
 
     //setup UDP socket
-    m_udpSocket.bind();
+    if(!m_udpSocket.bind())
+        qCFatal(_udp) << "failed to bind socket";
+
 
     connect(&m_udpSocket,
             &QUdpSocket::readyRead,
@@ -137,11 +158,12 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
             {
                 if(isConnectedToServer())
                 {
-                    qDebug() << "server didn't send ping request for a while, so UDP connection has lost.";
+                    qCInfo(_udp) << "server didn't send ping request for a while, so assuming connection has lost.";
                     emit notificationRequested(NotificationType::Error,
                                                "Connection Lost",
                                                NotificationId::ConnectionLost,
                                                NotificationDuration::Long);
+                    emit youConnectionLost();
                 }
 
                 //close connection, sometimes user may stuck in middle of connecting and connection lost
@@ -174,7 +196,7 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
             this,
             [this](const LatestResponse &response)
             {
-                qDebug() << "update available, update to " << response.latestVersion().toString() << "current version = " << myAppVersion();
+                qCInfo(_app) << "update available, update to " << response.latestVersion().toString() << "current version = " << myAppVersion();
                 emit showImportantNotifierBar("Update "+ response.latestVersion().toString() + " is available",
                                                                          ImportantNotificationColor::Blue);
             });
@@ -184,7 +206,7 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
             this,
             []()
             {
-                qDebug() << "Already up to date.";
+                qCInfo(_app) << "Already up to date.";
             });
 
     connect(&m_updateChecker,
@@ -192,18 +214,17 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
             this,
             [this](const QString &err)
             {
-                qDebug() << "error to check for update err=" << err;
+                qCWarning(_app) << "error to check for update err=" << err;
                 // emit showImportantNotifierBar("Failed to check for update, "+err,
                 //                               ImportantNotificationColor::Red);
             });
 
 
     //check for update at startup
-    QString targetPlatform;
-    if(platformName()=="Windows")
-        targetPlatform="windows-x64";
-    else
-        targetPlatform="windows-x64"; //for test
+    QString targetPlatform =  platformName();
+    if(targetPlatform=="Windows") targetPlatform="windows-x64";
+    else if(targetPlatform=="Linux") targetPlatform="linux-x64";
+    else if(targetPlatform=="Android") targetPlatform="android-arm8";
 
     m_updateChecker.checkForUpdates(targetPlatform, myAppVersion());
 }
@@ -211,6 +232,7 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
 
 void User::joinChannel(quint64 channelId, const QString& password)
 {
+    qCInfo(_tcp) << "sending join channel request";
     JoinChannelPacket join;
 
     join.channelId = channelId;
@@ -230,7 +252,7 @@ int User::isChannelLocked(quint64 channelId)
     if(channel)
         return channel->isLocked;
     else
-        qDebug() << "invalid channel id.";
+        qCWarning(_app) << "invalid channel id to check isLocked.";
     return -1;
 }
 
@@ -284,6 +306,7 @@ QString User::serverUptime() const
 
 void User::moveUser(quint64 userId, quint64 channelId, const QString& password)
 {
+    qCInfo(_tcp) << "sending move user request";
     MoveUserPacket mv;
     mv.channelId=channelId;
     mv.userId=userId;
@@ -299,6 +322,7 @@ void User::moveUser(quint64 userId, quint64 channelId, const QString& password)
 
 void User::connectToServer(bool saveThisConnection, const QString& serverIp, const QString& str_serverPort)
 {
+    qCInfo(_app) << "connect to server.";
     //if user is connected to somewhere, disconnect before new connection
     if(isConnectedToServer())
         disconnect();
@@ -307,7 +331,7 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
     //check is server saved or is temporary?
     if(m_connectedServerId_onDb==-1) //server is temporary
     {
-        qDebug() << "server connection is termporary. connectedServerId DB=" << m_connectedServerId_onDb;
+        qCInfo(_app) << "server connection is termporary. connectedServerId DB=" << m_connectedServerId_onDb;
     }
 
     //convert ports to quint64
@@ -315,7 +339,7 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
     quint64 serverPort = str_serverPort.toULongLong(&ok);
     if(!ok)
     {
-        qDebug() << "Invalid port number!";
+        qCWarning(_app) << "Invalid port number, port=" << str_serverPort;
         emit notificationRequested(NotificationType::Error,
                                    "Invalid port number.");
         return;
@@ -331,7 +355,7 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
 
     if(serverId==-1) //server doesnt exist on list
     {
-        QString serverName= "The Server";
+        QString serverName= USER_DEFAULT_SERVER_NAME;
         int serverDbIndex = -1;
         if(saveThisConnection)
         {
@@ -344,12 +368,12 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
                       });
             if(result)
             {
-                qDebug() << "server saved to myServers";
+                qCInfo(_app) << "server saved to myServers";
                 QVariantMap serverInfo = m_database->getServer(serverIp,str_serverPort);
 
                 if (serverInfo.isEmpty())
                 {
-                    qDebug() << "while reading data from recently added server got: Server not found";
+                    qCWarning(_app) << "while reading data from recently added server got: Server not found";
                     return;
                 }
 
@@ -359,7 +383,7 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
                 setMyServerName(serverName);
             }
             else
-                qDebug() << "failed to save server to myServers.";
+                qCCritical(_app) <<  "failed to save server to myServers.";
         }
 
         //add to myServers model and set isActive to TRUE
@@ -398,14 +422,14 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
     login.username = myUsername();
     if(!m_identityManager->currentIdentity())
     {
-        qDebug() << "connect failed. no identity selected... create one";
+        qCInfo(_app) << "connect failed. no identity selected... create one";
         if(m_identityManager->createIdentity("Default"+QString::number(QRandomGenerator::global()->bounded(100))))
         {
-            qDebug()<<"we create one new identity for you";
+            qCInfo(_app) << "we create one new identity for you";
         }
         else
         {
-            qDebug() << "you didnt have an identity and sadly we couldn't create one for you!";
+            qCWarning(_app) << "you didnt have an identity and sadly we couldn't create one for you!";
             return;
         }
     }
@@ -419,6 +443,7 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
     login.machineName = QSysInfo::machineHostName();
     login.osName =  platformName();
     login.osVersion = QSysInfo::prettyProductName();
+
 
     Packet p;
     p.type = PacketType::LoginRequest;
@@ -436,7 +461,7 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
     setIsConnectedToServer(true);
 
 
-    qDebug() << "sending login request.. will wait for response.. connecting server is "
+    qCInfo(_tcp) << "sending login request.. will wait for response.. connecting server is "
              << m_serverIp << ":" << m_serverPort  << " name=" << myUsername() << "identity=" << myIdentity() ;
 
     socket.write(p.serialize());
@@ -448,6 +473,7 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
 
 void User::updateSavedServer(quint64 serverId, quint64 dbIndex, const QString& name, const QString& ip, const QString& port)
 {
+    qCInfo(_app) << "update saved server.";
     bool res = m_database->update("MyServers",
                     dbIndex,
                     {
@@ -461,6 +487,7 @@ void User::updateSavedServer(quint64 serverId, quint64 dbIndex, const QString& n
         emit notificationRequested(NotificationType::Success,
                                    "MyServer updated.");
 
+        qCInfo(_app) << "myserver updated.";
         //update model data.
         m_myServersModel->updateServer(serverId,name,ip,port);
 
@@ -469,6 +496,7 @@ void User::updateSavedServer(quint64 serverId, quint64 dbIndex, const QString& n
     }
     else
     {
+        qCWarning(_app) << "failed to update MyServer.";
         emit notificationRequested(NotificationType::Error,
                                    "Failed to update MyServer.");
     }
@@ -476,29 +504,31 @@ void User::updateSavedServer(quint64 serverId, quint64 dbIndex, const QString& n
 
 void User::deleteSavedServer(quint64 serverId, quint64 serverDbIndex)
 {
+    qCInfo(_app) << "delete saved server.";
     if(serverDbIndex!=-1) //server is not saved in database. just delete it from model.
     {
         bool res = m_database->remove("MyServers",serverDbIndex);
         if(res)
         {
-            qDebug() << "server deleted from MyServers.";
+            qCInfo(_app) << "server deleted from MyServers.";
             emit notificationRequested(NotificationType::Success,
                                        "Server deleted from MyServers.");
 
             //delete saved avatars in that server's avatar directory
-            qDebug() << "trying to delete avatars of that server: target path = " << SAVE_AVATAR_PATH+QString::number(serverDbIndex);
+            qCInfo(_app) << "trying to delete avatars of that server: target path = " << SAVE_AVATAR_PATH+QString::number(serverDbIndex);
 
             QDir dir(SAVE_AVATAR_PATH+QString::number(serverDbIndex));
             if (dir.exists())
             {
                 if (!dir.removeRecursively())
-                    qDebug() << "Failed to remove avatar.";
+                    qCWarning(_app) << "Failed to remove avatar.";
             }
             else
-                qDebug() << "that path avatar doesn't exists.";
+                qCInfo(_app) << "that path avatar doesn't exists.";
         }
         else
         {
+            qCWarning(_app) << "Failed to delete server from MyServers.";
             emit notificationRequested(NotificationType::Error,
                                        "Failed to delete server from MyServers.");
         }
@@ -510,7 +540,7 @@ void User::deleteSavedServer(quint64 serverId, quint64 serverDbIndex)
 
 void User::switchOrConnectToServer(const QString &serverIp, const QString &str_serverPort, int serverId)
 {
-    qDebug() << "connectToServer server " << serverId << " called ";
+    qCInfo(_app) << "switch OR connectToServer server-id: " << serverId;
     //tell myServers model im connected to this server.
     m_myServersModel->setIsActive(serverId);
 
@@ -522,6 +552,7 @@ void User::switchOrConnectToServer(const QString &serverIp, const QString &str_s
 
 void User::disconnect()
 {
+    qCInfo(_app) << "disconnect.";
     if(!isConnectedToServer()) //to prevent double run this function, first user do disconnect manually/switched to antoher server, then QTCPSocket::Disconnect would run this again..
         return;
 
@@ -529,6 +560,8 @@ void User::disconnect()
                                "Disconnected",
                                NotificationId::Disconnected,
                                NotificationDuration::Short);
+
+    emit youDisconnected();
 
     //disocnnect sockets.
     socket.disconnectFromHost();
@@ -540,6 +573,7 @@ void User::disconnect()
 
 void User::createChannel(QString channelName, QString password, bool saveMessages)
 {
+    qCInfo(_tcp) << "sending create channel request";
     CreateChannelPacket cc;
     cc.name = channelName;
     cc.password= password;
@@ -560,20 +594,15 @@ void User::sendVoicePcm(
 
     if(muteMicrophone() || muteHeadphone())
     {
-#if D_PRINT_VOICE_INFO
-        qDebug() << "mic or headphone is muted.";
-#endif
+        // qCCritical(_app) << "microphone or headphone is muted, send voice abort..";
         return;
     }
 
     if(m_myId < 0)
     {
-#if D_PRINT_VOICE_INFO
-        qDebug() << "invalid my id.";
-#endif
+        qCCritical(_app) << "myId is invalid.";
         return;
     }
-
 
 
     // Accumulate microphone PCM
@@ -642,6 +671,7 @@ void User::sendVoicePcm(
 
 void User::sendMessage(QString message)
 {
+    qCInfo(_tcp) << "sending message request";
     SendMessagePacket sm;
     sm.text = message;
     sm.type = SendMessagePacket::Type::Text;
@@ -656,6 +686,7 @@ void User::sendMessage(QString message)
 
 void User::updateChannel(quint64 channelId, const QString &name, const QString &pass, bool saveMessages)
 {
+    qCInfo(_tcp) << "sending update channel request";
     UpdateChannelPacket uc;
     uc.channelId =channelId;
     uc.name = name;
@@ -676,6 +707,7 @@ QString User::getChannelName(quint64 channelId)
 
 void User::deleteChannel(quint64 channelId)
 {
+    qCInfo(_tcp) << "sending delete channel request";
     DeleteChannelPacket d;
     d.channelId = channelId;
 
@@ -693,22 +725,22 @@ ClientUser *User::clientUser(quint64 id)
 
 void User::updateApp()
 {
-    qDebug() << "updateApp clicked";
+    qCInfo(_updater) << "updateApp clicked";
     QString exe = QCoreApplication::applicationDirPath() + "/BeanChatUpdater.exe";
-    qDebug() << "trying to launch updater, path=" << exe;
+    qCInfo(_updater) << "trying to launch updater, path=" << exe;
     if (!QProcess::startDetached(exe))
     {
-        qDebug() << "failed to launch updater.";
+        qCCritical(_updater) << "failed to launch updater.";
         return;
     }
 
-    qDebug() << "updater launched, lets close self.";
+    qCInfo(_updater) << "updater launched, lets close self.";
     QCoreApplication::quit();
 }
 
 void User::askForServerState()
 {
-    qDebug() << "asking for server State packet..";
+    qCInfo(_tcp) << "asking for server State packet..";
     ServerStatePacket ssp;
 
     Packet p;
@@ -720,7 +752,7 @@ void User::askForServerState()
 
 void User::askForNotFoundAvatars()
 {
-    qDebug() << "asking for not found avatars... not found avatars count=" << m_notFoundAvatars.count();
+    qCInfo(_tcp) << "asking for not found avatars... not found avatars count=" << m_notFoundAvatars.count();
     RequestAvatarsPacket ra;
     ra.notFoundIds = m_notFoundAvatars;
 
@@ -736,7 +768,7 @@ void User::newAvatarArrived(quint64 userId,
                             const QString& oldAvatarHash,
                             const QByteArray& avatarData)
 {
-    qDebug()<< "new Avatars Arrived";
+    qCInfo(_tcp) << "Avatars response arrived";
 
     //check whether that received avatarHash is valid?
     if(avatarHash.isEmpty())
@@ -746,7 +778,7 @@ void User::newAvatarArrived(quint64 userId,
     if(m_avatarManager.saveAvatar(SAVE_AVATAR_PATH+QString::number(m_connectedServerId_onDb)
                                    ,avatarHash,avatarData))
     {
-        qDebug() << "avatar saved for that user, "
+        qCInfo(_app) << "avatar saved for that user, "
                  << "userid=" << userId
                  << "hash=" << avatarHash
                  << "oldHash=" << oldAvatarHash
@@ -761,7 +793,7 @@ void User::newAvatarArrived(quint64 userId,
 
         if(avatarPath.isEmpty())
         {
-            qDebug() << "avatarpath is empty!";
+            qCInfo(_app) << "avatar path is empty!";
         }
 
         //check is it server's avatar or not
@@ -769,17 +801,17 @@ void User::newAvatarArrived(quint64 userId,
         {
             //apply new avatar to myServers model
             if(m_myServersModel->setAvatarPath(avatarPath))
-                qDebug() << "myServersModel avatar updated for that server avatarPath=" << avatarPath;
+                qCInfo(_app) << "myServersModel avatar updated for that server avatarPath=" << avatarPath;
             else
-                qDebug() << "failed to update avatar for that server on myServersModel avatarPath=" << avatarPath;
+                qCWarning(_app) << "failed to update avatar for that server on myServersModel avatarPath=" << avatarPath;
 
             //update datbase for that myServer id. to when didnt connected to servers load their avatar if found.
             QVariantMap values;
             values["avatarPath"] = avatarPath;
             if(m_database->update("MyServers", m_connectedServerId_onDb, values))
-                qDebug() << "server avatarPath updated on myServers' table.";
+                qCInfo(_app) << "server avatarPath updated on myServers' table.";
             else
-                qDebug() << "failed to update avatarPath on myServers' table.";
+                qCWarning(_app) << "failed to update avatarPath on myServers' table.";
 
 
             return;
@@ -793,13 +825,14 @@ void User::newAvatarArrived(quint64 userId,
         if(user->self())
         {
             setMyAvatarPath(avatarPath);
+            qCInfo(_app) << "my avatar has updated successfully.";
             emit notificationRequested(NotificationType::Success,
                                        "Avatar has updated successfully.");
         }
 
     }
     else
-        qDebug() << "failed to save avatar for that user...";
+        qCWarning(_app) <<  "failed to save avatar for that user...";
 }
 
 void User::onTcpReadyRead()
@@ -825,7 +858,7 @@ void User::onTcpReadyRead()
         // Wait until whole packet arrives
         if (m_tcpBuffer.size() < 6 + payloadSize)
         {
-            qDebug() <<"TCP READ WAITING... to packet completes";
+            qCInfo(_tcp) <<"WAITING... to packet completes";
             return;
         }
 
@@ -843,22 +876,20 @@ void User::onTcpReadyRead()
 }
 void User::processPacket(const Packet& packet)
 {
-    qInfo() << "received message: code:" << static_cast<int>(packet.type);
+    qCInfo(_app) << "processPacket for type:" << static_cast<int>(packet.type);
     switch(packet.type)
     {
 
     case PacketType::LoginChallenge:
     {
         auto challange = PacketHelpers::unpack<LoginPacket>(packet.payload);
-        qDebug() << "chalange received. lets proof";
-        qDebug() << "Challenge received:" << packet.payload.toBase64();
+        qCInfo(_app) << "login challenge received =" << packet.payload.toBase64();
 
         const Identity* identity = m_identityManager->currentIdentity();
 
         if(!identity)
             return;
 
-        qDebug() << "Public:" << identity->publicKeyBase64();
 
         LoginPacket proof;
 
@@ -866,13 +897,13 @@ void User::processPacket(const Packet& packet)
         QByteArray signature = Crypto::sign(identity->privateKey, challange.payload);
         proof.payload = signature;
 
-        qDebug() << "proofing Signature:" << signature.toBase64();
+        qCInfo(_app) <<  "proofing Signature:" << signature.toBase64();
 
         Packet p;
         p.type = PacketType::LoginProof;
         p.payload = PacketHelpers::pack(proof);
 
-        qDebug() << "sending proof to server.";
+        qCInfo(_tcp) << "sending proof to server.";
         socket.write(p.serialize());
 
         break;
@@ -888,7 +919,7 @@ void User::processPacket(const Packet& packet)
         {
             case UpdateUserInfoType::Username:
             {
-                qDebug() << "received a username changed";
+                qCInfo(_app) << "a username changed";
                 ClientUser* user = m_clientUserManager->user(info.userId);
                 if(!user)
                     return;
@@ -898,6 +929,7 @@ void User::processPacket(const Packet& packet)
                 {
                     emit notificationRequested(NotificationType::Info,
                                                "Your username has been updated.");
+                    qCInfo(_app) << "Your username has been updated.";
                     setMyUsername(info.payloadValue);
                 }
 
@@ -905,7 +937,7 @@ void User::processPacket(const Packet& packet)
             }
             case UpdateUserInfoType::Avatar:
             {
-                qDebug() << "received avatar: hash="  << info.payloadValue << " avatar size=" << info.payloadData.size();
+                qCInfo(_app) <<  "a avatar changed,  hash="  << info.payloadValue << " avatar size=" << info.payloadData.size();
 
                 //save this new avatar and apply it to models
                 newAvatarArrived(info.userId, info.payloadValue, info.payloadSecondValue, info.payloadData);
@@ -913,14 +945,14 @@ void User::processPacket(const Packet& packet)
                break;
             }
             default:
-                qDebug() << "unkown UpdateUserInfoType received.";
+                qCWarning(_app) << "unkown UpdateUserInfoType received. code=" << static_cast<int>(info.updateType);
         }
     }break;
 
 
     case PacketType::ResponseAvatars:
     {
-        qDebug() << "response avatars received lets update users' avatars";
+        qCInfo(_app) << "response avatars received lets update users' avatars";
 
         //clear list for next connection
         m_notFoundAvatars.clear();
@@ -939,7 +971,7 @@ void User::processPacket(const Packet& packet)
     }
     case PacketType::ChannelUpdated:
     {
-        qDebug() << " a channel updated";
+        qCInfo(_app) << "a channel updated";
         auto resp =
             PacketHelpers::unpack<ChannelUpdatedPacket>(
                 packet.payload);
@@ -950,6 +982,7 @@ void User::processPacket(const Packet& packet)
         {
             emit notificationRequested(NotificationType::Info,
                                        "Your channel has been updated.");
+            qCInfo(_app) << "your channel has been updated.";
             setMyChannelName(resp.name);
             setMyChannelSavesChat(resp.saveChats);
         }
@@ -958,7 +991,7 @@ void User::processPacket(const Packet& packet)
 
     case PacketType::ChannelDeleted:
     {
-        qDebug() << " a channel deleted";
+        qCInfo(_app) << "a channel deleted";
         auto resp =
             PacketHelpers::unpack<DeleteChannelPacket>(
                 packet.payload);
@@ -969,6 +1002,7 @@ void User::processPacket(const Packet& packet)
         {
             emit notificationRequested(NotificationType::Warning,
                                        "Your channel has been deleted.");
+            qCInfo(_app) << "your channel has been deleted.";
             m_currentChannelParticipant->clear();
             setMyChannelName("");
             setMyChannelId(0); //default vlaue for homeless users :D
@@ -979,7 +1013,7 @@ void User::processPacket(const Packet& packet)
     }
     case PacketType::ChannelCreated:
     {
-        qDebug() <<"a channel created";
+        qCInfo(_app) << "a channel created";
         auto resp =
             PacketHelpers::unpack<ChannelCreatedPacket>(
                 packet.payload);
@@ -990,12 +1024,14 @@ void User::processPacket(const Packet& packet)
     case PacketType::UserCameraClosed:
     case PacketType::UserCameraOpened:
     {
+        qCInfo(_app) << "a camera opened/closeed";;
         auto resp =
             PacketHelpers::unpack<UserStatusChangedPacket>(
                 packet.payload);
 
         if(resp.userId==myId()) //if it's himself update locaol user's variable therefore change icon at userStuff (user mic,speaker,...)
         {
+            qCInfo(_app) << "its mine.";
             m_isCameraOpen=resp.status;
 
             // start or stop camera
@@ -1003,11 +1039,11 @@ void User::processPacket(const Packet& packet)
             {
                 if(resp.status)
                 {
-                    qDebug() << "staring camera..";
                     m_cam->start();
 
 
                     //feed this user's vidoeSink with preview.
+                    qCInfo(_app) << "show camera preview (feed sink via camera)";
                     if (VideoSink *sink = m_currentChannelParticipant->videoSink(myId()))
                     {
                         connect(m_cam,
@@ -1019,7 +1055,7 @@ void User::processPacket(const Packet& packet)
                 }
                 else
                 {
-                    qDebug() << "stopping camera..";
+                    qCInfo(_app) << "stop showing camera preview (feed sink via camera)";
                     if (VideoSink *sink = m_currentChannelParticipant->videoSink(myId()))
                     {
                         QObject::disconnect(m_cam,
@@ -1035,6 +1071,7 @@ void User::processPacket(const Packet& packet)
             {
                 emit notificationRequested(NotificationType::Error,
                                            "Failed to open camera.");
+                qCWarning(_app) << "failed to open camera.";
             }
 
 
@@ -1042,7 +1079,7 @@ void User::processPacket(const Packet& packet)
         }
         else
         {
-            qDebug() << "update cmaera for user:" << resp.userId << " to " << resp.status;
+            qCInfo(_app) << "update camera status for user:" << resp.userId << " to " << resp.status;
         }
 
         if (ClientUser *user = m_clientUserManager->user(resp.userId))
@@ -1053,21 +1090,20 @@ void User::processPacket(const Packet& packet)
     case PacketType::UserMuted:
     case PacketType::UserUnmuted:
     {
+        qCInfo(_app) << "a microphone muted/unmuted" ;
         auto resp =
             PacketHelpers::unpack<UserStatusChangedPacket>(
                 packet.payload);
 
         if(resp.userId==myId()) //if it's himself update locaol user's variable therefore change icon at userStuff (user mic,speaker,...)
         {
+            qCInfo(_app) << "it's mine.";
             m_muteMicrophone=resp.status;
-
-            //close mic.
-
             emit muteMicrophoneChanged();
         }
         else
         {
-            qDebug() << "update mute for user:" << resp.userId << " to " << resp.status;
+            qCInfo(_app) <<  "update mute for user:" << resp.userId << " to " << resp.status;
         }
 
         if (ClientUser *user = m_clientUserManager->user(resp.userId))
@@ -1078,19 +1114,20 @@ void User::processPacket(const Packet& packet)
     case PacketType::UserDeafened:
     case PacketType::UserUndeafened:
     {
+        qCInfo(_app) << "a headphone deafened/undeafened" ;
         auto resp =
             PacketHelpers::unpack<UserStatusChangedPacket>(
                 packet.payload);
 
         if(resp.userId==myId()) //if it's himself update locaol user's variable therefore change icon at userStuff (user mic,speaker,...)
         {
+            qCInfo(_app) << "it's mine.";
             m_muteHeadphone=resp.status;
-
             emit muteHeadphoneChanged();
         }
         else
         {
-            qDebug() << "update speaker/headphone for user:" << resp.userId << " to " << resp.status;
+            qCInfo(_app) << "update speaker/headphone for user:" << resp.userId << " to " << resp.status;
         }
 
         if (ClientUser *user = m_clientUserManager->user(resp.userId))
@@ -1101,6 +1138,7 @@ void User::processPacket(const Packet& packet)
     case PacketType::UserMoved:
     case PacketType::UserJoinedChannel:
     {
+        qCInfo(_app) << "a user joined/moved to a channel" ;
         auto resp =
             PacketHelpers::unpack<UserJoinedChannelPacket>(
                 packet.payload);
@@ -1125,11 +1163,16 @@ void User::processPacket(const Packet& packet)
             if(packet.type==PacketType::UserMoved)
             {
                 emit notificationRequested(NotificationType::Info,
-                                           "You are moved.",
+                                           "You were moved.",
                                            NotificationId::YouAreMoved);
+                qCInfo(_app) << "you were moved";
+                emit youWereMoved();
             }
             else
-                qDebug() << "voice: channel switched.";
+            {
+                qCInfo(_app) << "you switched/join a channel.";
+                emit youChannelSwitched();
+            }
 
             //check if i had channel dont remove me from paritcipant (because wanna keep preview feed)\
                     else remove everyone
@@ -1169,16 +1212,16 @@ void User::processPacket(const Packet& packet)
                 }
             }
             else
-                qDebug() << "could not find channel id:" << resp.channelId;
+                qCWarning(_app) << "could not find channel to add user into, channel-id:" << resp.channelId;
         }
 
         //check did user join into my channel?
         else if(resp.channelId == m_myChannelId)
         {
             if(packet.type==PacketType::UserMoved)
-                qDebug() << "voice: user moved into your channel.";
+                qCInfo(_app) << "user moved into your channel.";
             else
-                qDebug() << "voice: user joined to your channel.";
+                qCInfo(_app) << "user joined to your channel.";
 
             //find channel and that user info and add into participantModel
             ChannelItem* channel = m_channelModel->findChannel(resp.channelId);
@@ -1189,10 +1232,10 @@ void User::processPacket(const Packet& packet)
                     if (ClientUser *clientUser = m_clientUserManager->user(jointUser->id()))
                         m_currentChannelParticipant->addUser(clientUser);
                 else
-                    qDebug() << "user joined could not find user inside channel id:" << resp.channelId << " userid=" << resp.userId;
+                    qCWarning(_app) << "user joined, but could not find user inside channelModel, channel-id:" << resp.channelId << " userid=" << resp.userId;
             }
             else
-                qDebug() << "user joined could not find channel id:" << resp.channelId;
+                qCWarning(_app) << "user joined, but could not find that channel inside channelModel, channel-id::" << resp.channelId;
 
             //for soundmanager to play effect.
             emit userJoined();
@@ -1202,13 +1245,10 @@ void User::processPacket(const Packet& packet)
         else if(resp.oldChannelId==m_myChannelId)
         {
             if(packet.type==PacketType::UserMoved)
-                qDebug() << "voice: user moved from your channel.";
+                qCInfo(_app) << "user moved from your channel.";
             else
-                qDebug() << "voice: user left your channel.";
+                qCInfo(_app) << "user left your channel.";
 
-
-            //remove that user from participant model
-            m_currentChannelParticipant->removeUser(resp.userId);
 
             //rest leaved user talkin status
             if (ClientUser *user = m_clientUserManager->user(resp.userId))
@@ -1217,9 +1257,8 @@ void User::processPacket(const Packet& packet)
             //for soundmanager to play effect
             emit userLeft();
         }
-
         else //user's action is not my concern, no sound effect or additional actions
-            qInfo () << "user (" << resp.userId << ") has left " << resp.oldChannelId << " and joined to " << resp.channelId ;
+            qCInfo(_app) << "user (" << resp.userId << ") has left " << resp.oldChannelId << " and joined to " << resp.channelId ;
 
 
 
@@ -1231,6 +1270,7 @@ void User::processPacket(const Packet& packet)
 
     case PacketType::LoginResponse:
     {
+        qCInfo(_app) << "login response received.";
         auto resp =
             PacketHelpers::unpack<LoginResponsePacket>(
                 packet.payload);
@@ -1241,12 +1281,13 @@ void User::processPacket(const Packet& packet)
                                        "Connection Rejected. ("+resp.message+")",
                                        NotificationId::ConnectionRejected,
                                        NotificationDuration::Long);
+            qCWarning(_app) << "login response said: connection rejected, msg=" << resp.message;
             disconnect();
         }
         else
         {
             setMyId(resp.id); //server just told us our name, to know when e.g: user connected to that channel is that same channel as us? what is my id? so here is it.
-            qDebug() << "my id is=" << myId();
+            qCInfo(_app) << "login accepted, myId is=" << myId();
 
 
             loginToUdpSocket();
@@ -1260,11 +1301,12 @@ void User::processPacket(const Packet& packet)
 
     case PacketType::UserConnected:
     {
+        qCInfo(_app) << "a user connected";
         auto u =
             PacketHelpers::unpack<UserConnectedPacket>(
                 packet.payload);
 
-        qDebug() << "User connected:" << u.username << " identity:" << u.identity;
+        qCDebug(_app) <<  "User connected:" << u.username << " identity:" << u.identity;
 
         //add user.
         ClientUser* user = m_clientUserManager->createUser(u.id);
@@ -1276,7 +1318,7 @@ void User::processPacket(const Packet& packet)
                 //send request to server for all not found avatars
                 askForNotFoundAvatars();
             }
-            qDebug() << "add user to connected list: " <<  u.appVersion << "-"
+            qCDebug(_app) << "add user to connected list: " <<  u.appVersion << "-"
                      << u.buildType << "-" << u.osName
                      << "-" << u.osVersion << "- avatar hash= " << u.avatarHash
                      << "avatar path=" << avatarPath << "channelid=";
@@ -1284,7 +1326,7 @@ void User::processPacket(const Packet& packet)
             //if user is me set myAvatarPath
             if(u.id == myId())
             {
-                qDebug() << "user connected received, this user is me: ";
+                qCInfo(_app) << "it's me";
                 setMyAvatarPath(avatarPath);
                 user->setSelf(true);
             }
@@ -1309,6 +1351,7 @@ void User::processPacket(const Packet& packet)
                 const UserRelationship *relationship = m_relationshipManager->find(u.identity);
                 if (relationship)
                 {
+                    qCInfo(_app) <<"relation found, setting for him..";
                     user->setRelationship(relationship->relationship);
                     user->setNickname(relationship->nickname);
                     user->setNote(relationship->note);
@@ -1317,37 +1360,36 @@ void User::processPacket(const Packet& packet)
                 }
                 else
                 {
+                    qCInfo(_app) <<"relation not found for this user setting defaults";
                     user->setRelationship(Relationship::Type::None);
                     user->setNickname({});
                     user->setNote({});
                     user->setVolume(SPEAKER_DEFAULT_CHANNEL_USERS_VOLUME);
                     user->setLocalMuted(false);
                 }
-
             }
 
             //add him to list.
             m_connectedUsersModel->addUser(user);
-
-            qDebug() << "user added to connectedusrs id="<<u.id;
         }
         else
-            qDebug() << "failed to create user, invalid id or user exists. id=" << u.id;
+            qCWarning(_app) << "failed to create user, invalid id or user exists. id=" << u.id;
 
 
         break;
     }
 
     case PacketType::UserConnectionLost:
-        qInfo () << "user connection lost.";
+        // qCInfo(_app) << "a user connection lost:";
     case PacketType::UserDisconnected:
     {
-        qInfo() << "user disconnected:";
+        // qCInfo(_app) << "a user disconnected:";
         auto resp =
             PacketHelpers::unpack<UserDisconnectedPacket>(
                 packet.payload);
 
-        qDebug()<< "User disconnected:" << resp.id << " wasConnectinLost?" << resp.wasConnectionLost;
+
+        qCInfo(_app) << "User disconnected:" << resp.id << " wasConnectinLost?" << resp.wasConnectionLost;
 
         ChannelItem* channel = m_channelModel->findChannelOfUser(resp.id);
         if(channel)
@@ -1355,22 +1397,14 @@ void User::processPacket(const Packet& packet)
             //check whether user was on our channel, if was play sound effect
             if(channel->id == m_myChannelId)
             {
-                qDebug() << "play user left.";
-                emit userLeft();
-
-                //try to remove him from participantmodel of our channel
-                m_currentChannelParticipant->removeUser(resp.id);
+                if(resp.wasConnectionLost)
+                    emit userTimedOut();
+                else
+                    emit userLeft(); //play user left channel sound effect
             }
         }
         else
-            qDebug() << "invalid channel id, not found cant find usr was in our channel or not";
-
-
-        //remove user from connected users list
-        m_connectedUsersModel->removeUser(resp.id);
-
-        //also dont know if user was inside a channel or not anyway try to remove him from model
-        m_channelModel->removeUser(resp.id);
+            qCWarning(_app) << "invalid channel id, not found cant find usr was in our channel or not to remove him";
 
 
         //set some status for that user. e.g set him offline to show user status as offline on chat
@@ -1388,6 +1422,7 @@ void User::processPacket(const Packet& packet)
 
     case PacketType::ChatMessage:
     {
+        qCInfo(_app) << "a new chat message";
         auto msg = PacketHelpers::unpack<ChatMessagePacket>(packet.payload);
 
         //show notification dot near chat indicator when chat isn't open
@@ -1395,7 +1430,10 @@ void User::processPacket(const Packet& packet)
             setChatUnreadMessages(chatUnreadMessages()+1); //increase unread messages count
 
         if(msg.senderId==myId())
-            emit messageSent(); //play message sent effect.
+        {
+            qCInfo(_app) << "message sent successfully";
+            // emit messageSent(); //play message sent effect.
+        }
         else
         {
             //check if chat is not open (user is in connectedUsersList), \
@@ -1406,9 +1444,9 @@ void User::processPacket(const Packet& packet)
                                            "New Message received.",
                                            NotificationId::Message,
                                            NotificationDuration::Short);
-
                 emit newMessage(); //play message recevied effect.
             }
+            // qCInfo(_app) << "new message received";
         }
 
         ClientUser* senderUser = m_clientUserManager->user(msg.senderId);
@@ -1422,7 +1460,7 @@ void User::processPacket(const Packet& packet)
 
     case PacketType::ServerState:
     {
-        qInfo() << "server state:";
+        qCInfo(_app) << "server state received.";
         auto state =
             PacketHelpers::unpack<ServerStatePacket>(
                 packet.payload);
@@ -1442,13 +1480,14 @@ void User::processPacket(const Packet& packet)
         }
         // else checkAvatar() would add id RESERVED .. to list \
                 then askForNotFoundAvatars would send server that list and when response \
-                arrived apply avatars for users or in this case if userId==RESERVED_TO_ASK_SERVERS_AVATAR \
+                arrived apply avatars for users or in this case if userId==BeanChatCommon::ReservedIds:ServerAvatar \
                 would apply it for myServers' avatarPath
 
 
 
         //channels
-        m_channelModel->clear();        
+        m_channelModel->clear();
+        qCInfo(_app) << "server channels count= "<< state.channels.count();
         for(auto& c : state.channels)
         {
             m_channelModel->addChannel(
@@ -1459,24 +1498,30 @@ void User::processPacket(const Packet& packet)
         }
 
         //users
+        qCInfo(_app) << "server users count= "<< state.users.count();
         for(auto& u : state.users)
         {
             //add user.
             ClientUser* user = m_clientUserManager->createUser(u.id);
-            qDebug() << "userid=" << u.id;
             if(user)
             {
                 QString avatarPath = checkAvatar(u.id, u.avatarHash);
 
-                qDebug() << "add user to connected: " <<  u.appVersion << "-"
-                         << u.buildType << "-" << u.osName
-                         << "-" << u.osVersion << "- avatar hash= " << u.avatarHash
-                         << "avatar path=" << avatarPath << "channelid=" << u.channelId;
+                qCDebug(_app) << "adding user to connected: "
+                        <<" id=" << u.id
+                        << "identity=" << u.identity
+                        << " appVersion="<<  u.appVersion
+                        << " buildtype=" << u.buildType
+                        << " osName=" << u.osName
+                        << " osVersion=" << u.osVersion
+                        << " avatar hash= " << u.avatarHash
+                        << "avatar path=" << avatarPath
+                        << "channelid=" << u.channelId;
 
                 //if user is me set myAvatarPath
                 if(u.id == myId())
                 {
-                    qDebug() << "state received, this user is me: ";
+                    qCInfo(_app) << "this user is me: ";
                     setMyAvatarPath(avatarPath);
                     user->setSelf(true);
                     // setMyStatus(u.status); //for now packet doesn't support it.
@@ -1497,9 +1542,9 @@ void User::processPacket(const Packet& packet)
                 user->setOsName(u.osName);
                 user->setOsVersion(u.osVersion);
 
+                //load info about this user. from our UserRelationship database, don't apply for self, (maybe via other idnetities user added currentIdentity so just avoid self)
                 if(!user->self())
                 {
-                    //load info about this user. from our UserRelationship
                     const UserRelationship* relationship = m_relationshipManager->find(u.identity);
                     if (relationship)
                     {
@@ -1522,18 +1567,17 @@ void User::processPacket(const Packet& packet)
                 //add him to list
                 m_connectedUsersModel->addUser(user);
 
-                qDebug() << "user added to connectedusrs id="<<u.id;
-
+                qCInfo(_app) << "user added to connectedusrs id="<<u.id;
 
                 //if user was in a channel, add him to our channel model
                 if(u.channelId!=0)
                     m_channelModel->addUser(u.channelId, user);
-                else
-                    qDebug() << "user channel id ==0 we dont add him to channel model";
-                qDebug() << "user added to connectedusrs id="<<u.id;
+                // else
+                    // qCInfo(_app) << "user channel id ==0 we dont add him to channel model, he is channel less";
+
             }
             else
-                qDebug() << "failed to create user, invalid id or user exists. id=" << u.id;
+                qCWarning(_app) << "failed to create user, invalid id or user exists. id=" << u.id;
 
         }
 
@@ -1544,18 +1588,42 @@ void User::processPacket(const Packet& packet)
     break;
 
     default:
-        qDebug() << "an unknown packetType received. type=" << static_cast<int>(packet.type);
+        qCWarning(_app) << "an unknown packetType received. type=" << static_cast<int>(packet.type);
         break;
     }
 }
 
 void User::loginToUdpSocket()
 {
-    //lookup for domain's ip, udp doesnt do this automatically. but TCP does.
-    QHostInfo info = QHostInfo::fromName(m_serverIp);
-    if (!info.addresses().isEmpty())
-        m_serverLookedupAddress = info.addresses().first();
+    //detect if its domain need to lookup
+    QHostAddress address;
+    if (address.setAddress(m_serverIp))
+    {
+        m_serverLookedupAddress = address;
 
+        qCInfo(_udp) << "Using IP directly:" << m_serverLookedupAddress.toString();
+    }
+    else // It's a domain, perform DNS lookup
+    {
+        qCInfo(_udp) << "using domain.. need to dns lookup..";
+        //lookup for domain's ip, udp doesnt do this automatically. but TCP does.
+        QHostInfo info = QHostInfo::fromName(m_serverIp);
+        if (!info.addresses().isEmpty())
+        {
+            m_serverLookedupAddress = info.addresses().first();
+            qCInfo(_udp) << "Resolved"
+                         << m_serverIp
+                         << "to"
+                         << m_serverLookedupAddress.toString();
+        }
+        else
+        {
+            qCCritical(_udp) << "Failed to resolve host:" << m_serverIp;
+            emit notificationRequested(NotificationType::Error,"failed to resolve domain");
+            disconnect();
+            return;
+        }
+    }
 
 
     UdpRegisterPacket reg;
@@ -1575,7 +1643,7 @@ void User::loginToUdpSocket()
     out << reg;
 
 
-    qDebug() << "just sent a login udp message to server.";
+    qCInfo(_udp) << "sending udp login request";
     qint64 bytes = m_udpSocket.writeDatagram(
         data,
         m_serverLookedupAddress,
@@ -1583,12 +1651,11 @@ void User::loginToUdpSocket()
 
     if (bytes == -1)
     {
-        qDebug() << "UDP send failed:"
-                 << m_udpSocket.errorString();
+        qCInfo(_udp) << "send failed:" << m_udpSocket.errorString();
     }
     else
     {
-        qDebug() << "UDP sent"
+        qCInfo(_udp) << "sent"
                  << bytes
                  << "bytes to"
                  << m_serverIp
@@ -1605,15 +1672,17 @@ void User::setMyAppVersion(const QString &newAppVersion)
     //check if saved version is lower than build version?
     if (savedVersion < buildVersion)
     {
+        qCInfo(_app) << "set app version to build's version.";
         m_appVersion = APP_VERSION;
 
         //also update setting's version
         m_settingsManager->setValue(APP_SETTING_VER, APP_VERSION);
     }
     else
+    {
         m_appVersion = newAppVersion;
-
-
+        qCInfo(_app) << "set app version to qsetting's version.";
+    }
     emit myAppVersionChanged();
 }
 
@@ -1626,6 +1695,7 @@ void User::setMyChannelId(quint64 newMyChannelId)
 {
     if (m_myChannelId == newMyChannelId)
         return;
+    qCInfo(_app) << "set my channel id to " << newMyChannelId;
     m_myChannelId = newMyChannelId;
     emit myChannelIdChanged();
 }
@@ -1639,6 +1709,7 @@ void User::setMyStatus(const ClientUser::Status &newMyStatus)
 {
     if (m_myStatus == newMyStatus)
         return;
+    qCInfo(_app) << "set my status to " << static_cast<int>(newMyStatus);
     m_myStatus = newMyStatus;
     emit myStatusChanged();
 }
@@ -1653,6 +1724,7 @@ void User::setConnectedServerId(int newConnectedServerId)
 {
     if (m_connectedServerId_onDb == newConnectedServerId)
         return;
+    qCInfo(_app) << "set connected server id to " << newConnectedServerId;
     m_connectedServerId_onDb = newConnectedServerId;
     emit connectedServerIdChanged();
 }
@@ -1666,6 +1738,7 @@ void User::setMyAvatarPath(const QString &newMyAvatarPath)
 {
     if (m_myAvatarPath == newMyAvatarPath)
         return;
+    qCInfo(_app) << "set my avatar path to " << newMyAvatarPath;
     m_myAvatarPath = newMyAvatarPath;
     emit myAvatarPathChanged();
 }
@@ -1679,20 +1752,25 @@ void User::setMyChannelSavesChat(bool newMyChannelSavesChat)
 {
     if (m_myChannelSavesChat == newMyChannelSavesChat)
         return;
+    qCInfo(_app) << "set mychannel saves chat to " << newMyChannelSavesChat;
     m_myChannelSavesChat = newMyChannelSavesChat;
     emit myChannelSavesChatChanged();
 }
 
 QString User::appTitle() const
 {
+    qCInfo(_app) << "reading appTitle()";
     return QString::fromUtf8(APP_TITLE) + " v" + QString::fromUtf8(APP_VERSION);
 }
 
 void User::updateMyProfile(const QString &username, const QString &avatarPath)
 {
-    qDebug()<< "update my profile username to " << username << "avatarpath to " << avatarPath;
+    qCInfo(_app) << "try to update my profile, username to " << username
+                 << " avatarpath to " << avatarPath;
 
     //save locally in files of myServers..
+    //code here
+
 
     //check is username changed?
     if(username != myUsername())
@@ -1700,6 +1778,7 @@ void User::updateMyProfile(const QString &username, const QString &avatarPath)
         if(isConnectedToServer())
         {
             //send request updaet to server.
+            qCInfo(_tcp) << "sending update username request";
             UpdateUserInfoPacket uu;
 
             uu.updateType = UpdateUserInfoType::Username;
@@ -1719,19 +1798,24 @@ void User::updateMyProfile(const QString &username, const QString &avatarPath)
 
     if(!avatarPath.isEmpty())
     {
-        //send request update to server
-        UpdateUserInfoPacket uu;
-        uu.updateType = UpdateUserInfoType::Avatar;
-        uu.paylaodData = m_avatarManager.imageFileToBytes(avatarPath);
-        qDebug() << "avatar size=" << uu.paylaodData.size();
+        if(isConnectedToServer())
+        {
+            //send request update to server
+            qCInfo(_tcp) << "sending update avatar request";
+            UpdateUserInfoPacket uu;
+            uu.updateType = UpdateUserInfoType::Avatar;
+            uu.paylaodData = m_avatarManager.imageFileToBytes(avatarPath);
+            qCInfo(_tcp) << "avatar size=" << uu.paylaodData.size();
 
-        Packet p;
+            Packet p;
 
-        p.type = PacketType::UpdateUserInfo;
-        p.payload = PacketHelpers::pack(uu);
-        socket.write(p.serialize());
+            p.type = PacketType::UpdateUserInfo;
+            p.payload = PacketHelpers::pack(uu);
+            socket.write(p.serialize());
+        }
+        else
+            qCInfo(_app) << "you are not connected to any server therefore can't send request update avatar.";
     }
-
 }
 
 
@@ -1748,13 +1832,13 @@ QString User::checkAvatar(quint64 userId, const QString &avatarHash, bool askFor
                                  +"/"+avatarHash
                                  +".png";
             avatarPath = QUrl::fromLocalFile(avatarPath).toString();
-            qDebug() << "avatar found = " << avatarPath;
+            qCInfo(_app) << "avatar found = " << avatarPath;
             return avatarPath;
         }
 
         if(askForAvatar)
         {
-            qDebug() << "avatar not found for  "
+            qCInfo(_app) << "avatar not found for  "
                      << "hash=" << avatarHash
                      << "userid=" << userId
                      << "would send request for this.";
@@ -1768,14 +1852,13 @@ QString User::checkAvatar(quint64 userId, const QString &avatarHash, bool askFor
 
 void User::onDisconnected()
 {
-    qDebug() << "Server disconnected";
+    qCInfo(_tcp) << "Server disconnected";
     disconnect();
 }
 
 void User::onSocketError(QAbstractSocket::SocketError error)
 {
-    qDebug() << "TCP error:" << error
-             << socket.errorString();
+    qCWarning(_tcp) << "error:" << error  << " socketError:"<< socket.errorString();
 
     QString errorMessage;
     switch (error)
@@ -1810,6 +1893,7 @@ void User::onSocketError(QAbstractSocket::SocketError error)
                                    NotificationId::ConnectionError);
 
     //make sure UDP socket is closed too.
+    qCInfo(_udp) << "tcp connection has error so force disconnect udp from host.";
     m_udpSocket.disconnectFromHost();
 
     //make sure reset variables for next connection
@@ -1836,10 +1920,10 @@ void User::onUdpReadyRead()
         {
         case PacketType::UdpLoginResponse:
         {
-            qDebug() << "udp logged in successfully.";
+            qCInfo(_udp) << "udp logged in successfully.";
             emit notificationRequested(NotificationType::Success,
                                        "Connected to "+myServerName());
-
+            emit youConnected();
             //start to expect every xSeconds ping request from server otherwise, assuming UDP connection has failed
             m_udpConnectionTimeout.start(UDP_CONNECTION_LOST_TIMER_INTERVAL); // 10 seconds
             break;
@@ -1873,10 +1957,10 @@ void User::onUdpReadyRead()
 #endif
                 QByteArray pcm = m_opus.decode(packet.audioData);
 #if D_PRINT_AUDIO_INFO
-                qDebug() << "decode =" << t.nsecsElapsed()/1000000.0 << "ms";
+                qCDebug(_udp) << "decode =" << t.nsecsElapsed()/1000000.0 << "ms";
 #endif
 #if D_PRINT_VOICE_INFO
-                qDebug() << "received opus=" << pcm.size() << " raw pcm=" << packet.audioData.size();
+                qCDebug(_udp) << "received opus=" << pcm.size() << " raw pcm=" << packet.audioData.size();
 #endif
 
                 if (!pcm.isEmpty())
@@ -1884,7 +1968,7 @@ void User::onUdpReadyRead()
                                        pcm, senderUser->volume());
             }
 #if D_PRINT_AUDIO_INFO
-            qDebug()
+            qCDebug(_udp)
                 << "Voice received from"
                 << packet.senderId
                 << "seq"
@@ -1920,7 +2004,7 @@ void User::onUdpReadyRead()
             //Before storing, validate it:
             if (frag.fragmentIndex >= pending.fragments.size())
             {
-                qDebug() << "Invalid fragment index";
+                qCWarning(_udp) << "VideoData: Invalid fragment index";
                 break;
             }
 
@@ -1961,6 +2045,7 @@ void User::onUdpReadyRead()
 
         case PacketType::UdpPingRequest: //ping requst from server.
         {
+            // qCDebug(_udp) << "ping request received.";
             PingPacket p;
             in >> p;
 
@@ -1984,6 +2069,7 @@ void User::onUdpReadyRead()
             out << PacketType::UdpPingResponse;
             out << p;
 
+            // qCDebug(_udp) << "sending pong to server.";
             m_udpSocket.writeDatagram(
                 data2,
                 m_serverLookedupAddress,
@@ -1998,7 +2084,7 @@ void User::onUdpReadyRead()
 void User::sendVideoFrame(const QByteArray &videoData)
 {
 #if D_PRINT_VIDEO_INFO
-    qDebug() << "sendVideoFrame:" << videoData.size();
+    qCDebug(_udp) << "sendVideoFrame:" << videoData.size();
 #endif
 
     if(!isConnectedToServer())
@@ -2033,7 +2119,7 @@ void User::sendVideoFrame(const QByteArray &videoData)
         out << frag;
 
 #if D_PRINT_VIDEO_INFO
-        qDebug()
+        qCDebug(_udp)
             << "Frame"
             << frameId
             << "Fragment"
@@ -2054,6 +2140,7 @@ void User::sendVideoFrame(const QByteArray &videoData)
 void User::currentIdentityChangedTo(const QString &name)
 {
     //update config
+    qCInfo(_app) << "current identity changed to " << name << " so lets update it in settings too.";
     m_settingsManager->setValue(USER_SETTING_LAST_IDENTITY_NAME,name);
 }
 
@@ -2078,6 +2165,7 @@ QString User::platformName()
 
 void User::resetVariables()
 {
+    qCInfo(_app) << "reset variables";
     //clear models
     m_channelModel->clear();
     m_currentChannelParticipant->clear();
@@ -2101,6 +2189,7 @@ void User::resetVariables()
     m_notFoundAvatars.clear(); //clear list for next connection
     setMyAvatarPath("");
     m_clientUserManager->clear();
+    m_channelModel->setCurrentChannelId(0); //set current channel to zeor therefore, stop timer for check user isTalking
 
     if(!m_switchingServer) //if we are not switching reset/turn-off all server's indicator status
         m_myServersModel->resetPreviousIsActiveServer();
@@ -2151,12 +2240,14 @@ void User::setMyVideoPacketLoss(float newMyVideoPacketLoss)
 {
     if (qFuzzyCompare(m_myVideoPacketLoss, newMyVideoPacketLoss))
         return;
+    // qCDebug(_udp) << "set my video packet loss to " << newMyVideoPacketLoss;
     m_myVideoPacketLoss = newMyVideoPacketLoss;
     emit myVideoPacketLossChanged();
 }
 
 void User::initOrLoadSettings()
 {
+    qCInfo(_app) << "init or load settings.";
     //load all saved settings such as saved devices index for audio input/output, volumes and ... and set to variables
 
 
@@ -2228,12 +2319,12 @@ void User::initOrLoadSettings()
     if(m_settingsManager->contains(USER_SETTING_USERNAME))
         setMyUsername(m_settingsManager->value(USER_SETTING_USERNAME, "").toString());
     else
-        qDebug()<< "username not found in config";
+        qCWarning(_app) << "username not found in config";
 
     if(m_settingsManager->contains(USER_SETTING_LAST_IDENTITY_NAME))
         m_identityManager->setCurrentIdentity(m_settingsManager->value(USER_SETTING_LAST_IDENTITY_NAME, "").toString());
     else
-        qDebug()<< "identity last name not found in config";
+        qCWarning(_app) << "last identity name not found in config";
 
 
 
@@ -2246,7 +2337,7 @@ void User::initOrLoadSettings()
             m_mic->setCurrentAudioInput(micIndex); //m_soundManager->outputDevice would automatically obey this change
         else
         {
-            qDebug() << "saved audioInput device not found, we did reset it to default.";
+            qCInfo(_app) << "saved audioInput device not found, we did reset it to default.";
 
             //set to default (first device)
             QString deviceId = m_mic->audioInputId(MIC_DEFUALT_DEVICE_INDEX);
@@ -2257,7 +2348,7 @@ void User::initOrLoadSettings()
     else
     {
         m_settingsManager->setValue(MIC_SETTING_DEVICE, "");
-        qDebug() << "ERROR there is no microphone at all.. plug something in";
+        qCWarning(_app) << "ERROR there is no microphone at all.. plug something in";
     }
 
 
@@ -2281,7 +2372,7 @@ void User::initOrLoadSettings()
             m_speaker->setCurrentAudioOutput(speakerIndex); //m_soundManager->outputDevice would automatically obey this change
         else
         {
-            qDebug() << "saved audioOutput device not found, we did reset it to default.";
+            qCInfo(_app) << "saved audioOutput device not found, we did reset it to default.";
             m_speaker->setCurrentAudioOutput(SPEAKER_DEFAULT_DEVICE_INDEX); //set to default, note m_soundManager->outputDevice would automatically obey this change
 
             //set to default (first device)
@@ -2293,7 +2384,7 @@ void User::initOrLoadSettings()
     else
     {
         m_settingsManager->setValue(SPEAKER_SETTING_DEVICE, "");
-        qDebug() << "ERROR there is no speaker at all.. plug something in";
+        qCInfo(_app) << "ERROR there is no speaker at all.. plug something in";
     }
 
 
@@ -2307,7 +2398,7 @@ void User::initOrLoadSettings()
             m_cam->setCurrentCameraInput(cameraIndex);
         else
         {
-            qDebug() << "saved cameraInput device not found, we did reset it to default.";
+            qCInfo(_app) << "saved cameraInput device not found, we did reset it to default.";
 
             //set to default (first device)
             QString deviceId = m_cam->cameraIntputId(CAMERA_DEFAULT_DEVICE_INDEX);
@@ -2318,7 +2409,7 @@ void User::initOrLoadSettings()
     else
     {
         m_settingsManager->setValue(CAMERA_SETTING_DEVICE, "");
-        qDebug() << "ERROR there is no cameraInput at all.. plug something in";
+        qCWarning(_app) << "ERROR there is no cameraInput at all.. plug something in";
     }
 
 
@@ -2348,6 +2439,7 @@ void User::setMyVoicePacketLoss(float newMyVoicePacketLoss)
 {
     if (qFuzzyCompare(m_myVoicePacketLoss, newMyVoicePacketLoss))
         return;
+    // qCDebug(_udp) << "set my voice packet loss to " << newMyVoicePacketLoss;
     m_myVoicePacketLoss = newMyVoicePacketLoss;
     emit myVoicePacketLossChanged();
 }
@@ -2361,6 +2453,7 @@ void User::setMyPing(int newMyPing)
 {
     if (m_myPing == newMyPing)
         return;
+    // qCDebug(_udp) << "set my ping to " << newMyPing;
     m_myPing = newMyPing;
     emit myPingChanged();
 }
@@ -2374,6 +2467,7 @@ void User::setChatUnreadMessages(int newChatUnreadMessages)
 {
     if (m_chatUnreadMessages == newChatUnreadMessages)
         return;
+    qCDebug(_app) << "set chat unread messages to " << newChatUnreadMessages;
     m_chatUnreadMessages = newChatUnreadMessages;
     emit chatUnreadMessagesChanged();
 }
@@ -2387,6 +2481,7 @@ void User::setIsChatOpen(bool newIsChatOpen)
 {
     if (m_isChatOpen == newIsChatOpen)
         return;
+    qCDebug(_app) << "set Is Chat Open to " << newIsChatOpen;
     m_isChatOpen = newIsChatOpen;
     emit isChatOpenChanged();
 }
@@ -2399,7 +2494,8 @@ QString User::myIdentity()
 
 void User::setMyIdentity(const QString &newIdentity)
 {
-    //code here
+    //code here, i think this became useless and manage is by m_identityManager.
+    qCInfo(_app) << "set my identity to " << newIdentity;
     emit myIdentityChanged();
 }
 
@@ -2413,6 +2509,7 @@ void User::setIsConnectedToServer(bool newConnectedToServer)
     if (m_isConnectedToServer == newConnectedToServer)
         return;
     m_isConnectedToServer = newConnectedToServer;
+    qCDebug(_app) << "set Is Connected To Server to " << newConnectedToServer;
     emit isConnectedToServerChanged();
 }
 
@@ -2425,6 +2522,7 @@ void User::setMyServerName(const QString &newMyServerName)
 {
     if (m_myServerName == newMyServerName)
         return;
+    qCDebug(_app) << "set My Server Name to " << newMyServerName;
     m_myServerName = newMyServerName;
     emit myServerNameChanged();
 }
@@ -2440,6 +2538,7 @@ void User::setIsCameraOpen(bool status)
         return;
 
     //send request to server.
+    qCInfo(_tcp) << "sending open/close camera request.";
     Packet p;
     if(status)
         p.type = PacketType::UserCameraOpened;
@@ -2460,6 +2559,7 @@ void User::setMuteMicrophone(bool status)
         return;
 
     //send request to server.
+    qCInfo(_tcp) << "sending mute/unmute microphone request.";
     Packet p;
     if(status)
         p.type = PacketType::UserMuted;
@@ -2480,6 +2580,7 @@ void User::setMuteHeadphone(bool status)
         return;
 
     //send request to server.
+    qCInfo(_tcp) << "sending deafened/undeafened headphone request.";
     Packet p;
     if(status)
         p.type = PacketType::UserDeafened;
@@ -2500,6 +2601,7 @@ void User::setMyUsername(const QString &newMyUsername)
         return;
 
     //update config username
+    qCDebug(_app) << "set My UserName to " << newMyUsername << " and save it to settings";
     m_settingsManager->setValue(USER_SETTING_USERNAME, newMyUsername);
 
     m_myUsername = newMyUsername;
@@ -2515,6 +2617,7 @@ void User::setMyId(int newMyId)
 {
     if (m_myId == newMyId)
         return;
+    qCDebug(_app) << "set My Id to " << newMyId;
     m_myId = newMyId;
     emit myIdChanged();
 }
@@ -2529,6 +2632,7 @@ void User::setMyChannelName(const QString& name)
     if(m_myChannelName == name)
         return;
 
+    qCDebug(_app) << "set My Channel Name to " << name;
     m_myChannelName = name;
     emit myChannelNameChanged();
 }

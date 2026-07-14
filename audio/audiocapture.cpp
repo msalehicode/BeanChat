@@ -1,5 +1,6 @@
 #include "audiocapture.h"
 
+#include "logging/loggingcategories.h"
 
 
 AudioCapture::AudioCapture(QObject *parent)
@@ -10,7 +11,7 @@ AudioCapture::AudioCapture(QObject *parent)
     // Initialize RNNoise
     m_rnnoiseState = rnnoise_create(nullptr);
     if (!m_rnnoiseState) {
-        qDebug() << "Failed to create RNNoise state!";
+        qCWarning(_microphone) << "Failed to create RNNoise state!";
     }
 
     //first fetch inputs..
@@ -20,7 +21,7 @@ AudioCapture::AudioCapture(QObject *parent)
     //connect for later changes
     connect(&m_mediaDevices, &QMediaDevices::audioInputsChanged, this, [this]()
     {
-        qDebug() << "Audio hardware change detected!";
+        qCInfo(_microphone) << "Audio hardware change detected!";
 
         // 1. Refresh your local list
         refreshAudioInputs();
@@ -47,23 +48,29 @@ AudioCapture::~AudioCapture()
 
 void AudioCapture::start()
 {
+    qCInfo(_microphone) << "starting audio capture";
     // Check if the current index is actually valid
     if (m_audioInputs.isEmpty() || m_currentAudioInput >= m_audioInputs.size()) {
-        qWarning() << "Invalid audio input index!";
+        qCWarning(_microphone) << "Invalid audio input index!";
         return;
     }
 
     // Clean up existing capture before starting new one
     if (m_audioSource)
     {
+        qCInfo(_microphone) << "before starting audio capture, let's stop old one";
         stop();
     }
 
 
     QAudioFormat format;
-    format.setSampleRate(48000);
-    format.setChannelCount(1);
+    format.setSampleRate(MIC_DEFAULT_SAMPLE_RATE);
+    format.setChannelCount(MIC_DEFAULT_CHANNELS);
     format.setSampleFormat(QAudioFormat::Int16);
+    qCInfo(_microphone) << "audio capture format: sampleRate="
+                        << format.sampleRate()
+                        << " channels="
+                        << format.channelCount();
 
     m_audioSource = new QAudioSource(m_audioInputs[m_currentAudioInput], format, this);
     m_device = m_audioSource->start();
@@ -79,11 +86,6 @@ void AudioCapture::start()
 
                 if(pushToTalkStatus() && pushToTalkPressed()==false)
                     return;
-
-
-
-
-
 
 
                 //for visual speaking value
@@ -176,7 +178,7 @@ void AudioCapture::start()
                                 rnnoiseFrame);
 
                         // Debug
-                        // qDebug() << "RNNoise VAD:" << vadProbability;
+                        // qCDebug(_microphone) << "RNNoise VAD:" << vadProbability;
 
                         QByteArray processedData;
                         processedData.resize(BYTES_PER_FRAME);
@@ -221,7 +223,10 @@ void AudioCapture::start()
 
 void AudioCapture::stop()
 {
-    if (m_audioSource) {
+    if (m_audioSource)
+    {
+        qCInfo(_microphone) << "exists so stopping audio capture";
+
         // Stop audio processing
         m_audioSource->stop();
 
@@ -237,6 +242,7 @@ void AudioCapture::stop()
         m_audioSource = nullptr;
         m_device = nullptr;
     }
+
 }
 
 QStringList AudioCapture::audioInputNames() const
@@ -274,7 +280,7 @@ void AudioCapture::setCurrentAudioInput(int newCurrentAudioInput)
     emit currentAudioInputChanged();
 
     if (m_audioSource) {
-        qDebug() << "Switching input device to:" << m_audioInputs[m_currentAudioInput].description();
+        qCInfo(_microphone) << "Switching input device to:" << m_audioInputs[m_currentAudioInput].description();
         start(); // This calls the start() logic which handles stopping the old one
     }
 }
@@ -299,6 +305,7 @@ void AudioCapture::setRnnoiseStatus(bool newRnnoiseStatus)
     if (m_rnnoiseStatus == newRnnoiseStatus)
         return;
     m_rnnoiseStatus = newRnnoiseStatus;
+    qCInfo(_microphone) << "set RNNoise status to " << newRnnoiseStatus;
     emit rnnoiseStatusChanged();
 }
 
@@ -312,6 +319,7 @@ void AudioCapture::setVolumeGateStatus(bool newVolumeGateStatus)
     if (m_volumeGateStatus == newVolumeGateStatus)
         return;
     m_volumeGateStatus = newVolumeGateStatus;
+    qCInfo(_microphone) << "set VolumeGate Status to " << newVolumeGateStatus;
     emit volumeGateStatusChanged();
 }
 
@@ -325,6 +333,7 @@ void AudioCapture::setVolumeGateThreshold(float newVolumeGateThreshold)
     if (qFuzzyCompare(m_volumeGateThreshold, newVolumeGateThreshold))
         return;
     m_volumeGateThreshold = newVolumeGateThreshold;
+    qCInfo(_microphone) << "set Volume Gate Threshold to " << newVolumeGateThreshold;
     emit volumeGateThresholdChanged();
 }
 
@@ -338,6 +347,7 @@ void AudioCapture::setCurrentVolume(float newCurrentVolume)
     if (qFuzzyCompare(m_currentVolume, newCurrentVolume))
         return;
     m_currentVolume = newCurrentVolume;
+    // qCDebug(_microphone) << "set Current Volume to " << newCurrentVolume;
     emit currentVolumeChanged();
 }
 
@@ -351,6 +361,7 @@ void AudioCapture::setRnnoiseValue(float newRnnoiseValue)
     if (qFuzzyCompare(m_rnnoiseValue, newRnnoiseValue))
         return;
     m_rnnoiseValue = newRnnoiseValue;
+    qCInfo(_microphone) << "set Rnnoise Value (Threshold) to " << newRnnoiseValue;
     emit rnnoiseValueChanged();
 }
 
@@ -364,6 +375,7 @@ void AudioCapture::setPushToTalkStatus(bool newPushToTalkStatus)
     if (m_pushToTalkStatus == newPushToTalkStatus)
         return;
     m_pushToTalkStatus = newPushToTalkStatus;
+    qCInfo(_microphone) << "set Push To Talk Status to " << newPushToTalkStatus;
     emit pushToTalkStatusChanged();
 }
 
@@ -384,6 +396,7 @@ void AudioCapture::setPushToTalkModifiers(int newModifiers)
 
     m_pushToTalkModifiers = newModifiers;
 
+    qCInfo(_microphone) << "set Push To Talk Modifiers to " << newModifiers;
     emit pushToTalkModifiersChanged();
     emit pushToTalkKeyStringChanged();
 }
@@ -395,6 +408,7 @@ void AudioCapture::setPushToTalkKey(int newPushToTalkKey)
 
     m_pushToTalkKey = newPushToTalkKey;
 
+    qCInfo(_microphone) << "set Push To Talk Key to " << newPushToTalkKey;
     emit pushToTalkKeyChanged();
     emit pushToTalkKeyStringChanged();
 }
@@ -451,7 +465,7 @@ int AudioCapture::audioInputIndexFromId(const QString &id) const
 
 void AudioCapture::refreshAudioInputs()
 {
-    qDebug() << "=== INPUT DEVICES ===";
+    qCInfo(_microphone) << "=== INPUT DEVICES ===";
     QList<QAudioDevice> inputs = QMediaDevices::audioInputs();
     for (int i = 0; i < inputs.size(); i++)
     {
@@ -507,9 +521,9 @@ bool AudioCapture::initialPushToTalkHotkey()
 
     if(m_pushToTalkHotkey->isRegistered())
     {
-        qDebug() << "push to talk Hotkey Registered fine.";
+        qCInfo(_microphone) <<  "push to talk Hotkey Registered fine.";
         return true;
     }
-    qDebug() << "push to talk Hotkey failed to register.";
+    qCWarning(_microphone) <<  "push to talk Hotkey failed to register.";
     return false;
 }

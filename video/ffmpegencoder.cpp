@@ -1,5 +1,7 @@
 #include "ffmpegencoder.h"
 
+#include "logging/loggingcategories.h"
+
 FFmpegEncoder::FFmpegEncoder(QObject *parent)
     : QObject(parent)
 {
@@ -17,6 +19,7 @@ bool FFmpegEncoder::open(
     int bitrate,
     int gopSize)
 {
+    qCInfo(_ffmpeg) << "close old opened encoder if exists, then open encoder";
     close();
 
     const AVCodec *codec =
@@ -24,7 +27,7 @@ bool FFmpegEncoder::open(
 
     if (!codec)
     {
-        qDebug() << "Could not find H264 encoder.";
+        qCCritical(_ffmpeg) << "Could not find H264 encoder.";
         return false;
     }
 
@@ -32,7 +35,7 @@ bool FFmpegEncoder::open(
 
     if (!m_codec)
     {
-        qDebug() << "Could not allocate codec context.";
+        qCCritical(_ffmpeg) << "Could not allocate codec context.";
         return false;
     }
 
@@ -47,26 +50,47 @@ bool FFmpegEncoder::open(
     m_codec->time_base = AVRational{1, fps};
     m_codec->framerate = AVRational{fps, 1};
 
+    // m_codec->bit_rate = bitrate;
+
     m_codec->gop_size = gopSize;
     m_codec->max_b_frames = 0;
 
     // Very important for realtime video
-    av_opt_set(m_codec->priv_data, "preset", "ultrafast", 0);
+    if (av_opt_set(m_codec->priv_data, "preset", "ultrafast", 0) < 0)
+        qCWarning(_ffmpeg) << "Failed to set preset";
 
-    av_opt_set(m_codec->priv_data, "tune", "zerolatency", 0);
+    if(av_opt_set(m_codec->priv_data, "tune", "zerolatency", 0) <0)
+        qCWarning(_ffmpeg) << "Failed to set tune";
 
-    av_opt_set(m_codec->priv_data, "profile", "baseline", 0);
+    if(av_opt_set(m_codec->priv_data, "profile", "baseline", 0)<0)
+        qCWarning(_ffmpeg) << "Failed to set profile";
 
-    av_opt_set(m_codec->priv_data, "repeat-headers", "1", 0);
+    if(av_opt_set(m_codec->priv_data, "repeat-headers", "1", 0) <0)
+        qCWarning(_ffmpeg) << "Failed to set repeat-headers";
 
-    av_opt_set(m_codec->priv_data, "crf", "28", 0);
+    if(av_opt_set(m_codec->priv_data, "crf", "28", 0)<0)
+        qCWarning(_ffmpeg) << "Failed to set crf";
 
-    if (avcodec_open2(
-            m_codec,
-            codec,
-            nullptr) < 0)
+    qCInfo(_ffmpeg) << "m_codec info are:\n"
+        << "width =" << m_codec->width
+        << "height =" << m_codec->height
+        << "fps =" << m_codec->framerate.num << "/" << m_codec->framerate.den
+        << "timeBase =" << m_codec->time_base.num << "/" << m_codec->time_base.den
+        << "gop =" << m_codec->gop_size
+        << "max_b_frames =" << m_codec->max_b_frames
+        << "bitrate =" << m_codec->bit_rate;
+
+
+    int ret = avcodec_open2(
+        m_codec,
+        codec,
+        nullptr);
+
+    if (ret < 0)
     {
-        qDebug() << "Failed to open H264 encoder.";
+        char err[AV_ERROR_MAX_STRING_SIZE];
+        av_strerror(ret, err, sizeof(err));
+        qCCritical(_ffmpeg) << "Failed to open H264 encoder:" << err;
 
         close();
 
@@ -124,13 +148,14 @@ bool FFmpegEncoder::open(
 
     m_pts = 0;
 
-    qDebug() << "FFmpeg encoder initialized.";
+    qCInfo(_ffmpeg) << "FFmpeg encoder initialized.";
 
     return true;
 }
 
 void FFmpegEncoder::close()
 {
+    qCInfo(_ffmpeg) << "try to close encoder";
     if (m_sws)
     {
         sws_freeContext(m_sws);
@@ -209,7 +234,7 @@ void FFmpegEncoder::encode(const QImage &image)
             m_codec,
             m_frame) < 0)
     {
-        qDebug() << "avcodec_send_frame failed";
+        qCCritical(_ffmpeg) <<  "avcodec_send_frame failed";
         return;
     }
 
@@ -228,7 +253,7 @@ void FFmpegEncoder::encode(const QImage &image)
 
         if (ret < 0)
         {
-            qDebug() << "avcodec_receive_packet failed";
+            qCCritical(_ffmpeg) <<  "avcodec_receive_packet failed";
             break;
         }
 
@@ -243,11 +268,11 @@ void FFmpegEncoder::encode(const QImage &image)
             packet,
             keyFrame);
 
-        qDebug()
-            << "PTS:" << m_packet->pts
-            << "DTS:" << m_packet->dts
-            << "size:" << m_packet->size
-            << "key:" << keyFrame;
+        // qCDebug(_ffmpeg)
+        //     << "PTS:" << m_packet->pts
+        //     << "DTS:" << m_packet->dts
+        //     << "size:" << m_packet->size
+        //     << "key:" << keyFrame;
 
         av_packet_unref(
             m_packet);

@@ -1,5 +1,7 @@
 #include "avatarmanager.h"
 
+#include "logging/loggingcategories.h"
+
 AvatarManager::AvatarManager(QObject *parent)
     : QObject{parent}
 {}
@@ -15,7 +17,7 @@ QByteArray AvatarManager::imageFileToBytes(
 
     if (!file.open(QIODevice::ReadOnly))
     {
-        qDebug() << "failed to open" << localPath;
+        qCWarning(_avatar) << "Failed to open " << localPath;
 
         return {};
     }
@@ -32,7 +34,10 @@ bool AvatarManager::saveAvatar(const QString &serverDir, const QString &hash, co
         hash + ".png");
 
     if (!file.open(QIODevice::WriteOnly))
+    {
+        qCWarning(_avatar) << "failed to save avatar ";
         return false;
+    }
 
     file.write(avatarData);
 

@@ -78,7 +78,7 @@ public:
 
 
 private:
-    quint64 m_lastIsActiveId=-1; //to reset last item when new item is activated
+    quint64 m_lastIsActiveId=0; //to reset last item when new item is activated
     quint64 m_nextServerId = 1; //runtime id, server id in datbase named index
     int findRowById(quint64 serverId) const;
     QList<MyServerInfo> m_servers;

@@ -7,6 +7,8 @@
 #include <QSqlError>
 #include <QDebug>
 
+#include "logging/loggingcategories.h"
+
 DatabaseMigrator::DatabaseMigrator(Database *database) : m_database(database)
 {
 
@@ -17,7 +19,7 @@ bool DatabaseMigrator::migrate()
     // Old debug databases
     if (!metadataTableExists())
     {
-        qDebug() << "Legacy database detected.";
+        qCInfo(_database) << "Legacy database detected.";
 
         QSqlDatabase db = m_database->database();
 
@@ -29,12 +31,14 @@ bool DatabaseMigrator::migrate()
         if(!query.exec("DROP TABLE IF EXISTS MyServers"))
         {
             db.rollback();
+            qCCritical(_database) << "failed to drop table MyServer";
             return false;
         }
 
         if(!query.exec("DROP TABLE IF EXISTS UserRelations"))
         {
             db.rollback();
+            qCCritical(_database) << "failed to drop table UserRelations";
             return false;
         }
 
@@ -47,7 +51,7 @@ bool DatabaseMigrator::migrate()
 
         if (!db.commit())
         {
-            qDebug() << db.lastError();
+            qCCritical(_database) << "failed to commit error=" <<  db.lastError();
             return false;
         }
     }
@@ -55,7 +59,7 @@ bool DatabaseMigrator::migrate()
 
     int version = schemaVersion();
 
-    qDebug() << "Current schema version:" << version;
+    qCInfo(_database) << "Current schema version:" << version;
 
     while (true)
     {
@@ -72,7 +76,7 @@ bool DatabaseMigrator::migrate()
 
             default:
             {
-                qDebug() << "Database schema is up to date.";
+                qCInfo(_database) << "Database schema is up to date.";
                 return true;
             }
         }
@@ -91,7 +95,7 @@ bool DatabaseMigrator::createMetadataTable()
         )
     )"))
     {
-        qDebug() << query.lastError();
+        qCCritical(_database) << "failed to create table MetaData error=" << query.lastError();
         return false;
     }
 
@@ -109,7 +113,7 @@ int DatabaseMigrator::schemaVersion()
 
     if (!query.exec())
     {
-        qDebug() << query.lastError();
+        qCCritical(_database) << "failed to read schema version error=" << query.lastError();
         return 0;
     }
 
@@ -143,7 +147,7 @@ bool DatabaseMigrator::setSchemaVersion(int version)
 
     if (!query.exec())
     {
-        qDebug() << query.lastError();
+        qCCritical(_database) <<"failed to set schema version into MetaData error:" << query.lastError();
         return false;
     }
 
@@ -162,14 +166,17 @@ bool DatabaseMigrator::metadataTableExists()
     )");
 
     if (!query.exec())
+    {
+        qCInfo(_database) << "metadata Table doesnt Exist.";
         return false;
+    }
 
     return query.next();
 }
 
 bool DatabaseMigrator::migrate0to1()
 {
-    qDebug() << "Migrating schema 0 -> 1";
+    qCInfo(_database) << "Migrating schema 0 -> 1";
 
     QSqlDatabase db = m_database->database();
 
@@ -190,7 +197,7 @@ bool DatabaseMigrator::migrate0to1()
         )
     )"))
     {
-        qDebug() << query.lastError();
+        qCCritical(_database) << "failed to migrate 0 to 1, error=" << query.lastError();
 
         db.rollback();
 
@@ -215,8 +222,7 @@ bool DatabaseMigrator::migrate0to1()
         );
     )"))
     {
-        qDebug() << query.lastError();
-
+        qCCritical(_database) << "failed to migrate 0 to 1, error=" << query.lastError();
         db.rollback();
 
         return false;
@@ -232,11 +238,11 @@ bool DatabaseMigrator::migrate0to1()
 
     if (!db.commit())
     {
-        qDebug() << "Failed to commit transaction:" << db.lastError();
+        qCCritical(_database) <<  "Failed to commit transaction:" << db.lastError();
         return false;
     }
 
-    qDebug() << "Database upgraded to schema version 1";
+    qCInfo(_database) << "Database upgraded to schema version 1";
 
     return true;
 }

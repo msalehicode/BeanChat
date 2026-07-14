@@ -12,6 +12,8 @@
 #include <QDateTime>
 #include <QDebug>
 
+#include "logging/loggingcategories.h"
+
 IdentityManager::IdentityManager(QObject *parent)
     : QObject(parent)
 {
@@ -65,10 +67,16 @@ bool IdentityManager::createIdentity(const QString& name)
     QString identityName = name.trimmed();
 
     if(identityName.isEmpty())
+    {
+        qCCritical(_identity) << "create identity failed, empty name";
         return false;
+    }
 
     if(findIdentity(identityName))
+    {
+        qCCritical(_identity) << "create identity failed, name exists";
         return false;
+    }
 
 
     QByteArray publicKey;
@@ -78,7 +86,7 @@ bool IdentityManager::createIdentity(const QString& name)
             publicKey,
             privateKey))
     {
-        qDebug() << "Failed to generate identity.";
+        qCCritical(_identity) << "Failed to generate identity.";
         return false;
     }
 
@@ -101,6 +109,7 @@ bool IdentityManager::createIdentity(const QString& name)
     if(m_currentIdentityName.isEmpty())
     {
         m_currentIdentityName = identityName;
+        qCInfo(_identity) << "its first identity lets active it";
         emit currentIdentityChanged();
         emit currentIdentityChangedTo(identityName); //to update config file
     }
@@ -117,17 +126,26 @@ bool IdentityManager::renameIdentity(
         findIdentity(oldName);
 
     if(!identity)
+    {
+        qCCritical(_identity) << "rename identity failed, cant find identity";
         return false;
+    }
 
 
     QString name =
         newName.trimmed();
 
     if(name.isEmpty())
+    {
+        qCCritical(_identity) << "rename identity failed, empty name";
         return false;
+    }
 
     if(findIdentity(name))
+    {
+        qCCritical(_identity) << "rename identity failed, name exists";
         return false;
+    }
 
 
     identity->name =
@@ -172,6 +190,7 @@ bool IdentityManager::setCurrentIdentity(const QString& name)
         return false;
 
     m_currentIdentityName = name;
+    qCInfo(_identity) << "set current identity to " << name;
     emit currentIdentityChangedTo(name); //to update config file
 
     return save();
@@ -209,7 +228,7 @@ bool IdentityManager::save()
 
     if(!file.open(QIODevice::WriteOnly))
     {
-        qDebug() << "Failed to save identities.";
+        qCCritical(_identity) << "Failed to save identities.";
 
         return false;
     }
@@ -217,6 +236,7 @@ bool IdentityManager::save()
     file.write(QJsonDocument(root).toJson());
 
     emit identitiesChanged();
+    qCInfo(_identity) << "identities saved";
     return true;
 }
 
@@ -231,17 +251,20 @@ bool IdentityManager::load()
 
     if(!file.exists())
     {
-        qDebug() << "identity file not found. lets generate one.";
+        qCInfo(_identity) << "identity file not found. lets generate one.";
         if(createIdentity("Default"))
+        {
+            qCInfo(_identity) << "identity generated with name Deafult.";
             return true;
+        }
 
-        qDebug() << "faild to create identity Default";
+        qCCritical(_identity) << "faild to create identity Default";
         return false;
     }
 
     if(!file.open(QIODevice::ReadOnly))
     {
-        qDebug() << "Failed to open identity file.";
+        qCCritical(_identity) << "Failed to open identity file.";
         return false;
     }
 
@@ -250,7 +273,7 @@ bool IdentityManager::load()
 
     if(!doc.isObject())
     {
-        qDebug() << "Invalid identity file.";
+        qCCritical(_identity) <<  "Invalid identity file.";
         return false;
     }
 
@@ -323,12 +346,12 @@ void IdentityManager::setCurrentIdentityIndex(int index)
 
 void IdentityManager::removeCurrentIdentity()
 {
-    qDebug() << "remove current identity";
+    qCInfo(_identity) <<  "remove current identity";
     removeIdentity(m_currentIdentityName);
 }
 
 void IdentityManager::renameCurrentIdentity(const QString &newName)
 {
-    qDebug() << "rename current identity to " << newName;
+    qCInfo(_identity) <<  "rename current identity to " << newName;
     renameIdentity(m_currentIdentityName,newName);
 }

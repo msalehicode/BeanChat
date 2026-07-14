@@ -1,21 +1,15 @@
 #include "myvideoitem.h"
 
+#include "logging/loggingcategories.h"
 
 MyVideoItem::MyVideoItem()
 {
     setFlag(ItemHasContents, true);
-#if D_PRINT_MYVIDEOITEM_INFO
-    qDebug()
-        << "MyVideoItem thread"
-        << thread();
-#endif
 }
 
 void MyVideoItem::releaseResources()
 {
-#if D_PRINT_MYVIDEOITEM_INFO
-    qDebug() << "releaseResources";
-#endif
+    qCInfo(_videoitem) << "MyVideoItem release resources";
 }
 
 MyVideoItem::~MyVideoItem()
@@ -34,8 +28,12 @@ VideoSink *MyVideoItem::sink() const
 void MyVideoItem::setSink(
     VideoSink *sink)
 {
+    qCInfo(_videoitem) << "set sink";
     if(m_sink == sink)
+    {
+        qCWarning(_videoitem) << "set sink ignored, it's the same";
         return;
+    }
 
     if(m_sink)
         disconnect(
@@ -94,6 +92,14 @@ QSGNode *MyVideoItem::updatePaintNode(
 
     QImage img = m_sink->image();
 
+
+    // if (img.isNull()) //<- this check causes crash!
+    // {
+    //     qCWarning(_videoitem) << "image is null!";
+    //     node->setTexture(nullptr);
+    //     return node;
+    // }
+
 #if D_PRINT_MYVIDEOITEM_INFO
     qDebug() << "videoItem image:"
         << img.size()
@@ -101,39 +107,24 @@ QSGNode *MyVideoItem::updatePaintNode(
         << img.isDetached();
 #endif
 
-    //apply radius to image
-    QImage rounded(img.size(), QImage::Format_ARGB32_Premultiplied);
-    rounded.fill(Qt::transparent);
-
-    QPainter p(&rounded);
-    p.setRenderHint(QPainter::Antialiasing);
-
-    QPainterPath path;
-    path.addRoundedRect(
-        QRectF(0,0,img.width(),img.height()),
-        m_radius,
-        m_radius);
-
-    p.setClipPath(path);
-    p.drawImage(0,0,img);
-    p.end();
-
-    // if (img.isNull()) //this cause crash!
-    //     return node;
+    //apply radius to image, (it has heavy for CPU lets comment it for now)
+    // QImage rounded(img.size(), QImage::Format_ARGB32_Premultiplied);
+    // rounded.fill(Qt::transparent);
+    // QPainter p(&rounded);
+    // p.setRenderHint(QPainter::Antialiasing);
+    // QPainterPath path;
+    // path.addRoundedRect(
+    //     QRectF(0,0,img.width(),img.height()),
+    //     m_radius,
+    //     m_radius);
+    // p.setClipPath(path);
+    // p.drawImage(0,0,img);
+    // p.end();
 
     if (!window())
         return node;
 
-    //test image
-    // QImage image(
-    //     320,
-    //     180,
-    //     QImage::Format_RGB32);
-    // image.fill(Qt::green);
-    // image = image.mirrored(true, false); // Optional mirror like webcam preview
-
-    node->setTexture(
-        window()->createTextureFromImage(rounded));
+    node->setTexture(window()->createTextureFromImage(img));
 
     node->setRect(boundingRect());
 

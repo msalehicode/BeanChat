@@ -1,5 +1,7 @@
 #include "myserversmodel.h"
 
+#include "logging/loggingcategories.h"
+
 MyServersModel::MyServersModel(QObject *parent)
     : QAbstractListModel(parent)
 {
@@ -15,8 +17,13 @@ QVariant MyServersModel::data(
     const QModelIndex &index,
     int role) const
 {
-    if(!index.isValid())
+    if (!index.isValid() ||
+        index.row() < 0 ||
+        index.row() >= m_servers.size())
+    {
+        qCCritical(_models) << "invalid index to get myServers data";
         return {};
+    }
 
     const auto& server =
         m_servers[index.row()];
@@ -48,6 +55,7 @@ QVariant MyServersModel::data(
         return static_cast<int>(server.status);
     }
 
+    qCWarning(_models) << "myServers data, return {}";
     return {};
 }
 
@@ -69,6 +77,7 @@ MyServersModel::roleNames() const
 
 void MyServersModel::clear()
 {
+    qCInfo(_models) << "clear myServersModel";
     beginResetModel();
 
     m_servers.clear();
@@ -83,6 +92,7 @@ void MyServersModel::addServer(QString name,
                                bool isActive,
                                quint64 index)
 {
+    qCInfo(_models) <<  "add server, address= " << ip  << ":" << port <<" avatarPath=" << avatarPath;
     beginInsertRows(QModelIndex(),
                     rowCount(),
                     rowCount());
@@ -90,7 +100,6 @@ void MyServersModel::addServer(QString name,
     MyServerInfo server;
     server.id = m_nextServerId++;
     server.index = index;
-    qDebug() << "add server, avatarPath myServersModel " << avatarPath;
     server.avatarPath=avatarPath;
     server.name = name;
     server.ip = ip;
@@ -108,6 +117,7 @@ void MyServersModel::addServer(QString name,
 
 void MyServersModel::removeServer(quint64 serverId)
 {
+    qCInfo(_models) << "remove server, server id=" << serverId;
     for (int row = 0; row < m_servers.size(); ++row)
     {
         if (m_servers[row].id == serverId)
@@ -120,6 +130,8 @@ void MyServersModel::removeServer(quint64 serverId)
             return;
         }
     }
+
+    qCWarning(_models) << "remove server failed, couldn't find server in list";
 }
 
 void MyServersModel::updateServer(quint64 serverId,
@@ -127,10 +139,14 @@ void MyServersModel::updateServer(quint64 serverId,
                                   const QString &ip,
                                   const QString &port)
 {
+    qCInfo(_models) << "update server, serverId= " << serverId;
     int row = findRowById(serverId);
 
     if (row < 0)
+    {
+        qCCritical(_models) << "update server failed, raw<0";
         return;
+    }
 
     auto &server = m_servers[row];
 
@@ -153,7 +169,10 @@ void MyServersModel::setName(quint64 serverId, QString newName)
     int row = findRowById(serverId);
 
     if (row < 0)
+    {
+        qCCritical(_models) << "update server failed, raw<0";
         return;
+    }
 
     m_servers[row].name = newName;
 
@@ -251,7 +270,7 @@ bool MyServersModel::setAvatarPath(const QString &path)
 
 void MyServersModel::resetPreviousIsActiveServer()
 {
-    if (m_lastIsActiveId == -1)
+    if (m_lastIsActiveId == 0)
         return;
 
 
@@ -279,6 +298,7 @@ int MyServersModel::doesServerExists(const QString &ip, const QString& port)
             return m_servers[i].id;
     }
 
+    qCWarning(_models) << "server doesnt exists. returning -1";
     return -1;
 }
 
@@ -291,5 +311,7 @@ int MyServersModel::findRowById(quint64 serverId) const
         if (m_servers[i].id == serverId)
             return i;
     }
+
+    qCWarning(_models) << "failed to find server by id, id=" << serverId;
     return -1;
 }

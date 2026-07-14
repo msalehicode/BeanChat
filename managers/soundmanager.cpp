@@ -1,25 +1,33 @@
 #include "soundmanager.h"
 
+#include "logging/loggingcategories.h"
+
 SoundManager::SoundManager(QObject* parent)
     :
     QObject(parent)
 {
-    m_message.setSource(
-        QUrl("qrc:/ui/soundeffects/message.wav"));
+    qCInfo(_soundEffect) << "loading sound manager";
 
-    m_userJoin.setSource(
-        QUrl("qrc:/ui/soundeffects/user-join.wav"));
+    m_newMessage.setSource(QUrl("qrc:/soundpack/speech/shimmer/newMessage.wav"));
+    m_connected.setSource(QUrl("qrc:/soundpack/speech/shimmer/connected.wav"));
+    m_disconnected.setSource(QUrl("qrc:/soundpack/speech/shimmer/disconnected.wav"));
+    m_connectionLost.setSource(QUrl("qrc:/soundpack/speech/shimmer/connection-lost.wav"));
+    m_channelSwitched.setSource(QUrl("qrc:/soundpack/speech/shimmer/channel-switched.wav"));
+    m_youWereMoved.setSource(QUrl("qrc:/soundpack/speech/shimmer/you-were-moved.wav"));
+    m_userJoin.setSource(QUrl("qrc:/soundpack/speech/shimmer/user-joined-your-channel.wav"));
+    m_userLeft.setSource(QUrl("qrc:/soundpack/speech/shimmer/user-left-your-channel.wav"));
+    m_userTimedOut.setSource(QUrl("qrc:/soundpack/speech/shimmer/user-timed-out.wav"));
 
-    m_userLeave.setSource(
-        QUrl("qrc:/ui/soundeffects/user-left.wav"));
 
-    m_messageBack.setSource(
-        QUrl("qrc:/ui/soundeffects/message-back.wav"));
-
-    m_message.setVolume(m_volume);
+    m_newMessage.setVolume(m_volume);
+    m_connected.setVolume(m_volume);
+    m_disconnected.setVolume(m_volume);
+    m_connectionLost.setVolume(m_volume);
+    m_channelSwitched.setVolume(m_volume);
+    m_youWereMoved.setVolume(m_volume);
     m_userJoin.setVolume(m_volume);
-    m_userLeave.setVolume(m_volume);
-    m_messageBack.setVolume(m_volume);
+    m_userLeft.setVolume(m_volume);
+    m_userTimedOut.setVolume(m_volume);
 }
 
 bool SoundManager::canPlay(
@@ -50,30 +58,103 @@ void SoundManager::setVolume(float newVolume)
         return;
     m_volume = newVolume;
 
-    m_message.setVolume(m_volume);
+    m_newMessage.setVolume(m_volume);
+    m_connected.setVolume(m_volume);
+    m_disconnected.setVolume(m_volume);
+    m_connectionLost.setVolume(m_volume);
+    m_channelSwitched.setVolume(m_volume);
+    m_youWereMoved.setVolume(m_volume);
     m_userJoin.setVolume(m_volume);
-    m_userLeave.setVolume(m_volume);
-    m_messageBack.setVolume(m_volume);
+    m_userLeft.setVolume(m_volume);
+    m_userTimedOut.setVolume(m_volume);
 
+    qCInfo(_soundEffect) << "set volume to " << newVolume;
     emit volumeChanged();
 }
 
-void SoundManager::playMessage()
+
+
+void SoundManager::playNewMessage()
 {
     if(!canPlay(
-            m_messageCooldown,
-            300))
+            m_newMessageCooldown,
+            500))
     {
         return;
     }
 
-    m_message.play();
+    m_newMessage.play();
+}
+
+void SoundManager::playConnected()
+{
+    if(!canPlay(
+            m_connectedCooldown,
+            500))
+    {
+        return;
+    }
+
+    m_connected.play();
+}
+
+void SoundManager::playDisconnected()
+{
+    // Suppress if Connection Lost was played recently
+    if (m_lastConnectionLost.isValid() &&
+        m_lastConnectionLost.elapsed() < 2000)
+    {
+        return;
+    }
+
+    if (!canPlay(m_disconnectedCooldown, 500))
+        return;
+
+    m_disconnected.play();
+}
+
+void SoundManager::playConnectionLost()
+{
+    if(!canPlay(
+            m_connectionLostCooldown,
+            500))
+    {
+        return;
+    }
+
+    m_lastConnectionLost.restart();
+
+    m_connectionLost.play();
+}
+
+void SoundManager::playChannelSwitched()
+{
+    if(!canPlay(
+            m_channelSwitchedCooldown,
+            500))
+    {
+        return;
+    }
+
+    m_channelSwitched.play();
+}
+
+void SoundManager::playYouWereMoved()
+{
+    if(!canPlay(
+            m_youWereMovedCooldown,
+            500))
+    {
+        return;
+    }
+
+    m_youWereMoved.play();
 }
 
 void SoundManager::playUserJoin()
 {
     if(!canPlay(
-            m_joinCooldown,
+            m_userJoinCooldown,
             500))
     {
         return;
@@ -82,35 +163,42 @@ void SoundManager::playUserJoin()
     m_userJoin.play();
 }
 
-void SoundManager::playUserLeave()
+void SoundManager::playUserLeft()
 {
     if(!canPlay(
-            m_leaveCooldown,
+            m_userLeftCooldown,
             500))
     {
         return;
     }
 
-    m_userLeave.play();
+    m_userLeft.play();
 }
 
-void SoundManager::playMessageBack()
+void SoundManager::playUserTimedOut()
 {
     if(!canPlay(
-            m_messageBackCooldown,
+            m_userTimedOutCooldown,
             500))
     {
         return;
     }
 
-    m_messageBack.play();
+    m_userTimedOut.play();
 }
+
 
 void SoundManager::changeAudioOutput(QAudioDevice *output)
 {
-    m_message.setAudioDevice(*output);
+    m_newMessage.setAudioDevice(*output);
+    m_connected.setAudioDevice(*output);
+    m_disconnected.setAudioDevice(*output);
+    m_connectionLost.setAudioDevice(*output);
+    m_channelSwitched.setAudioDevice(*output);
+    m_youWereMoved.setAudioDevice(*output);
     m_userJoin.setAudioDevice(*output);
-    m_userLeave.setAudioDevice(*output);
-    m_messageBack.setAudioDevice(*output);
-    qDebug() << "soundmanager audio output changed.";
+    m_userLeft.setAudioDevice(*output);
+    m_userTimedOut.setAudioDevice(*output);
+
+    qCInfo(_soundEffect) << "audio output changed.";
 }

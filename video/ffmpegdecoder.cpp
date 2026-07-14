@@ -1,5 +1,7 @@
 #include "ffmpegdecoder.h"
 
+#include "logging/loggingcategories.h"
+
 FFmpegDecoder::FFmpegDecoder(QObject *parent)
     : QObject(parent)
 {
@@ -12,6 +14,7 @@ FFmpegDecoder::~FFmpegDecoder()
 
 bool FFmpegDecoder::open()
 {
+    qCInfo(_ffmpeg) << "close old opened decoder if exists, then open decoder";
     close();
 
     const AVCodec *codec =
@@ -19,7 +22,7 @@ bool FFmpegDecoder::open()
 
     if (!codec)
     {
-        qDebug() << "Could not find H264 decoder.";
+        qCCritical(_ffmpeg) << "Could not find H264 decoder.";
         return false;
     }
 
@@ -27,23 +30,28 @@ bool FFmpegDecoder::open()
 
     if (!m_codec)
     {
-        qDebug() << "Could not allocate decoder context.";
+        qCCritical(_ffmpeg) << "Could not allocate decoder context.";
         return false;
     }
 
-    if (avcodec_open2(
-            m_codec,
-            codec,
-            nullptr) < 0)
+    int ret = avcodec_open2(
+        m_codec,
+        codec,
+        nullptr);
+
+    if (ret < 0)
     {
-        qDebug() << "Failed to open decoder.";
+        char err[AV_ERROR_MAX_STRING_SIZE];
+        av_strerror(ret, err, sizeof(err));
+
+        qCCritical(_ffmpeg)
+            << "Failed to open decoder:"
+            << err;
 
         close();
 
         return false;
     }
-
-    qDebug() << m_codec->codec->name;
 
     m_frame = av_frame_alloc();
 
@@ -61,13 +69,19 @@ bool FFmpegDecoder::open()
         return false;
     }
 
-    qDebug() << "FFmpeg decoder initialized.";
+    qCInfo(_ffmpeg) << "FFmpeg decoder initialized.";
+
+    qCInfo(_ffmpeg)
+        << "Decoder info: "
+        << m_codec->codec->name
+        << m_codec->codec->long_name;
 
     return true;
 }
 
 void FFmpegDecoder::close()
 {
+    qCInfo(_ffmpeg) << "try to close decoder.";
     if (m_sws)
     {
         sws_freeContext(m_sws);
@@ -107,9 +121,9 @@ void FFmpegDecoder::decode(const QByteArray &packetData)
 
     m_packet->size = packetData.size();
 
-    qDebug()
-        << "received packet"
-        << packetData.size();
+    // qCDebug(_ffmpeg)
+    //     << "received packet"
+    //     << packetData.size();
 
     int ret =
         avcodec_send_packet(
@@ -121,7 +135,7 @@ void FFmpegDecoder::decode(const QByteArray &packetData)
         char err[256];
         av_strerror(ret, err, sizeof(err));
 
-        qDebug() << "avcodec_send_packet failed. send_packet:" << err;
+        qCCritical(_ffmpeg) << "avcodec_send_packet failed. send_packet:" << err;
 
         return;
     }
@@ -133,7 +147,7 @@ void FFmpegDecoder::decode(const QByteArray &packetData)
                 m_codec,
                 m_frame);
 
-        // qDebug()
+        // qCDebug(_ffmpeg)
         //     << "Decoded frame"
         //     << m_frame->width
         //     << m_frame->height
@@ -152,7 +166,7 @@ void FFmpegDecoder::decode(const QByteArray &packetData)
             char err[256];
             av_strerror(ret, err, sizeof(err));
 
-            qDebug() << "avcodec_receive_frame failed. receive_frame:" << err;
+            qCCritical(_ffmpeg) << "avcodec_receive_frame failed. receive_frame:" << err;
 
             break;
         }

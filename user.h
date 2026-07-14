@@ -12,6 +12,8 @@
 #include <QTimer>
 #include <QHostInfo>
 #include <QQueue>
+#include <QHostAddress>
+
 
 // include from BeanChatCommon (to server and client speak one language)
 #include <protocol/Packets.h>
@@ -275,11 +277,23 @@ signals:
     void myChannelNameChanged();
 
 
+    //play request to sound
+    void newMessage();
+
+    void youConnected();
+    void youDisconnected();
+    void youConnectionLost();
+
+    void youChannelSwitched();
+    void youWereMoved();
+
     void userJoined();
     void userLeft();
-    void newMessage();
-    void messageSent();
+    void userTimedOut();
 
+
+
+    //
     void isCameraOpenChanged();
 
     void myServerNameChanged();

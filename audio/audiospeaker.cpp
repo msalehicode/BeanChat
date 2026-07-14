@@ -1,5 +1,5 @@
 #include "audiospeaker.h"
-
+#include "logging/loggingcategories.h"
 
 AudioSpeaker::AudioSpeaker(QObject *parent)
     : QObject(parent)
@@ -11,7 +11,7 @@ AudioSpeaker::AudioSpeaker(QObject *parent)
     //connect for later changes
     connect(&m_mediaDevices, &QMediaDevices::audioOutputsChanged, this, [this]()
             {
-                qDebug() << "Speaker hardware change detected!";
+                qCInfo(_speaker) << "Speaker hardware change detected!";
 
                 // 1. Refresh your local list
                 refreshAudioOutputs();
@@ -54,13 +54,14 @@ bool AudioSpeaker::start()
 {
     // Check if the current index is actually valid
     if (m_audioOutputs.isEmpty() || m_currentAudioOutput >= m_audioOutputs.size()) {
-        qWarning() << "Invalid audio output index!";
+        qCCritical(_speaker) <<  "Invalid audio output index!";
         return false;
     }
 
     // Clean up existing capture before starting new one
     if (m_sink)
     {
+        qCInfo(_speaker) << "before start speaker, let's stop old one.";
         stop();
     }
 
@@ -68,10 +69,14 @@ bool AudioSpeaker::start()
     m_format.setSampleRate(SPEAKER_DEFAULT_SAMPLE_RATE);
     m_format.setChannelCount(SPEAKER_DEFAULT_CHANNEL);
     m_format.setSampleFormat(QAudioFormat::Int16);
+    qCDebug(_speaker) << "speaker format smapleRate="
+                     << m_format.sampleRate()
+                     << " channel="
+                     << m_format.channelCount();
 
     if (!m_format.isValid())
     {
-        qDebug() << "Invalid audio format";
+        qCCritical(_speaker) << "Invalid audio format";
         return false;
     }
 
@@ -79,6 +84,7 @@ bool AudioSpeaker::start()
 
     // m_sink->setBufferSize(16384);
     m_sink->setBufferSize(32768);
+    qCInfo(_speaker) << "speaker sink buffer size= " << m_sink->bufferSize();
 
     m_device = m_sink->start();
 
@@ -86,7 +92,7 @@ bool AudioSpeaker::start()
 
     if (!m_device)
     {
-        qDebug() << "Failed to start audio sink";
+        qCCritical(_speaker) <<  "Failed to start audio sink";
         return false;
     }
 
@@ -97,7 +103,9 @@ bool AudioSpeaker::start()
 
 void AudioSpeaker::stop()
 {
-    if (m_sink) {
+    qCInfo(_speaker) << "stopping speaker.";
+    if (m_sink)
+    {
         m_sink->stop();
         delete m_sink;
         m_sink = nullptr;
@@ -182,7 +190,7 @@ void AudioSpeaker::setCurrentAudioOutput(int newCurrentAudioOutput)
 
     if (m_sink)
     {
-        qDebug() << "Switching output device to:" << m_audioOutputs[m_currentAudioOutput].description();
+        qCInfo(_speaker) <<  "Switching output device to:" << m_audioOutputs[m_currentAudioOutput].description();
         start(); // This calls the start() logic which handles stopping the old one
     }
 }
@@ -199,7 +207,7 @@ void AudioSpeaker::setAudioOutputs(QList<QAudioDevice> newList)
 
 void AudioSpeaker::refreshAudioOutputs()
 {
-    qDebug() << "=== OUTPUT DEVICES ===";
+    qCInfo(_speaker) <<  "=== OUTPUT DEVICES ===";
     QList<QAudioDevice> inputs = QMediaDevices::audioOutputs();
     for (int i = 0; i < inputs.size(); i++)
     {

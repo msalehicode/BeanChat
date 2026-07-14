@@ -92,6 +92,9 @@ public:
     ChannelItem* findChannelOfUser(quint64 userId);
     ClientUser* findUserInChannel(ChannelItem *channel, quint64 userId);
     void restartVoiceTimer(quint64 userId);
+
+    void setTimerChannelTalkingStatus(bool status); //start/stop check for status isTalking users in channel timer. (when joint to channel start, when left stop)
+
 signals:
     void userTalkingStatus(quint64 userId,bool status);
 

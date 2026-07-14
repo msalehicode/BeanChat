@@ -3,6 +3,7 @@
 #include <QAbstractListModel>
 #include "../video/videosink.h"
 #include "clientuser.h"
+#include <QPointer>
 
 class ParticipantModel : public QAbstractListModel
 {
@@ -50,7 +51,7 @@ private:
     void observeUser(ClientUser* user);
     struct ParticipantData
     {
-        ClientUser *user = nullptr;
+        QPointer<ClientUser> user;
         VideoSink *videoSink = nullptr;
     };
 
