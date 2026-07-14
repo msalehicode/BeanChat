@@ -71,8 +71,6 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
             if(!sink)
                 return;
 
-            sender->setHasCamera(true);
-
             sink->setImage(image);
         });
 
