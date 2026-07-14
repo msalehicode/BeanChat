@@ -473,7 +473,7 @@ if(WIN32)
         COMMAND
             "${WINDEPLOYQT_EXECUTABLE}"
             --release
-            --qmldir "${CMAKE_SOURCE_DIR}"
+            --qmldir "${CMAKE_SOURCE_DIR}/ui"
             "${DEPLOY_DIR}/$<TARGET_FILE_NAME:appBeanChat>"
 
 
