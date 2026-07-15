@@ -31,7 +31,7 @@ Item
             {
                 anchors.centerIn: parent
 
-                text: "Server Users (" + connectedUsersModel.count + ")"
+                text: "Server Users (" + connectedUsersModel.count + "/" + user.serverMaxUsers + ")"
 
                 color: "white"
                 font.pixelSize: 18

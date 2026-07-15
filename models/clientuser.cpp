@@ -161,17 +161,21 @@ void ClientUser::setIsAdmin(bool newIsAdmin)
     emit isAdminChanged();
 }
 
-ClientUser::Status ClientUser::status() const
+BeanChatCommon::Presence::Status ClientUser::status() const
 {
     return m_status;
 }
 
-void ClientUser::setStatus(Status newStatus)
+void ClientUser::setStatus(BeanChatCommon::Presence::Status newStatus)
 {
     if (m_status == newStatus)
         return;
-    m_status = newStatus;
-    emit statusChanged();
+
+    if(BeanChatCommon::isValidPresenceStatus(newStatus))
+    {
+        m_status = newStatus;
+        emit statusChanged();
+    }
 }
 
 quint64 ClientUser::channelId() const

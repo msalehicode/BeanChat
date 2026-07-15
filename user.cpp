@@ -269,6 +269,11 @@ QString User::serverAvatarHash() const
     return m_receivedServerInfo.avatarHash;
 }
 
+QString User::serverMaxUsers() const
+{
+    return QString::number(m_receivedServerInfo.maxUsers);
+}
+
 QString User::serverVersion() const
 {
     return m_receivedServerInfo.version;
@@ -418,6 +423,7 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
 
 
     login.username = myUsername();
+    login.status =myStatus();
     if(!m_identityManager->currentIdentity())
     {
         qCInfo(_app) << "connect failed. no identity selected... create one";
@@ -942,6 +948,31 @@ void User::processPacket(const Packet& packet)
 
                break;
             }
+            case UpdateUserInfoType::ActivityStatus:
+            {
+                qCInfo(_app) <<  "a activity status changed";
+
+                ClientUser* user = m_clientUserManager->user(info.userId);
+                if(!user)
+                    return;
+
+                bool ok=false;
+                int val = info.payloadValue.toInt(&ok);
+                if(ok)
+                {
+                    BeanChatCommon::Presence::Status st = static_cast<BeanChatCommon::Presence::Status>(val);
+                    user->setStatus(st);
+                    if(user->self())
+                    {
+                        emit notificationRequested(NotificationType::Info,
+                                                   "Your activity status has been updated.");
+                        qCInfo(_app) << "Your activity status has been updated.";
+                        setMyStatus(st);
+                    }
+                }
+
+                break;
+            }
             default:
                 qCWarning(_app) << "unkown UpdateUserInfoType received. code=" << static_cast<int>(info.updateType);
         }
@@ -1306,72 +1337,83 @@ void User::processPacket(const Packet& packet)
 
         qCDebug(_app) <<  "User connected:" << u.username << " identity:" << u.identity;
 
-        //add user.
-        ClientUser* user = m_clientUserManager->createUser(u.id);
-        if(user)
+        bool userExists = false;
+        //check if user is on offline users (server may have showOfflineUsers ON)
+        ClientUser* user= m_clientUserManager->user(u.id);
+        if(!user)
         {
-            QString avatarPath = checkAvatar(u.id, u.avatarHash);
-            if(avatarPath.isEmpty())
+            user = m_clientUserManager->createUser(u.id);
+            if(!user)
             {
-                //send request to server for all not found avatars
-                askForNotFoundAvatars();
+                qCWarning(_app) << "failed to create user, invalid id=" << u.id;
+                break;
             }
-            qCDebug(_app) << "add user to connected list: " <<  u.appVersion << "-"
-                     << u.buildType << "-" << u.osName
-                     << "-" << u.osVersion << "- avatar hash= " << u.avatarHash
-                     << "avatar path=" << avatarPath << "channelid=";
+        }
+        else
+            userExists=true;
 
-            //if user is me set myAvatarPath
-            if(u.id == myId())
+        QString avatarPath = checkAvatar(u.id, u.avatarHash);
+        if(avatarPath.isEmpty())
+        {
+            //send request to server for all not found avatars
+            askForNotFoundAvatars();
+        }
+        qCDebug(_app) << "add user to connected list: " <<  u.appVersion << "-"
+                      << u.buildType << "-" << u.osName
+                      << "-" << u.osVersion << "- avatar hash= " << u.avatarHash
+                      << "avatar path=" << avatarPath << "channelid=";
+
+        //if user is me set myAvatarPath
+        if(u.id == myId())
+        {
+            qCInfo(_app) << "it's me";
+            setMyAvatarPath(avatarPath);
+            user->setSelf(true);
+        }
+
+
+        user->setUsername(u.username);
+        user->setIdentity(u.identity);
+        user->setAvatarPath(avatarPath);
+        // user->setIconsId(u.icon); //for now packet haven;t this
+        user->setMuted(u.muted);
+        user->setDeafened(u.deafened);
+        user->setHasCamera(u.camera);
+        user->setStatus(u.status);
+        user->setAppVersion(u.appVersion);
+        user->setBuildType(u.buildType);
+        user->setOsName(u.osName);
+        user->setOsVersion(u.osVersion);
+
+        //load info about this user. from our UserRelationship
+        if(!user->self())
+        {
+            const UserRelationship *relationship = m_relationshipManager->find(u.identity);
+            if (relationship)
             {
-                qCInfo(_app) << "it's me";
-                setMyAvatarPath(avatarPath);
-                user->setSelf(true);
+                qCInfo(_app) <<"relation found, setting for him..";
+                user->setRelationship(relationship->relationship);
+                user->setNickname(relationship->nickname);
+                user->setNote(relationship->note);
+                user->setVolume(relationship->voiceVolume);
+                user->setLocalMuted(relationship->muted);
             }
-
-
-            user->setUsername(u.username);
-            user->setIdentity(u.identity);
-            user->setAvatarPath(avatarPath);
-            // user->setIconsId(u.icon); //for now packet haven;t this
-            user->setMuted(u.muted);
-            user->setDeafened(u.deafened);
-            user->setHasCamera(u.camera);
-            // user->setStatus(u.status); //for now packet haven;t this
-            user->setAppVersion(u.appVersion);
-            user->setBuildType(u.buildType);
-            user->setOsName(u.osName);
-            user->setOsVersion(u.osVersion);
-
-            //load info about this user. from our UserRelationship
-            if(!user->self())
+            else
             {
-                const UserRelationship *relationship = m_relationshipManager->find(u.identity);
-                if (relationship)
-                {
-                    qCInfo(_app) <<"relation found, setting for him..";
-                    user->setRelationship(relationship->relationship);
-                    user->setNickname(relationship->nickname);
-                    user->setNote(relationship->note);
-                    user->setVolume(relationship->voiceVolume);
-                    user->setLocalMuted(relationship->muted);
-                }
-                else
-                {
-                    qCInfo(_app) <<"relation not found for this user setting defaults";
-                    user->setRelationship(Relationship::Type::None);
-                    user->setNickname({});
-                    user->setNote({});
-                    user->setVolume(SPEAKER_DEFAULT_CHANNEL_USERS_VOLUME);
-                    user->setLocalMuted(false);
-                }
+                qCInfo(_app) <<"relation not found for this user setting defaults";
+                user->setRelationship(Relationship::Type::None);
+                user->setNickname({});
+                user->setNote({});
+                user->setVolume(SPEAKER_DEFAULT_CHANNEL_USERS_VOLUME);
+                user->setLocalMuted(false);
             }
+        }
 
+        if(!userExists)
+        {
             //add him to list.
             m_connectedUsersModel->addUser(user);
         }
-        else
-            qCWarning(_app) << "failed to create user, invalid id or user exists. id=" << u.id;
 
 
         break;
@@ -1409,11 +1451,11 @@ void User::processPacket(const Packet& packet)
         ClientUser* user = m_clientUserManager->user(resp.id);
         if(user)
         {
-            user->setStatus(ClientUser::Status::Offline);
+            user->setStatus(BeanChatCommon::Presence::Status::Offline);
         }
 
         //remove user.
-        m_clientUserManager->removeUser(resp.id);
+        // m_clientUserManager->removeUser(resp.id);
 
         break;
     }
@@ -1522,7 +1564,7 @@ void User::processPacket(const Packet& packet)
                     qCInfo(_app) << "this user is me: ";
                     setMyAvatarPath(avatarPath);
                     user->setSelf(true);
-                    // setMyStatus(u.status); //for now packet doesn't support it.
+                    setMyStatus(u.status);
                 }
 
 
@@ -1534,7 +1576,7 @@ void User::processPacket(const Packet& packet)
                 user->setDeafened(u.deafened);
                 user->setChannelId(u.channelId);
                 user->setHasCamera(u.camera);
-                // user->setStatus(u.status); //for now packet haven;t this
+                user->setStatus(u.status);
                 user->setAppVersion(u.appVersion);
                 user->setBuildType(u.buildType);
                 user->setOsName(u.osName);
@@ -1698,16 +1740,19 @@ void User::setMyChannelId(quint64 newMyChannelId)
     emit myChannelIdChanged();
 }
 
-ClientUser::Status User::myStatus() const
+BeanChatCommon::Presence::Status User::myStatus() const
 {
     return m_myStatus;
 }
 
-void User::setMyStatus(const ClientUser::Status &newMyStatus)
+void User::setMyStatus(const Presence::Status &newMyStatus)
 {
     if (m_myStatus == newMyStatus)
         return;
-    qCInfo(_app) << "set my status to " << static_cast<int>(newMyStatus);
+
+    qCDebug(_app) << "set My Activity Status to " << newMyStatus << " and save it to settings";
+    m_settingsManager->setValue(USER_SETTING_LAST_ACTIVITY_STATUS, newMyStatus);
+
     m_myStatus = newMyStatus;
     emit myStatusChanged();
 }
@@ -1761,6 +1806,29 @@ QString User::appTitle() const
     return QString::fromUtf8(APP_TITLE) + " v" + QString::fromUtf8(APP_VERSION);
 }
 
+void User::updateMyActivityStatus(BeanChatCommon::Presence::Status status)
+{
+    if(isConnectedToServer())
+    {
+        //send request updaet to server.
+        qCInfo(_tcp) << "sending update activity status request";
+        UpdateUserInfoPacket uu;
+
+        uu.updateType = UpdateUserInfoType::ActivityStatus;
+        uu.payloadValue = QString::number(static_cast<int>(status));
+
+        Packet p;
+        p.type = PacketType::UpdateUserInfo;
+        p.payload = PacketHelpers::pack(uu);
+        socket.write(p.serialize());
+    }
+    else
+    {
+        //update local username for upcoming connections.
+        setMyStatus(status);
+    }
+
+}
 void User::updateMyProfile(const QString &username, const QString &avatarPath)
 {
     qCInfo(_app) << "try to update my profile, username to " << username
@@ -2323,6 +2391,21 @@ void User::initOrLoadSettings()
         m_identityManager->setCurrentIdentity(m_settingsManager->value(USER_SETTING_LAST_IDENTITY_NAME, "").toString());
     else
         qCWarning(_app) << "last identity name not found in config";
+
+    if(m_settingsManager->contains(USER_SETTING_LAST_ACTIVITY_STATUS))
+    {
+        auto status = static_cast<BeanChatCommon::Presence::Status>(
+            m_settingsManager->value(
+                                 USER_SETTING_LAST_ACTIVITY_STATUS,
+                                 static_cast<int>(BeanChatCommon::Presence::Status::Online)).toInt());
+        if (!BeanChatCommon::isValidPresenceStatus(status))
+            status = BeanChatCommon::Presence::Status::Online;
+
+        setMyStatus(status);
+    }
+    else
+        setMyStatus(BeanChatCommon::Presence::Status::Online);
+
 
 
 

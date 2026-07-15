@@ -41,7 +41,7 @@ QVariant ChatModel::data(
         case SenderStatusRole:
             return item.sender
                         ? static_cast<int>(item.sender->status())
-                        : static_cast<int>(ClientUser::Status::Offline);
+                       : static_cast<int>(BeanChatCommon::Presence::Status::Offline);
 
         case SenderRelationRole:
             return item.sender

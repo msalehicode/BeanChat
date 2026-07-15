@@ -5,7 +5,7 @@ project(BeanChat VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(APP_CURRENT_VERSION "0.26.34")
+set(APP_CURRENT_VERSION "0.27.36")
 set(APP_TitleName "BeanChat")
 set(APP_OrganizationName "orgBeanChat")
 set(APP_ApplicationName "appBeanChat")
@@ -130,6 +130,8 @@ qt_add_qml_module(appBeanChat
         ui/popups/GetValuePopup.qml #to ask for a Field with dynamic action
         ui/popups/ShowQRcode.qml
         ui/popups/ShowToCopyPopup.qml #e.g copy Servercode
+        ui/popups/StatusItem.qml
+        ui/popups/StatusPopup.qml
 
         # settingsPage pages/components
         ui/settingPages/SettingSection.qml
@@ -203,6 +205,7 @@ qt_add_qml_module(appBeanChat
         models/clientuser.h models/clientuser.cpp
         models/identity.h models/identity.cpp
         models/userrelationship.h
+        models/connectedusersproxymodel.h models/connectedusersproxymodel.cpp
 
     # icons
     RESOURCES
@@ -407,6 +410,7 @@ target_compile_definitions(appBeanChat PRIVATE
     #user info
     USER_SETTING_USERNAME="User/Username"
     USER_SETTING_LAST_IDENTITY_NAME="User/LastIdentity"
+    USER_SETTING_LAST_ACTIVITY_STATUS="User/LastActivity"
 
     #camera input default config
     CAMERA_DEFAULT_DEVICE_INDEX=0

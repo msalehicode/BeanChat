@@ -26,6 +26,7 @@
 #include "models/myserversmodel.h"
 #include "models/participantmodel.h"
 #include "models/userrelationship.h"
+#include "models/connectedusersproxymodel.h"
 
 //QML components
 #include "video/myvideoitem.h"
@@ -53,6 +54,8 @@
 #include "sharing/servercode.h"
 #include "sharing/clipboardhelper.h"
 
+#include <protocol/commonTypes.h>
+
 
 //logger
 #include <QStandardPaths>
@@ -60,6 +63,7 @@
 #include "logging/loggingcategories.h"
 #include "logging/crashreporter.h"
 #include "managers/logmanager.h"
+
 
 int main(int argc, char *argv[])
 {
@@ -179,7 +183,14 @@ int main(int argc, char *argv[])
     ChatModel chatModel;
     ParticipantModel participantsModel;//participant = current channel users which has video sink and shown on center of screen
     ConnectedUsersModel connectedUsersModel;
+    ConnectedUsersProxyModel connectedUsersProxy;
     MyServersModel myServersModel;
+
+
+
+    //connect proxyModel to connectedUsers to sort users as we wish
+    connectedUsersProxy.setSourceModel(&connectedUsersModel);
+    connectedUsersProxy.sort(0);
 
     //----------
     User usr(&channelModel, &chatModel, &participantsModel, &connectedUsersModel, &myServersModel,
@@ -336,6 +347,7 @@ int main(int argc, char *argv[])
     qmlRegisterUncreatableType<VideoSink>("CustomVideo", 1, 0, "VideoSink", "VideoSink cannot be created from QML");
     qmlRegisterUncreatableType<ClientUser>("BeanChatClient", 1, 0, "ClientUser", "Created by C++ only");
     qmlRegisterUncreatableType<Relationship>("BeanChatClient", 1, 0, "Relationship", "Enum Only");
+    qmlRegisterUncreatableMetaObject(Presence::staticMetaObject, "BeanChatClient", 1, 0, "Presence", "Enums only");
 
     //qml
     QQmlApplicationEngine engine;
@@ -344,7 +356,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("speaker", &speaker);
     engine.rootContext()->setContextProperty("camera", &cam);
     engine.rootContext()->setContextProperty("participantModel", &participantsModel);
-    engine.rootContext()->setContextProperty("connectedUsersModel", &connectedUsersModel);
+    engine.rootContext()->setContextProperty("connectedUsersModel", &connectedUsersProxy);
     engine.rootContext()->setContextProperty("myServersModel", &myServersModel);
     engine.rootContext()->setContextProperty("user", &usr);
     engine.rootContext()->setContextProperty("channelModel",&channelModel);

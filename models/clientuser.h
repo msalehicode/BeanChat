@@ -3,6 +3,7 @@
 #include <QObject>
 
 #include "userrelationship.h"
+#include <protocol/commonTypes.h>
 
 class ClientUser : public QObject
 {
@@ -20,7 +21,7 @@ class ClientUser : public QObject
     Q_PROPERTY(bool muted READ muted NOTIFY mutedChanged FINAL)
     Q_PROPERTY(bool deafened READ deafened NOTIFY deafenedChanged FINAL)
     Q_PROPERTY(bool isAdmin READ isAdmin NOTIFY isAdminChanged FINAL)
-    Q_PROPERTY(Status status READ status NOTIFY statusChanged FINAL)
+    Q_PROPERTY(BeanChatCommon::Presence::Status status READ status NOTIFY statusChanged FINAL)
     Q_PROPERTY(quint64 channelId READ channelId NOTIFY channelIdChanged FINAL)
     Q_PROPERTY(int volume READ volume WRITE setVolume NOTIFY volumeChanged FINAL)
     Q_PROPERTY(bool self READ self NOTIFY selfChanged FINAL)
@@ -34,19 +35,6 @@ class ClientUser : public QObject
 
 public:
     explicit ClientUser(QObject *parent = nullptr);
-
-
-    enum class Status
-    {
-        Unknown = 0,
-        Offline,
-        Online,
-        Idle,
-        DoNotDisturb,
-        Busy
-    };
-    Q_ENUM(Status) //make it useable in qml
-
 
     quint64 id() const;
     void setId(quint64 newId);
@@ -84,8 +72,8 @@ public:
     bool isAdmin() const;
     void setIsAdmin(bool newIsAdmin);
 
-    Status status() const;
-    void setStatus(Status newStatus);
+    BeanChatCommon::Presence::Status status() const;
+    void setStatus(BeanChatCommon::Presence::Status newStatus);
 
     quint64 channelId() const;
     void setChannelId(quint64 newChannelId);
@@ -198,6 +186,6 @@ private:
     bool m_deafened = false;
     bool m_hasCamera = false;
     bool m_isAdmin = false;
-    Status m_status= Status::Online;
+    BeanChatCommon::Presence::Status m_status= BeanChatCommon::Presence::Status::Online;
 
 };

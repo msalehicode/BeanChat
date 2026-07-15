@@ -21,6 +21,7 @@
 #include <protocol/PacketHelpers.h>
 #include <protocol/ProtocolVersion.h>
 #include <protocol/ProtocolLimits.h>
+#include <protocol/commonTypes.h>
 using namespace BeanChatCommon;
 
 
@@ -248,17 +249,19 @@ public:
     QString serverName() const;
     QString serverWebsite() const;
     QString serverAvatarHash() const;
+    QString serverMaxUsers() const;
     QString serverVersion() const;
     QString serverUptime() const;
 
 
-    ClientUser::Status myStatus() const;
-    void setMyStatus(const ClientUser::Status &newMyStatus);
+    BeanChatCommon::Presence::Status myStatus() const;
+    void setMyStatus(const BeanChatCommon::Presence::Status &newMyStatus);
 
     quint64 myChannelId() const;
     void setMyChannelId(quint64 newMyChannelId);
 
 
+    Q_INVOKABLE void updateMyActivityStatus(BeanChatCommon::Presence::Status status);
 signals:
 
     void myIdChanged();
@@ -379,7 +382,7 @@ private:
 
     //user cant modify, would receive from target server
     int m_myId =-1;
-    ClientUser::Status m_myStatus=ClientUser::Status::Offline;
+    BeanChatCommon::Presence::Status m_myStatus=BeanChatCommon::Presence::Status::Offline;
     quint64 m_myChannelId=0; //channelId 0 is default value for those users didn't connect to any channel just connected to server.
     QString m_myChannelName = ""; //current channel
     bool m_myChannelSavesChat=false;
@@ -393,6 +396,7 @@ private:
     Q_PROPERTY(QString serverName READ serverName NOTIFY receivedServerInfoChanged)
     Q_PROPERTY(QString serverWebsite READ serverWebsite NOTIFY receivedServerInfoChanged)
     Q_PROPERTY(QString serverAvatarHash READ serverAvatarHash NOTIFY receivedServerInfoChanged)
+    Q_PROPERTY(QString serverMaxUsers  READ serverMaxUsers NOTIFY receivedServerInfoChanged)
     Q_PROPERTY(QString serverVersion READ serverVersion NOTIFY receivedServerInfoChanged)
     Q_PROPERTY(QString serverUptime READ serverUptime NOTIFY receivedServerInfoChanged)
 
@@ -475,7 +479,7 @@ private:
     Q_PROPERTY(QString myAppVersion READ myAppVersion NOTIFY myAppVersionChanged FINAL)
     Q_PROPERTY(QString buildType READ buildType CONSTANT)
     Q_PROPERTY(QString appTitle READ appTitle CONSTANT)
-    Q_PROPERTY(ClientUser::Status myStatus READ myStatus WRITE setMyStatus NOTIFY myStatusChanged FINAL)
+    Q_PROPERTY(BeanChatCommon::Presence::Status myStatus READ myStatus WRITE setMyStatus NOTIFY myStatusChanged FINAL)
     Q_PROPERTY(quint64 myChannelId READ myChannelId WRITE setMyChannelId NOTIFY myChannelIdChanged FINAL)
 };
 

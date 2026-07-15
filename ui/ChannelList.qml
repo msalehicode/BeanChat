@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import BeanChatClient 1.0
 
 import "constants/"
+import "popups/"
 Item
 {
     id:channelList
@@ -834,8 +835,12 @@ Item
                         cursorShape: Qt.PointingHandCursor
                         onClicked:
                         {
-                            modifyProfilePopup.avatarSource=user.myAvatarPath
-                            modifyProfilePopup.open()
+                            var p = userStatus.mapToItem(statusPopup.parent, 0, 0)
+
+                            statusPopup.x = p.x + userStatus.width //- statusPopup.width + 100
+                            statusPopup.y = p.y - statusPopup.height - 8
+
+                            statusPopup.open()
                         }
                     }
 
@@ -860,11 +865,21 @@ Item
                         color: UiHelpers.statusColor(user.myStatus)
                         MouseArea
                         {
+                            id:userStatusMouseArea
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: console.log("clicked on my status indicator")
+                            onClicked:
+                            {
+                                var p = userStatus.mapToItem(statusPopup.parent, 0, 0)
+
+                                statusPopup.x = p.x + userStatus.width //- statusPopup.width + 100
+                                statusPopup.y = p.y - statusPopup.height - 8
+
+                                statusPopup.open()
+                            }
                         }
                     }
+
                 }
 
                 Text
@@ -1045,6 +1060,20 @@ Item
         {
             serverTitle.opened = false
             console.log("Settings")
+        }
+    }
+
+
+
+
+    StatusPopup
+    {
+        id: statusPopup
+
+        onStatusSelected:
+        {
+            console.log("status selected=",status)
+            user.updateMyActivityStatus(status)
         }
     }
 

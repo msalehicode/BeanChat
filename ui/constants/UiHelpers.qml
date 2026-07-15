@@ -9,19 +9,22 @@ QtObject
     {
         switch (status)
         {
-        case ClientUser.Online:
+        case Presence.Online:
             return "lime"
 
-        case ClientUser.Idle:
+        case Presence.Idle:
             return "orange"
 
-        case ClientUser.Busy:
+        case Presence.Away:
+            return "yellow"
+
+        case Presence.Busy:
             return "red"
 
-        case ClientUser.DoNotDisturb:
+        case Presence.DoNotDisturb:
             return "#ff0066"
 
-        case ClientUser.Offline:
+        case Presence.Offline:
         default:
             return "gray"
         }
@@ -54,19 +57,22 @@ QtObject
     {
         switch (status)
         {
-        case ClientUser.Online:
+        case Presence.Online:
             return "Online"
 
-        case ClientUser.Idle:
+        case Presence.Idle:
             return "Idle"
 
-        case ClientUser.Busy:
+        case Presence.Away:
+            return "Away"
+
+        case Presence.Busy:
             return "Busy"
 
-        case ClientUser.DoNotDisturb:
+        case Presence.DoNotDisturb:
             return "Do Not Disturb"
 
-        case ClientUser.Offline:
+        case Presence.Offline:
         default:
             return "Offline"
         }
