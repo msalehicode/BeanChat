@@ -168,7 +168,7 @@ Item
                     height: 40
                     radius: 20
 
-                    color: noAvatarLetter.visible ? "#839ac7" : "transparent"
+                    color: noAvatarLetter.visible ? avatarBg : "transparent"
                     border.width: 1
 
                     border.color: "#2C3B57"
@@ -177,7 +177,7 @@ Item
                     {
                         id:noAvatarLetter
                         anchors.centerIn: parent
-                        text:"?"
+                        text:  model.senderName.charAt(0).toUpperCase()
                         visible: !userAvatar.visible
                         color: "white"
                         font.bold: true

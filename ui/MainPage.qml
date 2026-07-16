@@ -14,7 +14,7 @@ Item {
 
     readonly property color bg1 : "#414247"
     readonly property color bg2: "#121315"
-
+    readonly property color avatarBg: "#040833"
     readonly property int iconH: 22
     readonly property int iconW: 22
 

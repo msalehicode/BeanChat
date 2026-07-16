@@ -112,7 +112,7 @@ Item
                         radius: width/2
                         visible: !model.isCameraOpen
                         anchors.centerIn: parent
-                        color: noAvatarLetter.visible ? "#839ac7" : "transparent"
+                        color: noAvatarLetter.visible ? avatarBg : "transparent"
                         border.color: "#2C3B57"
                         border.width: 1
                         Text
@@ -120,7 +120,7 @@ Item
                             id:noAvatarLetter
                             anchors.centerIn: parent
                             visible: model.avatarPath === ""
-                            text: "?"
+                            text:  model.username.charAt(0).toUpperCase()
                             color: "white"
                             font.pixelSize: 16
                         }

@@ -330,14 +330,14 @@ Item
                                     Layout.preferredHeight: 27
 
                                     radius: width / 2
-                                    color: noAvatarLetter.visible ? "#839ac7" : "transparent"
+                                    color: noAvatarLetter.visible ? avatarBg : "transparent"
 
                                     Text
                                     {
                                         id:noAvatarLetter
                                         anchors.centerIn: parent
                                         visible: modelData.avatarPath === ""
-                                        text: "?"
+                                        text:  modelData.username.charAt(0).toUpperCase()
                                         color: "white"
                                         font.pixelSize: 16
                                     }
@@ -814,12 +814,12 @@ Item
                     height: width
                     radius: width / 2
 
-                    color: "#1E1F22"
+                    color: avatarBg
                     Text
                     {
                         anchors.centerIn: parent
                         visible: user.myAvatarPath === ""
-                        text: "?"
+                        text:  user.myUsername.charAt(0).toUpperCase()
                         color: "white"
                         font.pixelSize: 16
                     }

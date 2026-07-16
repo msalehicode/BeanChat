@@ -262,6 +262,11 @@ public:
 
 
     Q_INVOKABLE void updateMyActivityStatus(BeanChatCommon::Presence::Status status);
+    quint64 connectedUsersCount() const;
+    void setConnectedUsersCount(quint64 newConnectedUsersCount);
+    void setConnectedUsersCount(quint64 newConnectedUsersCount, bool increase);
+
+
 signals:
 
     void myIdChanged();
@@ -348,6 +353,8 @@ signals:
 
     void myChannelIdChanged();
 
+    void connectedUsersCountChanged();
+
 public slots:
     void onTcpReadyRead();
     void onDisconnected();
@@ -386,6 +393,7 @@ private:
     quint64 m_myChannelId=0; //channelId 0 is default value for those users didn't connect to any channel just connected to server.
     QString m_myChannelName = ""; //current channel
     bool m_myChannelSavesChat=false;
+    quint64 m_connectedUsersCount=0;
     QString m_myServerName= ""; //current server connected to (name that saved by user inside myServers, can be modified, only shown to this user)
     // UserConnectionStatus m_connectionStatus=UserConnectionStatus::Unknown;
     int m_connectedServerId_onDb=-1; //(serverDbIndex) to use for path of avatars. e.g path/to/Cached/avatars/0  <- this 0 is server id (directory to hold that server user's avatar files)
@@ -481,6 +489,7 @@ private:
     Q_PROPERTY(QString appTitle READ appTitle CONSTANT)
     Q_PROPERTY(BeanChatCommon::Presence::Status myStatus READ myStatus WRITE setMyStatus NOTIFY myStatusChanged FINAL)
     Q_PROPERTY(quint64 myChannelId READ myChannelId WRITE setMyChannelId NOTIFY myChannelIdChanged FINAL)
+    Q_PROPERTY(quint64 connectedUsersCount READ connectedUsersCount WRITE setConnectedUsersCount NOTIFY connectedUsersCountChanged FINAL)
 };
 
 #endif // USER_H

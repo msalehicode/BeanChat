@@ -756,15 +756,18 @@ void User::askForServerState()
 
 void User::askForNotFoundAvatars()
 {
-    qCInfo(_tcp) << "asking for not found avatars... not found avatars count=" << m_notFoundAvatars.count();
-    RequestAvatarsPacket ra;
-    ra.notFoundIds = m_notFoundAvatars;
+    if(m_notFoundAvatars.count()>0)
+    {
+        qCInfo(_tcp) << "asking for not found avatars... not found avatars count=" << m_notFoundAvatars.count();
+        RequestAvatarsPacket ra;
+        ra.notFoundIds = m_notFoundAvatars;
 
-    Packet p;
-    p.type = PacketType::RequestAvatars;
-    p.payload = PacketHelpers::pack(ra);
+        Packet p;
+        p.type = PacketType::RequestAvatars;
+        p.payload = PacketHelpers::pack(ra);
 
-    socket.write(p.serialize());
+        socket.write(p.serialize());
+    }
 }
 
 void User::newAvatarArrived(quint64 userId,
@@ -961,6 +964,13 @@ void User::processPacket(const Packet& packet)
                 if(ok)
                 {
                     BeanChatCommon::Presence::Status st = static_cast<BeanChatCommon::Presence::Status>(val);
+
+                    //check if status became offline (invisible) decrease connectedUsers
+                    if(st==BeanChatCommon::Presence::Status::Offline)
+                        setConnectedUsersCount(1,false); //decrease one
+                    else if(user->status()==BeanChatCommon::Presence::Status::Offline) //check if user is offline (invisible) now and became something else increase count
+                        setConnectedUsersCount(1,true); //increase one
+
                     user->setStatus(st);
                     if(user->self())
                     {
@@ -1415,7 +1425,9 @@ void User::processPacket(const Packet& packet)
             m_connectedUsersModel->addUser(user);
         }
 
-
+        //update connectUsersCount (SERVER INFO)
+        if(user->status()!=BeanChatCommon::Presence::Status::Offline)
+            setConnectedUsersCount(1,true); //one increased
         break;
     }
 
@@ -1451,11 +1463,19 @@ void User::processPacket(const Packet& packet)
         ClientUser* user = m_clientUserManager->user(resp.id);
         if(user)
         {
+            //update connectUsersCount (SERVER INFO) if user wans't invisible
+            if(user->status()!=BeanChatCommon::Presence::Status::Offline) //invisbile
+                setConnectedUsersCount(1,false); //one decreased
+
             user->setStatus(BeanChatCommon::Presence::Status::Offline);
         }
 
         //remove user.
         // m_clientUserManager->removeUser(resp.id);
+
+        //instead removeUser by manager, only remove user from channel and participant
+        m_channelModel->removeUser(resp.id);
+        m_currentChannelParticipant->removeUser(resp.id);
 
         break;
     }
@@ -1607,6 +1627,10 @@ void User::processPacket(const Packet& packet)
                 //add him to list
                 m_connectedUsersModel->addUser(user);
 
+                //when user isn't offline  or invisible update connectUsersCount (SERVER INFO)
+                if(user->status()!=BeanChatCommon::Presence::Status::Offline)
+                    setConnectedUsersCount(1,true); //one increase
+
                 qCInfo(_app) << "user added to connectedusrs id="<<u.id;
 
                 //if user was in a channel, add him to our channel model
@@ -1702,6 +1726,33 @@ void User::loginToUdpSocket()
                  << ":"
                  << m_serverPort;
     }
+}
+
+quint64 User::connectedUsersCount() const
+{
+    return m_connectedUsersCount;
+}
+
+void User::setConnectedUsersCount(quint64 newConnectedUsersCount)
+{
+    if (m_connectedUsersCount == newConnectedUsersCount)
+        return;
+    m_connectedUsersCount = newConnectedUsersCount;
+    emit connectedUsersCountChanged();
+}
+
+void User::setConnectedUsersCount(quint64 newConnectedUsersCount, bool increase)
+{
+    if (m_connectedUsersCount == (increase? m_connectedUsersCount+newConnectedUsersCount
+                                                                                : m_connectedUsersCount -newConnectedUsersCount))
+        return;
+
+    if(increase)
+        m_connectedUsersCount += newConnectedUsersCount;
+    else
+        m_connectedUsersCount -= newConnectedUsersCount;
+
+    emit connectedUsersCountChanged();
 }
 
 void User::setMyAppVersion(const QString &newAppVersion)
@@ -2252,6 +2303,7 @@ void User::resetVariables()
     setMyPing(-1);
     setMyVideoPacketLoss(0.0f);
     setMyVoicePacketLoss(0.0f);
+    setConnectedUsersCount(0);
     m_notFoundAvatars.clear(); //clear list for next connection
     setMyAvatarPath("");
     m_clientUserManager->clear();

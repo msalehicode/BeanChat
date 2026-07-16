@@ -31,7 +31,7 @@ Item
             {
                 anchors.centerIn: parent
 
-                text: "Server Users (" + connectedUsersModel.count + "/" + user.serverMaxUsers + ")"
+                text: "Server Users (" + user.connectedUsersCount + "/" + user.serverMaxUsers + ")"
 
                 color: "white"
                 font.pixelSize: 18
@@ -94,14 +94,14 @@ Item
                         height: width
                         radius: width / 2
 
-                        color: noAvatarLetter.visible ? "#839ac7" : "transparent"
+                        color: noAvatarLetter.visible ? avatarBg : "transparent"
 
                         Text
                         {
                             id:noAvatarLetter
                             anchors.centerIn: parent
                             visible: model.userAvatarPath === ""
-                            text: "?"
+                            text:  model.userName.charAt(0).toUpperCase()
                             color: "white"
                             font.pixelSize: 16
                         }
@@ -153,6 +153,7 @@ Item
                     source: getOsIcon(model.userOsName)
                     width: 20
                     height: 20
+                    visible: model.userStatus!==Presence.Offline
                     anchors
                     {
                         right:parent.right

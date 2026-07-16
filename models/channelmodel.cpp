@@ -334,6 +334,9 @@ void ChannelModel::removeChannel(quint64 channelId)
 
 void ChannelModel::resetChannelTalkingStatus(quint64 channelId)
 {
+    if(channelId==0)
+        return;
+
     qCInfo(_models) << "reset channel talking status, target id=" << channelId;
     ChannelItem* channel = findChannel(channelId);
     if(!channel)

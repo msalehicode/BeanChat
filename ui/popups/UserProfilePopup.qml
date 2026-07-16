@@ -11,31 +11,6 @@ Popup
 
     property ClientUser clientUser
 
-    //when user is disocnnected and no longer access to clinetUser.data... to prevent empty profiep page
-    property string cachedName: ""
-    property string cachedAvatar: ""
-    property int cachedId: 0
-    property string cachedIdentity: ""
-
-    onClientUserChanged:
-    {
-        if (!clientUser)
-            return;
-
-        cachedName = clientUser.username
-        cachedAvatar = clientUser.avatarPath
-        cachedId = clientUser.id
-        cachedIdentity= clientUser.identity
-    }
-
-    onClosed:
-    {
-        cachedAvatar=""
-        cachedName=""
-        cachedId=-1
-        cachedIdentity=""
-    }
-
     width: 380
     height: 600
 
@@ -84,7 +59,7 @@ Popup
         anchors.top: banner.bottom
         anchors.topMargin: -48
 
-        color: "#5865F2"
+        color: avatarBg
 
         border.width: 4
         border.color: "#2B2D31"
@@ -98,9 +73,7 @@ Popup
             anchors.fill: parent
             visible: source!==""
 
-            source: clientUser
-                    ? clientUser.avatarPath
-                    : cachedAvatar
+            source: clientUser.avatarPath
 
             fillMode: Image.PreserveAspectCrop
         }
@@ -109,11 +82,9 @@ Popup
         {
             anchors.centerIn: parent
 
-            visible: !avatarImage.visible
+            visible: clientUser.avatarPath.length<=1
 
-            text: clientUser
-                    ? clientUser.username.charAt(0).toUpperCase()
-                    : cachedName.charAt(0).toUpperCase()
+            text:  clientUser.username.charAt(0).toUpperCase()
 
             color: "white"
             font.pixelSize: 34
@@ -132,10 +103,7 @@ Popup
             border.width: 3
             border.color: "#2B2D31"
 
-            color: UiHelpers.statusColor(
-                       clientUser
-                       ? clientUser.status
-                       : ClientUser.Offline)
+            color: UiHelpers.statusColor(clientUser.status)
         }
     }
 
@@ -167,13 +135,9 @@ Popup
 
                 horizontalAlignment: Text.AlignHCenter
 
-                text: clientUser
-                      ? clientUser.username
-                      : cachedId == -1
-                        ? "Offline User"
-                        : cachedName
+                text:clientUser.username
 
-                color:  clientUser ? UiHelpers.relationColor(clientUser.relationship) : "white"
+                color: UiHelpers.relationColor(clientUser.relationship)
 
                 font.pixelSize: 24
                 font.bold: true
@@ -198,9 +162,9 @@ Popup
             {
                 text: "NOTE"
                 color: "#B5BAC1"
-                visible: clientUser ? (clientUser.self?false:true): false //show when user is available or not self
                 font.bold: true
                 width: parent.width
+                visible: !clientUser.self //dont show for self
             }
 
             TextField
@@ -209,18 +173,13 @@ Popup
                 placeholderText: "enter note for this user"
                 placeholderTextColor: "white"
                 width: parent.width
-                visible: clientUser ? (clientUser.self?false:true): false
-                text: clientUser ? (clientUser.note.length>0? clientUser.note : "") : ""
+                text: clientUser.note.length>0? clientUser.note : ""
                 color: "white"
+                visible: !clientUser.self //dont show for self
                 function updateNote()
                 {
-                    if(clientUser)
-                    {
                         relationshipManager.setNote(clientUser.identity, userNoteField.text)
                         clientUser.note=userNoteField.text
-                    }
-                    else
-                        console.log("cannot set note for null user")
                 }
 
                 onAccepted: userNoteField.updateNote()
@@ -267,7 +226,7 @@ Popup
 
                     Text
                     {
-                        text: "ID (" + (clientUser ? clientUser.id : cachedId) +")"
+                        text: "ID (" + clientUser.id +")"
                         color: "#949BA4"
                         font.pixelSize: 11
                         font.bold: true
@@ -285,7 +244,7 @@ Popup
                         Text
                         {
                             id:identityText
-                            text: clientUser ? clientUser.identity : cachedIdentity
+                            text: clientUser.identity
                             color: "white"
                             width: parent.width-65
                             font.family: "Consolas"    // or "monospace"
@@ -388,7 +347,6 @@ Popup
                        id:userStatusAndRelationBase
                        width: parent.width
                        height: 60
-                       visible: clientUser ? true : false
                        Column
                        {
                            id:userStatusBase
@@ -402,16 +360,8 @@ Popup
 
                            Text
                            {
-                               text: UiHelpers.statusText(
-                                         clientUser
-                                         ? clientUser.status
-                                         : ClientUser.Offline)
-
-                               color: UiHelpers.statusColor(
-                                          clientUser
-                                          ? clientUser.status
-                                          : ClientUser.Offline)
-
+                               text: UiHelpers.statusText(clientUser.status)
+                               color: UiHelpers.statusColor(clientUser.status)
                                font.pixelSize: 15
                                font.bold: true
                            }
@@ -423,7 +373,7 @@ Popup
                            anchors.right: parent.right
                            anchors.rightMargin: 10
                            anchors.verticalCenter: parent.verticalCenter
-                           visible: clientUser ? (clientUser.self? false : true) : false//only show when user is avaiable and not self
+                           visible:clientUser.self? false : true//only show when user isn't self
                            color: "transparent"
                            width: 60
                            height: 50
@@ -433,34 +383,27 @@ Popup
                                anchors.right: parent.right
                                width: visible ? 25 : 0
                                height: width
-                               visible: clientUser ?
-                                            (clientUser.relationship===Relationship.None
-                                            ||clientUser.relationship===Relationship.Friend) : false
+                               visible: clientUser.relationship===Relationship.None ||
+                                             clientUser.relationship===Relationship.Friend
 
-                               source: clientUser ?
-                                           clientUser.relationship===Relationship.Friend ?
-                                               "../icons/user-is-friend.png" : "../icons/user-add-friend.png" : ""
+                               source: clientUser.relationship===Relationship.Friend ?
+                                                "../icons/user-is-friend.png" : "../icons/user-add-friend.png"
                                MouseArea
                                {
                                    anchors.fill: parent
                                    cursorShape: Qt.PointingHandCursor
                                    onClicked:
                                    {
-                                       if(clientUser)
+                                       if(clientUser.relationship===Relationship.None)
                                        {
-                                           if(clientUser.relationship===Relationship.None)
-                                           {
-                                               relationshipManager.addFriend(clientUser.identity)
-                                               clientUser.relationship=Relationship.Friend
-                                           }
-                                           else if(clientUser.relationship===Relationship.Friend)
-                                           {
-                                               relationshipManager.removeFriend(clientUser.identity)
-                                               clientUser.relationship=Relationship.None
-                                           }
+                                           relationshipManager.addFriend(clientUser.identity)
+                                           clientUser.relationship=Relationship.Friend
                                        }
-                                       else
-                                           console.log("user is null, cant add/remove friend him.")
+                                       else if(clientUser.relationship===Relationship.Friend)
+                                       {
+                                           relationshipManager.removeFriend(clientUser.identity)
+                                           clientUser.relationship=Relationship.None
+                                       }
                                    }
                                }
                            }
@@ -474,38 +417,31 @@ Popup
                                    width: visible ? 25 : 0
                                    height: width
 
-                               visible: clientUser ?
-                                            (clientUser.relationship===Relationship.None
-                                            ||clientUser.relationship===Relationship.Blocked) : false
+                               visible: clientUser.relationship===Relationship.None
+                                             || clientUser.relationship===Relationship.Blocked
 
-                               source: clientUser ?
-                                           (clientUser.relationship==Relationship.Blocked
-                                            ? "../icons/user-is-blocked" : "../icons/user-add-block.png") : ""
+                               source: clientUser.relationship==Relationship.Blocked ?
+                                           "../icons/user-is-blocked" : "../icons/user-add-block.png"
                                MouseArea
                                {
                                    anchors.fill: parent
                                    cursorShape: Qt.PointingHandCursor
                                    onClicked:
                                    {
-                                       if(clientUser)
+                                       if(clientUser.relationship===Relationship.None)
                                        {
-                                           if(clientUser.relationship===Relationship.None)
-                                           {
-                                               relationshipManager.blockUser(clientUser.identity)
-                                               clientUser.relationship=Relationship.Blocked
-                                               relationshipManager.setMuted(clientUser.identity,true)
-                                               clientUser.localMuted=true
-                                           }
-                                           else if(clientUser.relationship===Relationship.Blocked)
-                                           {
-                                               relationshipManager.unblockUser(clientUser.identity)
-                                               clientUser.relationship=Relationship.None
-                                               relationshipManager.setMuted(clientUser.identity,false)
-                                               clientUser.localMuted=false
-                                           }
+                                           relationshipManager.blockUser(clientUser.identity)
+                                           clientUser.relationship=Relationship.Blocked
+                                           relationshipManager.setMuted(clientUser.identity,true)
+                                           clientUser.localMuted=true
                                        }
-                                       else
-                                           console.log("user is null, cant block/unblock him.")
+                                       else if(clientUser.relationship===Relationship.Blocked)
+                                       {
+                                           relationshipManager.unblockUser(clientUser.identity)
+                                           clientUser.relationship=Relationship.None
+                                           relationshipManager.setMuted(clientUser.identity,false)
+                                           clientUser.localMuted=false
+                                       }
                                    }
                                }
                            }
@@ -519,7 +455,7 @@ Popup
                     {
                         text: "CURRENT CHANNEL"
                         color: "#949BA4"
-                        visible: clientUser ? true : false
+                        visible: clientUser.status!==Presence.Offline
                         font.pixelSize: 11
                         font.bold: true
                     }
@@ -530,13 +466,11 @@ Popup
                         height: 38
                         radius: 10
                         color: "#2B2D31"
-                        visible: clientUser ? true : false
+                        visible: clientUser.status!==Presence.Offline
                         Text
                         {
                             id:channelName
-                            text: clientUser
-                                  ? (clientUser.channelId===0? "None" : (user.getChannelName(clientUser.channelId)))
-                                  : "Offline"
+                            text: clientUser.channelId===0? "None" : (user.getChannelName(clientUser.channelId))
                             anchors
                             {
                                 left:parent.left
@@ -554,11 +488,10 @@ Popup
                             id:buttonJoinHisChannel
                             width: (parent.width-10)/3
                             height: 38
-                            visible: clientUser ?
-                                         clientUser.channelId>0 //don't show when user isn't in any channel.
+                            visible: clientUser.channelId>0 //don't show when user isn't in any channel.
                                          && clientUser.self!==true //don't show join when profile is self.
                                          && clientUser.channelId!==user.myChannelId //don't show when we're on the same channel
-                                         : false
+
                             anchors.right: parent.right
                             anchors.verticalCenter: parent.verticalCenter
                             radius: 8
@@ -610,7 +543,7 @@ Popup
                     {
                         text: "APP VERSION"
                         color: "#949BA4"
-                        visible: clientUser ? true : false
+                        visible: clientUser.status!==Presence.Offline
                         font.pixelSize: 11
                         font.bold: true
                     }
@@ -621,12 +554,10 @@ Popup
                         height: 38
                         radius: 10
                         color: "#2B2D31"
-                        visible: clientUser ? true : false
+                        visible: clientUser.status!==Presence.Offline
                         Text
                         {
-                            text: clientUser
-                                  ? (clientUser.appVersion + " on " + clientUser.osName)
-                                  : "version"
+                            text: clientUser.appVersion + " on " + clientUser.osName
                             anchors
                             {
                                 left:parent.left
@@ -649,8 +580,7 @@ Popup
                 id:messageOrCallBox
                 width: parent.width
                 spacing: 10
-                visible: clientUser ? (clientUser.self?false:true) : false //show only when user is available or not self
-
+                visible: clientUser.self ? false: clientUser.status!==Presence.Offline //show only when user isn't invisible/offline or self
                 Rectangle
                 {
                     width: (parent.width-10)/2
