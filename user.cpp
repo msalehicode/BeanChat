@@ -7,6 +7,7 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
            SoundManager* sounderManager, SettingsManager* settingsManager,
            ClientUserManager *clientuserManager, IdentityManager *identityManager,
            RelationshipManager* relationshipManager, Database* database,
+           AttachmentImageProvider* attachmentImageProvider,
            CameraCapture* cam, AudioCapture *mic, AudioSpeaker* speaker,
            QObject *parent)
     : QObject{parent}, m_channelModel(channelModel), m_chatModel(chatModel),
@@ -15,6 +16,7 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
     m_soundManager(sounderManager), m_settingsManager(settingsManager),
     m_clientUserManager(clientuserManager), m_identityManager(identityManager),
     m_relationshipManager(relationshipManager), m_database(database),
+    m_attachmentImageProvider(attachmentImageProvider),
     m_cam(cam), m_mic(mic), m_speaker(speaker)
 {
     qCInfo(_app) << "starting app";
@@ -673,13 +675,13 @@ void User::sendVoicePcm(
     m_channelModel->restartVoiceTimer(myId());
 }
 
-void User::sendMessage(QString message)
+void User::sendMessage(const QString& message)
 {
-    qCInfo(_tcp) << "sending message request";
+    qCInfo(_tcp) << "sending simple message ";
     SendMessagePacket sm;
     sm.text = message;
-    sm.type = SendMessagePacket::Type::Text;
-    sm.mediaPath = "";
+    sm.type = Msg::Type::Text;
+    sm.attachmentId=0;
 
     Packet p;
     p.type = PacketType::ChatMessage;
@@ -687,6 +689,133 @@ void User::sendMessage(QString message)
 
     socket.write(p.serialize());
 }
+
+void User::sendMessage(const QString& message,quint64 attachId, const QUrl &url)
+{
+    qCInfo(_tcp) << "sending message request with attachid="<<attachId;
+    SendMessagePacket sm;
+    sm.text = message;
+
+    QMimeDatabase db;
+    QString name = db.mimeTypeForFile(url.toLocalFile()).name();
+    if (name.startsWith("image/"))
+    {
+        if(name.contains("gif"))
+            sm.type=Msg::Type::AnimatedImage;
+        else
+            sm.type = Msg::Type::Image;
+    }
+    else if (name.startsWith("video/"))
+    {
+        sm.type = Msg::Type::Video;
+    }
+    else if (name.startsWith("audio/"))
+    {
+        sm.type = Msg::Type::Audio;
+    }
+    else
+    {
+        sm.type = Msg::Type::File;
+    }
+    sm.attachmentId=attachId;
+
+    Packet p;
+    p.type = PacketType::ChatMessage;
+    p.payload = PacketHelpers::pack(sm);
+
+    socket.write(p.serialize());
+}
+
+void User::sendFile(const QString &filePath)
+{
+    if (m_uploadFile.isOpen())
+    {
+        qWarning() << "Already uploading a file.";
+        emit sendFileResult(false, "Alread uploading a file... try later",0);
+        return;
+    }
+    QString localPath = QUrl(filePath).toLocalFile();
+
+    QFile file(localPath);
+
+    if (!file.open(QIODevice::ReadOnly))
+    {
+        qWarning() << "Cannot open file:" << localPath;
+        emit sendFileResult(false, "cannot open file: "+localPath,0);
+        return;
+    }
+
+    QCryptographicHash hash(QCryptographicHash::Sha256);
+
+    while (!file.atEnd())
+        hash.addData(file.read(64 * 1024));
+
+    QByteArray sha256 = hash.result();
+
+    file.seek(0);
+
+    m_uploadFile.setFileName(localPath);
+
+    if (!m_uploadFile.open(QIODevice::ReadOnly))
+    {
+        qWarning() << "Cannot reopen file.";
+        emit sendFileResult(false, "cannot reopen file",0);
+        return;
+    }
+
+    QFileInfo info(localPath);
+
+    QMimeDatabase db;
+
+    UploadFileBeginPacket up;
+
+    up.filename = info.fileName();
+    up.fileSize = m_uploadFile.size();
+    up.mimeType = db.mimeTypeForFile(localPath).name();
+    up.sha256 = sha256;
+
+    qDebug()
+        << "Beginning upload:"
+        << up.filename
+        << up.fileSize
+        << up.mimeType;
+
+    Packet p;
+    p.type = PacketType::UploadFileBegin;
+    p.payload = PacketHelpers::pack(up);
+
+    qCInfo(_tcp) << "sending UploadFileBegin to server.";
+    socket.write(p.serialize());
+}
+
+void User::downloadAttachment(quint64 attachId)
+{
+    DownloadAttachmentPacket packet;
+    packet.attachmentId = attachId;
+
+    Packet p;
+    p.type = PacketType::DownloadAttachment;
+    p.payload = PacketHelpers::pack(packet);
+
+    qCInfo(_tcp) << "Sending DownloadAttachment request. attachId =" << attachId;
+    socket.write(p.serialize());
+}
+
+bool User::hasAttachmentImage(quint64 attachmentId) const
+{
+    return m_attachmentImageProvider->hasImage(attachmentId);
+}
+
+QUrl User::attachmentUrl(quint64 id)
+{
+    QString path = m_attachmentImageProvider->imagePath(id);
+
+    if (path.isEmpty())
+        return {};
+
+    return QUrl::fromLocalFile(path);
+}
+
 
 void User::updateChannel(quint64 channelId, const QString &name, const QString &pass, bool saveMessages)
 {
@@ -913,6 +1042,183 @@ void User::processPacket(const Packet& packet)
         qCInfo(_tcp) << "sending proof to server.";
         socket.write(p.serialize());
 
+        break;
+    }
+
+    case PacketType::UploadFileBeginResponse:
+    {
+        auto resp = PacketHelpers::unpack<UploadFileBeginResponsePacket>(packet.payload);
+
+        if (!resp.success)
+        {
+            qWarning() << "upload file error=" << resp.error;
+            emit sendFileResult(false, "upload file failed, "+resp.error,0);
+            m_uploadFile.close();
+
+            break;
+        }
+
+        m_currentUploadId = resp.uploadId;
+
+        constexpr qint64 ChunkSize = 64 * 1024;
+
+        while (!m_uploadFile.atEnd())
+        {
+            UploadFileChunkPacket chunk;
+
+            chunk.uploadId = m_currentUploadId;
+            chunk.payload = m_uploadFile.read(ChunkSize);
+
+            Packet p;
+            p.type = PacketType::UploadFileChunk;
+            p.payload = PacketHelpers::pack(chunk);
+
+            qCInfo(_tcp) << "sending UploadFileChunk to server.";
+            socket.write(p.serialize());
+        }
+
+        UploadFileFinishPacket finish;
+
+        finish.uploadId = m_currentUploadId;
+
+        Packet p;
+        p.type = PacketType::UploadFileFinish;
+        p.payload = PacketHelpers::pack(finish);
+
+        qCInfo(_tcp) << "sending UploadFileFinish to server.";
+        socket.write(p.serialize());
+
+        break;
+    }
+
+
+    case PacketType::DownloadAttachmentBegin:
+    {
+        auto resp =
+            PacketHelpers::unpack<DownloadAttachmentBeginPacket>(
+                packet.payload);
+
+        if (!resp.success)
+        {
+            qCWarning(_tcp) << "Download failed:" << resp.error;
+            emit attachmentDownloadFailed(resp.attachmentId, resp.error);
+            break;
+        }
+
+        auto *session = new DownloadSession;
+        session->attachmentId      = resp.attachmentId;
+        session->originalFilename  = resp.filename;
+        session->mimeType          = resp.mimeType;
+        session->expectedSize      = resp.size;
+        session->receivedSize      = 0;
+        session->sha256            = resp.sha256;
+
+        QString dir =
+            QStandardPaths::writableLocation(
+                QStandardPaths::AppDataLocation)
+            + "/attachments";
+
+        QDir().mkpath(dir);
+
+        // session.file.setFileName(dir + "/" + QString::number(resp.attachmentId));
+        session->file = std::make_unique<QFile>(dir + "/" + QString::number(resp.attachmentId) + "_" + resp.filename);
+
+        if (!session->file->open(QIODevice::WriteOnly))
+        {
+            qCWarning(_app) << "Cannot create file:" << session->file->fileName();
+            emit attachmentDownloadFailed(resp.attachmentId, "cannot save file error:"+session->file->fileName());
+            break;
+        }
+
+        m_downloadSessions.insert(resp.attachmentId, session);
+
+        break;
+    }
+
+    case PacketType::DownloadAttachmentChunk:
+    {
+        auto resp =
+            PacketHelpers::unpack<DownloadAttachmentChunkPacket>(
+                packet.payload);
+
+        auto it = m_downloadSessions.find(resp.attachmentId);
+
+        if (it == m_downloadSessions.end())
+        {
+            qCWarning(_tcp) << "Unknown download session.";
+            emit attachmentDownloadFailed(resp.attachmentId, "unknown download session");
+            break;
+        }
+
+        it.value()->file->write(resp.payload);
+        it.value()->receivedSize += resp.payload.size();
+
+        emit attachmentDownloadProgress(
+            resp.attachmentId,
+            it.value()->progress());
+
+        break;
+    }
+
+    case PacketType::DownloadAttachmentFinish:
+    {
+        auto resp =
+            PacketHelpers::unpack<DownloadAttachmentFinishPacket>(
+                packet.payload);
+
+        auto it = m_downloadSessions.find(resp.attachmentId);
+
+        if (it == m_downloadSessions.end())
+        {
+            qCWarning(_tcp) << "Unknown download session.";
+            emit attachmentDownloadFailed(resp.attachmentId, "unknown download session");
+            break;
+        }
+
+        it.value()->file->close();
+
+        qCInfo(_tcp) << "Attachment downloaded:"
+                     << resp.attachmentId;
+
+
+        // TODO:
+        // verify SHA256 here
+
+        m_attachmentImageProvider->setImagePath(
+            resp.attachmentId,
+            it.value()->file->fileName());
+
+        emit attachmentDownloaded(resp.attachmentId);
+
+        delete it.value();
+        m_downloadSessions.erase(it);
+        break;
+    }
+
+
+
+    case PacketType::UploadFileFinishResponse:
+    {
+        auto resp =
+            PacketHelpers::unpack<
+                UploadFileFinishResponsePacket>(
+                packet.payload);
+
+        if (!resp.success)
+        {
+            qWarning() << "upload file result was not succ err=" << resp.error;
+            emit sendFileResult(false, "upload file failed, "+resp.error,0);
+            m_uploadFile.close();
+
+            break;
+        }
+
+        qDebug()
+            << "Upload finished."
+            << resp.attachmentId;
+        emit sendFileResult(true, "upload done, ",resp.attachmentId);
+
+        m_uploadFile.close();
         break;
     }
 

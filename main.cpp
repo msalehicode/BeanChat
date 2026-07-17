@@ -28,6 +28,8 @@
 #include "models/userrelationship.h"
 #include "models/connectedusersproxymodel.h"
 
+#include "models/attachmentimageprovider.h"
+
 //QML components
 #include "video/myvideoitem.h"
 
@@ -172,6 +174,10 @@ int main(int argc, char *argv[])
     AudioMixer mixer;
 
 
+    //show directly downloaded attachment images in component chat
+    AttachmentImageProvider* attachmentImageProvider = new AttachmentImageProvider;
+
+
     //sharing
     ServerCode serverCode; //encode/decode (ipv4:port -> XXX-XXX-XXX)
     ClipboardHelper clipboardHelper;
@@ -196,6 +202,7 @@ int main(int argc, char *argv[])
     User usr(&channelModel, &chatModel, &participantsModel, &connectedUsersModel, &myServersModel,
              &soundManager, &settingsManager, &clientuserManager, &identityManager,
              &relationshipManager, &database,
+             attachmentImageProvider,
              &cam, &audio, &speaker);
 
     //---------- camera connection ----------
@@ -348,6 +355,7 @@ int main(int argc, char *argv[])
     qmlRegisterUncreatableType<ClientUser>("BeanChatClient", 1, 0, "ClientUser", "Created by C++ only");
     qmlRegisterUncreatableType<Relationship>("BeanChatClient", 1, 0, "Relationship", "Enum Only");
     qmlRegisterUncreatableMetaObject(Presence::staticMetaObject, "BeanChatClient", 1, 0, "Presence", "Enums only");
+    qmlRegisterUncreatableMetaObject(Msg::staticMetaObject, "BeanChatClient", 1, 0, "MessageType", "Enums only");
 
     //qml
     QQmlApplicationEngine engine;
@@ -369,6 +377,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("clipboardHelper", &clipboardHelper);
 
     engine.addImageProvider("qrcode", new QRCodeImageProvider);
+    engine.addImageProvider("attachments",attachmentImageProvider);
 
     QObject::connect(
         &engine,

@@ -453,6 +453,11 @@ Item {
         id:showImagePopup
     }
 
+    ShowImageAnimatedPopup
+    {
+        id:showImageAnimatedPopup
+    }
+
     CreateChannelPopup
     {
         id:createChannelPopup

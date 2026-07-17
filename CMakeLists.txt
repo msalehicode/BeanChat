@@ -5,7 +5,7 @@ project(BeanChat VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(APP_CURRENT_VERSION "0.27.36")
+set(APP_CURRENT_VERSION "0.28.36")
 set(APP_TitleName "BeanChat")
 set(APP_OrganizationName "orgBeanChat")
 set(APP_ApplicationName "appBeanChat")
@@ -132,6 +132,7 @@ qt_add_qml_module(appBeanChat
         ui/popups/ShowToCopyPopup.qml #e.g copy Servercode
         ui/popups/StatusItem.qml
         ui/popups/StatusPopup.qml
+        ui/popups/ShowImageAnimatedPopup.qml
 
         # settingsPage pages/components
         ui/settingPages/SettingSection.qml
@@ -145,6 +146,15 @@ qt_add_qml_module(appBeanChat
         ui/settingPages/AdvancePage.qml
         ui/settingPages/CameraInputPage.qml
         ui/settingPages/AudioOutputPage.qml
+
+        #message delegates
+        ui/messageDelegates/MessageImage.qml
+        ui/messageDelegates/MessageImageAnimated.qml
+        ui/messageDelegates/MessageVideo.qml
+        ui/messageDelegates/MessageAudio.qml
+        # ui/messageDelegates/MessageFile.qml
+
+
 
     SOURCES
         user.h user.cpp
@@ -202,10 +212,14 @@ qt_add_qml_module(appBeanChat
         models/participantmodel.h models/participantmodel.cpp
         models/connectedusersmodel.h models/connectedusersmodel.cpp
         models/myserversmodel.h models/myserversmodel.cpp
+        models/connectedusersproxymodel.h models/connectedusersproxymodel.cpp
+
+        #models
         models/clientuser.h models/clientuser.cpp
         models/identity.h models/identity.cpp
         models/userrelationship.h
-        models/connectedusersproxymodel.h models/connectedusersproxymodel.cpp
+        models/attachmentimageprovider.h models/attachmentimageprovider.cpp
+        models/downloadsession.h
 
     # icons
     RESOURCES
@@ -221,6 +235,7 @@ qt_add_qml_module(appBeanChat
     ui/icons/web.png
     ui/icons/arrow-right.png
     ui/icons/save.png
+    ui/icons/attach.png
     ui/icons/user-add-block.png ui/icons/user-is-blocked.png
     ui/icons/user-add-friend.png ui/icons/user-is-friend.png
     ui/icons/endcall.png ui/icons/endcall-red.png
@@ -229,8 +244,16 @@ qt_add_qml_module(appBeanChat
     ui/icons/headphone.png ui/icons/headphone-closed.png ui/icons/headphone-red.png
     ui/icons/microphone.png ui/icons/microphone-closed.png ui/icons/microphone-red.png
     ui/icons/screen.png ui/icons/screen-closed.png ui/icons/screen-red.png
+
+    #signal icons
     ui/icons/signal.png ui/icons/signal-green.png ui/icons/signal-orange.png ui/icons/signal-red.png ui/icons/signal-yellow.png
+
+    #os icons
     ui/icons/os/android.png ui/icons/os/ios.png ui/icons/os/linux.png ui/icons/os/macos.png ui/icons/os/windows.png
+
+    # file types
+    ui/icons/file-gif.png ui/icons/file-code.png ui/icons/file-file.png ui/icons/file-text.png
+    ui/icons/file-audio.png ui/icons/file-image.png ui/icons/file-video.png ui/icons/file-archive.png
 )
 
 add_subdirectory(

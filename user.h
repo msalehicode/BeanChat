@@ -33,6 +33,7 @@ using namespace BeanChatCommon;
 #include "models/myserversmodel.h"
 #include "models/connectedusersmodel.h"
 
+#include "models/attachmentimageprovider.h"
 
 //capture resources
 #include "video/cameracapture.h"
@@ -60,6 +61,16 @@ using namespace BeanChatCommon;
 #include <QProcess>
 #include "update/updatechecker.h"
 
+
+
+//upload file in chat
+#include <QFileInfo>
+#include <QMimeDatabase>
+#include <QCryptographicHash>
+
+
+//donwload attachment
+#include "models/downloadsession.h"
 
 // enum class UserConnectionStatus
 // {
@@ -130,6 +141,7 @@ public:
                   SoundManager* sounderManager, SettingsManager* settingsManager,
                   ClientUserManager* clientuserManager, IdentityManager* identityManager,
                   RelationshipManager* relationshipManager, Database* database,
+                  AttachmentImageProvider* attachmentImageProvider,
                   CameraCapture* cam, AudioCapture* mic, AudioSpeaker* speaker,
                   QObject *parent = nullptr);
 
@@ -139,7 +151,13 @@ public:
     Q_INVOKABLE void joinChannel(quint64 channelId, const QString& password="");
     Q_INVOKABLE void moveUser(quint64 userId, quint64 channelId, const QString& password);
     Q_INVOKABLE void createChannel(QString channelName, QString password, bool saveMessages);
-    Q_INVOKABLE void sendMessage(QString message);
+    Q_INVOKABLE void sendMessage(const QString& message,quint64 attachId, const QUrl &url);
+    Q_INVOKABLE void sendMessage(const QString& message);
+    Q_INVOKABLE void sendFile(const QString& filePath);
+    Q_INVOKABLE void downloadAttachment(quint64 attachId);
+    Q_INVOKABLE bool hasAttachmentImage(quint64 attachmentId) const; //to know if image is downloaded or not (when list scorlls image component becomes downloaded=false by default)
+    Q_INVOKABLE QUrl attachmentUrl(quint64 id); //for animated images need this to get actual path, imageProvider doesnt work
+
     Q_INVOKABLE void updateChannel(quint64 channelId, const QString& name,
                                     const QString& pass, bool saveMessages);
     Q_INVOKABLE QString getChannelName(quint64 channelId); //to show channlename inside user's profile
@@ -355,6 +373,14 @@ signals:
 
     void connectedUsersCountChanged();
 
+
+    //send file signals:
+    void sendFileResult(bool status, QString error,  quint64 attachId);
+
+    void attachmentDownloadProgress(quint64 attachmentId, float progress);
+    void attachmentDownloaded(quint64 attachmentId);
+    void attachmentDownloadFailed(quint64 attachmentId, const QString &reason);
+
 public slots:
     void onTcpReadyRead();
     void onDisconnected();
@@ -408,6 +434,16 @@ private:
     Q_PROPERTY(QString serverVersion READ serverVersion NOTIFY receivedServerInfoChanged)
     Q_PROPERTY(QString serverUptime READ serverUptime NOTIFY receivedServerInfoChanged)
 
+
+    //upload file in chat
+    QFile m_uploadFile;
+    quint64 m_currentUploadId = 0;
+    QString m_uploadFilename;
+    AttachmentImageProvider* m_attachmentImageProvider=nullptr;
+
+
+    //download file in chat
+    QHash<quint64, DownloadSession*> m_downloadSessions;
 
     //connect and switch servers.
     bool m_isConnectedToServer=false;

@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
-
+import QtQuick.Dialogs
 import BeanChatClient 1.0
 import "constants/"
 
@@ -17,6 +17,73 @@ Item
     {
         anchors.fill: parent
         color: "transparent"
+    }
+    property string selectedFilePath: ""
+    property string selectedFileName: ""
+    property int uploadedFileAttachedId:0
+    property bool uploadingFile:false
+    function resetAttachFile()
+    {
+        if(root.uploadingFile)
+        {
+            console.log("a file is being uploaded, wait to fail or success, cant cancel it")
+            return;
+        }
+
+        textSelectedFileName.color="white"
+        root.uploadedFileAttachedId=0
+        root.selectedFilePath=""
+        root.selectedFileName=""
+        root.uploadingFile=false
+    }
+
+
+    //show error when upload file failed.
+    property bool errorDialogVisible: false
+    property string errorDialogTitle: ""
+    property string errorDialogMessage: ""
+    function showError(title, message)
+    {
+        errorDialogTitle = title
+        errorDialogMessage = message
+        errorDialogVisible = true
+    }
+
+    function uploadSelectedFile()
+    {
+        if(!root.uploadingFile) //upload once, or wait for upload complete
+        {
+            //show file name to user
+            root.selectedFileName =
+                    root.selectedFilePath.substring(
+                        root.selectedFilePath.lastIndexOf("/") + 1)
+
+            user.sendFile(root.selectedFilePath)
+            root.uploadingFile=true
+            textSelectedFileName.color="grey"
+        }
+    }
+
+
+    FileDialog
+    {
+        id: fileDialog
+
+        title: "Select file"
+
+        fileMode: FileDialog.OpenFile
+
+        onAccepted:
+        {
+            //to know name and show as selected file to user
+            root.selectedFilePath = selectedFile.toString()
+            uploadSelectedFile()
+        }
+
+        onRejected:
+        {
+            console.log("rejected")
+        }
     }
 
     Rectangle
@@ -266,69 +333,88 @@ Item
                         }
                     }
 
-
                     Column
                     {
                         id:messageContentBase
                         width: parent.width
-                        height: visible? implicitHeight : 0
-                        visible: model.senderRelation === Relationship.Blocked
-                                 && !blockedOverlay.revealed? false : true
-                        Item
+                        spacing: 6
+
+                        //make sure show end of long messages
+                        onHeightChanged:
                         {
-                            visible: delegatedItem.isImage
+                            if (chatView.atYEnd)
+                                Qt.callLater(chatView.positionViewAtEnd)
+                        }
 
-                            width: 300
-                            height: delegatedItem.isImage ? 150 : 0
+                        Loader
+                        {
+                            id: messageLoader
 
-                            Image
+                            width: parent.width
+
+                            source:
                             {
-                                id: chatImage
+                                    console.log("messageType by source =", model.messageType, "MessageType.Image=",MessageType.Image)
 
-                                anchors.fill: parent
-
-                                source: delegatedItem.isImage ? model.textMessage : ""
-
-                                fillMode: Image.PreserveAspectFit
-                                cache: true
-
-                                MouseArea
-                                {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-
-                                    onClicked:
+                                    switch (model.messageType)
                                     {
-                                        if (chatImage.status === Image.Ready)
-                                        {
-                                            showImagePopup.imageSource = model.textMessage
-                                            showImagePopup.open()
-                                        }
+                                    case MessageType.Image:
+                                        return "messageDelegates/MessageImage.qml"
+                                    case MessageType.AnimatedImage:
+                                        return "messageDelegates/MessageImageAnimated.qml"
+                                    case MessageType.Video:
+                                        return "messageDelegates/MessageVideo.qml"
+                                    case MessageType.Audio:
+                                        return "messageDelegates/MessageAudio.qml"
+                                    default:
+                                        return ""
                                     }
-                                }
                             }
 
-
-                            BusyIndicator
+                            onLoaded:
                             {
-                                anchors.centerIn: parent
-                                running: chatImage.status === Image.Loading
-                                visible: running
+                                item.attachmentId = model.attachId;
+
+                                if(model.messageType===MessageType.AnimatedImage)
+                                {
+                                    item.imageClicked.connect(function(attachmentId)
+                                           {
+                                               showImageAnimatedPopup.imageSource = user.attachmentUrl(attachmentId)
+                                               showImageAnimatedPopup.open()
+                                           })
+                                }
+                                else if(model.messageType===MessageType.Image)
+                                {
+                                    item.imageClicked.connect(function(attachmentId)
+                                           {
+                                               showImagePopup.imageSource = "image://attachments/" + attachmentId
+                                               showImagePopup.open()
+                                           })
+                                }
+
+                                //Video and Audio are ok, they don't need click for now.
+
                             }
                         }
 
+
+                        // Shared caption
                         TextEdit
                         {
-                            id: messageText
+                            id: caption
 
-                            textFormat: TextEdit.RichText
+                            visible: model.textMessage.length > 0
+
+                            width: parent.width
+
                             readOnly: true
                             selectByMouse: true
 
-                            font.pixelSize: !delegatedItem.isImage? 14 : 7
-                            width: parent.width
-                            wrapMode: TextArea.Wrap
+                            wrapMode: TextEdit.Wrap
+                            textFormat: TextEdit.RichText
+
                             color: "#DBDEE1"
+
                             text: delegatedItem.makeLinksClickable(model.textMessage)
 
                             //make sure show end of long messages
@@ -338,26 +424,28 @@ Item
                                     Qt.callLater(chatView.positionViewAtEnd)
                             }
 
+                            onLinkActivated: function(link)
+                            {
+                                Qt.openUrlExternally(link)
+                            }
+
                             cursorDelegate: null
+
 
                             MouseArea
                             {
                                 anchors.fill: parent
                                 acceptedButtons: Qt.NoButton
 
-                                cursorShape: messageText.hoveredLink.length > 0
+                                cursorShape: caption.hoveredLink.length > 0
                                              ? Qt.PointingHandCursor
                                              : Qt.IBeamCursor
 
                                 hoverEnabled: true
                             }
-
-                            onLinkActivated: function(link)
-                            {
-                                Qt.openUrlExternally(link)
-                            }
                         }
                     }
+
 
                     // Overlay
                     Rectangle
@@ -404,6 +492,7 @@ Item
                         }
                     }
                 }
+
             }
         }
 
@@ -450,16 +539,39 @@ Item
 
         function sendMessage()
         {
-            var msg = messageInput.text.trim()
+            if(root.uploadingFile)
+            {
+                console.log("sendMessage: a file is being uploaded...")
+                return; //should wait to upload.. or fail upload
+            }
+
+            var msg;
+
+            //a file is uploaded and ready to send with caption to it.
+            if(root.uploadedFileAttachedId>0)
+            {
+                console.log("sendMessage: a file is uploaded we have attachedid",root.uploadedFileAttachedId )
+                msg = messageInput.text.trim()
+
+                user.sendMessage(msg, root.uploadedFileAttachedId, root.selectedFilePath)
+
+                messageInput.clear()
+                resetAttachFile()
+                return;
+            }
+
+            msg = messageInput.text.trim()
 
             if (msg.length === 0)
                 return
 
+            console.log("sendMessage: sending simple meesage.")
             user.sendMessage(msg)
 
             messageInput.clear()
 
             // chatView.positionViewAtEnd()
+
         }
 
         anchors {
@@ -471,6 +583,103 @@ Item
         color: "#05070b"
 
         height: inputBackground.height + 16
+
+        Rectangle
+        {
+            id:controlSelectedFiles
+            visible: selectedFilePath.length > 0
+
+            anchors.left: inputBackground.left
+            anchors.right: inputBackground.right
+            anchors.bottom: inputBackground.top
+
+            anchors.bottomMargin: 8
+
+            height: 46
+
+            radius: 8
+
+            color: "#080B10"
+
+            Row
+            {
+                anchors.fill: parent
+
+                anchors.leftMargin: 12
+                anchors.rightMargin: 12
+
+                spacing: 10
+
+                Item
+                {
+                    width: 30
+                    height: 30
+
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Image
+                    {
+                        anchors.fill: parent
+                        source: UiHelpers.uploadedFileIcon(root.selectedFileName)
+                        opacity: root.uploadingFile ? 0.3 : 1
+                    }
+
+                    BusyIndicator
+                    {
+                        anchors.centerIn: parent
+
+                        width: 30
+                        height: 30
+
+                        running: root.uploadingFile
+                        visible: running
+                    }
+                }
+
+                Text
+                {
+                    id:textSelectedFileName
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    width: parent.width - removeButton.width - 40
+
+                    text: selectedFileName
+
+                    color: "white"
+
+                    elide: Text.ElideRight
+                }
+
+                Rectangle
+                {
+                    id: removeButton
+
+                    width: 26
+                    height: 26
+
+                    radius: 13
+
+                    color: "#3B3E45"
+
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Text
+                    {
+                        anchors.centerIn: parent
+                        text: "✕"
+                        color: "white"
+                    }
+
+                    MouseArea
+                    {
+                        anchors.fill: parent
+                        enabled: !root.uploadingFile
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.resetAttachFile()
+                    }
+                }
+            }
+        }
 
         Rectangle
         {
@@ -486,6 +695,8 @@ Item
                 bottomMargin: 8
             }
 
+            enabled: !root.uploadingFile //only enable when upload is not in process
+            opacity: root.uploadingFile ? 0.5 : 1
             radius: 8
             color: "#080B10"
 
@@ -502,12 +713,43 @@ Item
 
                 spacing: 10
 
+                Rectangle
+                {
+                    id: attachButton
 
+                    width: 40
+                    height: 40
+                    radius: 20
+
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    color: "#2B2D31"
+
+                    Image
+                    {
+                        anchors.centerIn: parent
+                        width: 18
+                        height: 18
+                        source: "icons/attach.png"
+                    }
+
+                    MouseArea
+                    {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+
+                        onClicked:
+                        {
+                            fileDialog.open()
+                        }
+                    }
+                }
                 ScrollView
                 {
                     id: messageScroll
 
-                    width: parent.width - sendButton.width - 20
+                    width: parent.width - attachButton.width - sendButton.width - 30
                     height: parent.height
 
                     ScrollBar.vertical.policy: ScrollBar.AsNeeded
@@ -575,6 +817,143 @@ Item
         }
     }
 
+    //show error upload file
+    Rectangle
+    {
+        anchors.fill: parent
+
+        visible: root.errorDialogVisible
+
+        color: "#000000"
+        opacity: 0.65
+
+        z: 1000
+
+        MouseArea
+        {
+            anchors.fill: parent
+        }
+
+        Rectangle
+        {
+            width: 360
+            height: 165
+            radius: 10
+
+            anchors.centerIn: parent
+
+            color: "#2B2D31"
+
+            border.width: 1
+            border.color: "#1E1F22"
+
+            Column
+            {
+                anchors.fill: parent
+
+                anchors.margins: 18
+
+                spacing: 18
+
+                Text
+                {
+                    text: root.errorDialogTitle
+
+                    font.pixelSize: 20
+                    font.bold: true
+
+                    color: "white"
+                }
+
+                Text
+                {
+                    width: parent.width
+
+                    text: root.errorDialogMessage
+
+                    color: "#DBDEE1"
+
+                    wrapMode: Text.WordWrap
+
+                    font.pixelSize: 14
+                }
+
+                Item
+                {
+                    width: parent.width
+                    height: 40
+
+                    Rectangle
+                    {
+                        width: 90
+                        height: 36
+
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        radius: 6
+
+                        color: okMouse.containsMouse ? "#6D8CF5" : "#5865F2"
+
+                        Text
+                        {
+                            anchors.centerIn: parent
+
+                            text: "OK"
+
+                            color: "white"
+
+                            font.bold: true
+                        }
+
+                        MouseArea
+                        {
+                            id: okMouse
+
+                            anchors.fill: parent
+
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+
+                            onClicked:
+                            {
+                                root.errorDialogVisible = false
+                            }
+                        }
+                    }
+                }
+            }
+
+            implicitHeight: contentHeight + 36
+
+            property int contentHeight: childrenRect.height
+        }
+    }
+
+
+    //handle drop to attach file
+    DropArea
+    {
+        anchors.fill: parent
+
+        onEntered: function(drag)
+        {
+            drag.accept(Qt.CopyAction)
+        }
+
+        onDropped: function(drop)
+        {
+            if (!drop.hasUrls || uploadingFile)
+                return
+
+            // for (let i = 0; i < drop.urls.length; ++i)
+            // {
+                    root.selectedFilePath = drop.urls[0] //for now we only support one file at the time.
+                    uploadSelectedFile()
+            // }
+        }
+    }
+
     Connections
     {
         target: user
@@ -594,6 +973,22 @@ Item
         function onMessageSent()
         {
             scrollToBottom()
+        }
+
+        function onSendFileResult(status,error,attachId)
+        {
+            root.uploadingFile=false  //allow user remove attached
+            if(status===true)
+            {
+                root.uploadedFileAttachedId=attachId
+                textSelectedFileName.color="white"
+            }
+            else
+            {
+                textSelectedFileName.color="red"
+                root.showError("Upload Failed", error)
+                root.resetAttachFile()
+            }
         }
     }
 

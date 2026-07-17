@@ -58,14 +58,14 @@ QVariant ChatModel::data(
                        ? item.sender->username()  // live username
                        : item.message.senderName; // cached username in case user is not connected. and cant access his name
 
+        case AttachIdRole:
+            return item.message.attachmentId;
+
         case TextRole:
             return item.message.text;
 
         case TypeRole:
             return static_cast<int>(item.message.type);
-
-        case MediaPathRole:
-            return item.message.mediaPath;
 
         case TimestampRole:
             return item.message.timestamp;
@@ -84,11 +84,11 @@ QHash<int,QByteArray> ChatModel::roleNames() const
             { SenderIdRole, "senderId" },
             { SenderNameRole, "senderName"},
             { SenderAvatarPathRole, "senderAvatarPath"},
+            { AttachIdRole,"attachId"},
             { SenderRelationRole, "senderRelation"},
             { SenderStatusRole, "senderStatus"},
             { TextRole, "textMessage" },
             { TypeRole, "messageType" },
-            { MediaPathRole, "mediaPath" },
             { TimestampRole, "timestamp" }
         };
 }
@@ -115,7 +115,7 @@ void ChatModel::clear()
 
 void ChatModel::addMessage(const ChatMessagePacket &message, ClientUser* sender)
 {
-    qCInfo(_models) << "add message to chat.";
+    qCInfo(_models) << "add message to chat, attachid="<<message.attachmentId;
     if(!sender)
     {
         qCCritical(_models) << "failed to add message, invalid sender object.";
