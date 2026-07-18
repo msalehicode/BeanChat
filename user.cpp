@@ -1379,6 +1379,13 @@ void User::processPacket(const Packet& packet)
             qCInfo(_app) << "its mine.";
             m_isCameraOpen=resp.status;
 
+
+            //play sound pack
+            if(resp.status)
+                emit cameraOpened();
+            else
+                emit cameraClosed();
+
             // start or stop camera
             if(m_cam)
             {
@@ -1435,16 +1442,24 @@ void User::processPacket(const Packet& packet)
     case PacketType::UserMuted:
     case PacketType::UserUnmuted:
     {
-        qCInfo(_app) << "a microphone muted/unmuted" ;
         auto resp =
             PacketHelpers::unpack<UserStatusChangedPacket>(
                 packet.payload);
+        qCInfo(_app) << "a microphone muted/unmuted to " << resp.status ;
 
         if(resp.userId==myId()) //if it's himself update locaol user's variable therefore change icon at userStuff (user mic,speaker,...)
         {
             qCInfo(_app) << "it's mine.";
             m_muteMicrophone=resp.status;
-            emit muteMicrophoneChanged();
+            emit muteMicrophoneChanged(); //because we used setMuteMic for send request mute mic.
+
+
+            //play sound pack
+            if(!resp.status)
+                emit micOpened();
+            else
+                emit micClosed();
+
         }
         else
         {
@@ -1468,7 +1483,14 @@ void User::processPacket(const Packet& packet)
         {
             qCInfo(_app) << "it's mine.";
             m_muteHeadphone=resp.status;
-            emit muteHeadphoneChanged();
+            emit muteHeadphoneChanged(); //because we used setMuteHeadphone to send request to server.
+
+            //play sound pack
+            if(!resp.status)
+                emit speakerOpened();
+            else
+                emit speakerClosed();
+
         }
         else
         {

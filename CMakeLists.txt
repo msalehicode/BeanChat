@@ -5,7 +5,7 @@ project(BeanChat VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(APP_CURRENT_VERSION "0.28.36")
+set(APP_CURRENT_VERSION "0.28.37")
 set(APP_TitleName "BeanChat")
 set(APP_OrganizationName "orgBeanChat")
 set(APP_ApplicationName "appBeanChat")
@@ -79,6 +79,15 @@ qt_add_resources(appBeanChat resources
         soundpack/speech/shimmer/user-joined-your-channel.wav
         soundpack/speech/shimmer/user-left-your-channel.wav
         soundpack/speech/shimmer/user-timed-out.wav
+
+        soundpack/speech/shimmer/mic-muted.wav
+        soundpack/speech/shimmer/mic-activated.wav
+
+        soundpack/speech/shimmer/sound-muted.wav
+        soundpack/speech/shimmer/sound-resumed.wav
+
+        soundpack/speech/shimmer/camera-off.wav
+        soundpack/speech/shimmer/camera-on.wav
 )
 
 #introduce notification singltones to qml

@@ -317,6 +317,12 @@ signals:
     void userLeft();
     void userTimedOut();
 
+    void cameraOpened();
+    void cameraClosed();
+    void micOpened();
+    void micClosed();
+    void speakerOpened();
+    void speakerClosed();
 
 
     //

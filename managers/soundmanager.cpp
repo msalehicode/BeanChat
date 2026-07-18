@@ -19,6 +19,14 @@ SoundManager::SoundManager(QObject* parent)
     m_userTimedOut.setSource(QUrl("qrc:/soundpack/speech/shimmer/user-timed-out.wav"));
 
 
+    m_micMuted.setSource(QUrl("qrc:/soundpack/speech/shimmer/mic-muted.wav"));
+    m_micActivated.setSource(QUrl("qrc:/soundpack/speech/shimmer/mic-activated.wav"));
+    m_soundMuted.setSource(QUrl("qrc:/soundpack/speech/shimmer/sound-muted.wav"));
+    m_soundResumed.setSource(QUrl("qrc:/soundpack/speech/shimmer/sound-resumed.wav"));
+    m_cameraOn.setSource(QUrl("qrc:/soundpack/speech/shimmer/camera-on.wav"));
+    m_cameraOff.setSource(QUrl("qrc:/soundpack/speech/shimmer/camera-off.wav"));
+
+
     m_newMessage.setVolume(m_volume);
     m_connected.setVolume(m_volume);
     m_disconnected.setVolume(m_volume);
@@ -28,6 +36,12 @@ SoundManager::SoundManager(QObject* parent)
     m_userJoin.setVolume(m_volume);
     m_userLeft.setVolume(m_volume);
     m_userTimedOut.setVolume(m_volume);
+    m_micMuted.setVolume(m_volume);
+    m_micActivated.setVolume(m_volume);
+    m_soundMuted.setVolume(m_volume);
+    m_soundResumed.setVolume(m_volume);
+    m_cameraOn.setVolume(m_volume);
+    m_cameraOff.setVolume(m_volume);
 }
 
 bool SoundManager::canPlay(
@@ -67,6 +81,13 @@ void SoundManager::setVolume(float newVolume)
     m_userJoin.setVolume(m_volume);
     m_userLeft.setVolume(m_volume);
     m_userTimedOut.setVolume(m_volume);
+
+    m_micMuted.setVolume(m_volume);
+    m_micActivated.setVolume(m_volume);
+    m_soundMuted.setVolume(m_volume);
+    m_soundResumed.setVolume(m_volume);
+    m_cameraOn.setVolume(m_volume);
+    m_cameraOff.setVolume(m_volume);
 
     qCInfo(_soundEffect) << "set volume to " << newVolume;
     emit volumeChanged();
@@ -187,6 +208,78 @@ void SoundManager::playUserTimedOut()
     m_userTimedOut.play();
 }
 
+void SoundManager::playMicMuted()
+{
+    if(!canPlay(
+            m_micMutedCooldown,
+            500))
+    {
+        return;
+    }
+
+    m_micMuted.play();
+}
+
+void SoundManager::playMicActiavted()
+{
+    if(!canPlay(
+            m_micActivatedCooldown,
+            500))
+    {
+        return;
+    }
+
+    m_micActivated.play();
+}
+
+void SoundManager::playSoundMuted()
+{
+    if(!canPlay(
+            m_soundMutedCooldown,
+            500))
+    {
+        return;
+    }
+
+    m_soundMuted.play();
+}
+
+void SoundManager::playSoundResumed()
+{
+    if(!canPlay(
+            m_soundResumedCooldown,
+            500))
+    {
+        return;
+    }
+
+    m_soundResumed.play();
+}
+
+void SoundManager::playCameraOn()
+{
+    if(!canPlay(
+            m_cameraOnCooldown,
+            500))
+    {
+        return;
+    }
+
+    m_cameraOn.play();
+}
+
+void SoundManager::playCameraOff()
+{
+    if(!canPlay(
+            m_cameraOffCooldown,
+            500))
+    {
+        return;
+    }
+
+    m_cameraOff.play();
+}
+
 
 void SoundManager::changeAudioOutput(QAudioDevice *output)
 {
@@ -199,6 +292,14 @@ void SoundManager::changeAudioOutput(QAudioDevice *output)
     m_userJoin.setAudioDevice(*output);
     m_userLeft.setAudioDevice(*output);
     m_userTimedOut.setAudioDevice(*output);
+
+    m_micMuted.setAudioDevice(*output);
+    m_micActivated.setAudioDevice(*output);
+    m_soundMuted.setAudioDevice(*output);
+    m_soundResumed.setAudioDevice(*output);
+    m_cameraOn.setAudioDevice(*output);
+    m_cameraOff.setAudioDevice(*output);
+
 
     qCInfo(_soundEffect) << "audio output changed.";
 }

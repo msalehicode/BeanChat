@@ -30,6 +30,15 @@ public slots:
     void playUserLeft();
     void playUserTimedOut();
 
+    void playMicMuted();
+    void playMicActiavted();
+
+    void playSoundMuted();
+    void playSoundResumed();
+
+    void playCameraOn();
+    void playCameraOff();
+
 
     void changeAudioOutput(QAudioDevice* output);
 signals:
@@ -57,6 +66,15 @@ private:
     QSoundEffect m_userLeft;
     QSoundEffect m_userTimedOut;
 
+    QSoundEffect m_micMuted;
+    QSoundEffect m_micActivated;
+
+    QSoundEffect m_soundMuted;
+    QSoundEffect m_soundResumed;
+
+    QSoundEffect m_cameraOn;
+    QSoundEffect m_cameraOff;
+
 
 
     //cooldown
@@ -73,6 +91,17 @@ private:
     QElapsedTimer m_userJoinCooldown;
     QElapsedTimer m_userLeftCooldown;
     QElapsedTimer m_userTimedOutCooldown;
+
+
+    QElapsedTimer m_micMutedCooldown;
+    QElapsedTimer m_micActivatedCooldown;
+
+    QElapsedTimer m_soundMutedCooldown;
+    QElapsedTimer m_soundResumedCooldown;
+
+    QElapsedTimer m_cameraOnCooldown;
+    QElapsedTimer m_cameraOffCooldown;
+
 
     Q_PROPERTY(float volume READ volume WRITE setVolume NOTIFY volumeChanged FINAL)
 };
