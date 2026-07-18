@@ -1015,6 +1015,17 @@ void User::processPacket(const Packet& packet)
     qCInfo(_app) << "processPacket for type:" << static_cast<int>(packet.type);
     switch(packet.type)
     {
+    case PacketType::IsEverythingsOk:
+    {
+        qCInfo(_app) << "IsEverythingsOk received";
+
+        Packet p;
+        p.type = PacketType::YesEverythingIsOk;
+
+        qCInfo(_tcp) << "sending response YesEverythingIsOk to server.";
+        socket.write(p.serialize());
+        break;
+    }
 
     case PacketType::LoginChallenge:
     {
