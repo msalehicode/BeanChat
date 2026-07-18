@@ -2350,10 +2350,7 @@ void User::onSocketError(QAbstractSocket::SocketError error)
 
     //make sure UDP socket is closed too.
     qCInfo(_udp) << "tcp connection has error so force disconnect udp from host.";
-    m_udpSocket.disconnectFromHost();
-
-    //make sure reset variables for next connection
-    resetVariables();
+    disconnect();
 }
 
 void User::onUdpReadyRead()
