@@ -327,6 +327,7 @@ void User::moveUser(quint64 userId, quint64 channelId, const QString& password)
 
 void User::connectToServer(bool saveThisConnection, const QString& serverIp, const QString& str_serverPort)
 {
+    setConnectionStatus(UserConnectionStatus::Connecting);
     qCInfo(_app) << "connect to server.";
     //if user is connected to somewhere, disconnect before new connection
     if(isConnectedToServer())
@@ -463,8 +464,6 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
     socket.connectToHost(
         m_serverIp,
         m_serverPort);
-
-    setIsConnectedToServer(true);
 
 
     qCInfo(_tcp) << "sending login request.. will wait for response.. connecting server is "
@@ -2377,6 +2376,9 @@ void User::onUdpReadyRead()
             emit notificationRequested(NotificationType::Success,
                                        "Connected to "+myServerName());
             emit youConnected();
+
+            setIsConnectedToServer(true);
+            setConnectionStatus(UserConnectionStatus::Connected);
             //start to expect every xSeconds ping request from server otherwise, assuming UDP connection has failed
             m_udpConnectionTimeout.start(UDP_CONNECTION_LOST_TIMER_INTERVAL); // 10 seconds
             break;
@@ -2635,7 +2637,7 @@ void User::resetVariables()
     m_connectedServerId_onDb=-1;
     m_serverIp.clear();
     m_serverPort=0;
-    // setConnectionStatus(UserConnectionStatus::Disconnected);
+    setConnectionStatus(UserConnectionStatus::Disconnected);
     setMyPing(-1);
     setMyVideoPacketLoss(0.0f);
     setMyVoicePacketLoss(0.0f);
@@ -2672,18 +2674,18 @@ void User::resetVariables()
         m_speaker->stop();
 }
 
-// UserConnectionStatus User::connectionStatus() const
-// {
-//     return m_connectionStatus;
-// }
+User::UserConnectionStatus User::connectionStatus() const
+{
+    return m_connectionStatus;
+}
 
-// void User::setConnectionStatus(UserConnectionStatus newConnectionStatus)
-// {
-//     if (m_connectionStatus == newConnectionStatus)
-//         return;
-//     m_connectionStatus = newConnectionStatus;
-//     emit connectionStatusChanged();
-// }
+void User::setConnectionStatus(UserConnectionStatus newConnectionStatus)
+{
+    if (m_connectionStatus == newConnectionStatus)
+        return;
+    m_connectionStatus = newConnectionStatus;
+    emit connectionStatusChanged();
+}
 
 float User::myVideoPacketLoss() const
 {

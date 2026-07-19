@@ -364,6 +364,7 @@ int main(int argc, char *argv[])
     qmlRegisterUncreatableType<Relationship>("BeanChatClient", 1, 0, "Relationship", "Enum Only");
     qmlRegisterUncreatableMetaObject(Presence::staticMetaObject, "BeanChatClient", 1, 0, "Presence", "Enums only");
     qmlRegisterUncreatableMetaObject(Msg::staticMetaObject, "BeanChatClient", 1, 0, "MessageType", "Enums only");
+    qmlRegisterUncreatableType<User::UserConnectionStatus> ("BeanChatClient", 1, 0, "ConnectionStatus", "Enums only");
 
     //qml
     QQmlApplicationEngine engine;

@@ -72,16 +72,6 @@ using namespace BeanChatCommon;
 //donwload attachment
 #include "models/downloadsession.h"
 
-// enum class UserConnectionStatus
-// {
-//     Unknown,
-//     Connecting,
-//     Connected,
-//     ConnectionLost,
-//     Rejected,
-//     Error,
-//     Disconnected
-// };
 
 enum class ImportantNotificationColor
 {
@@ -235,8 +225,20 @@ public:
     void setMyAppVersion(const QString &newAppVersion);
 
     QString buildType() const;
-    // UserConnectionStatus connectionStatus() const;
-    // void setConnectionStatus(UserConnectionStatus newConnectionStatus);
+
+    enum class UserConnectionStatus
+    {
+        Unknown,
+        Connecting,
+        Connected,
+        ConnectionLost,
+        Rejected,
+        Error,
+        Disconnected
+    };
+    Q_ENUM(UserConnectionStatus)
+    UserConnectionStatus connectionStatus() const;
+    void setConnectionStatus(UserConnectionStatus newConnectionStatus);
 
     bool myChannelSavesChat() const;
     void setMyChannelSavesChat(bool newMyChannelSavesChat);
@@ -344,7 +346,7 @@ signals:
 
     void myVideoPacketLossChanged();
 
-    // void connectionStatusChanged();
+    void connectionStatusChanged();
 
     void myChannelSavesChatChanged();
 
@@ -427,7 +429,7 @@ private:
     bool m_myChannelSavesChat=false;
     quint64 m_connectedUsersCount=0;
     QString m_myServerName= ""; //current server connected to (name that saved by user inside myServers, can be modified, only shown to this user)
-    // UserConnectionStatus m_connectionStatus=UserConnectionStatus::Unknown;
+    UserConnectionStatus m_connectionStatus=UserConnectionStatus::Unknown;
     int m_connectedServerId_onDb=-1; //(serverDbIndex) to use for path of avatars. e.g path/to/Cached/avatars/0  <- this 0 is server id (directory to hold that server user's avatar files)
     QString m_appVersion;
 
@@ -521,7 +523,7 @@ private:
     Q_PROPERTY(int myPing READ myPing WRITE setMyPing NOTIFY myPingChanged FINAL)
     Q_PROPERTY(float myVoicePacketLoss READ myVoicePacketLoss WRITE setMyVoicePacketLoss NOTIFY myVoicePacketLossChanged FINAL)
     Q_PROPERTY(float myVideoPacketLoss READ myVideoPacketLoss WRITE setMyVideoPacketLoss NOTIFY myVideoPacketLossChanged FINAL)
-    // Q_PROPERTY(UserConnectionStatus connectionStatus READ connectionStatus WRITE setConnectionStatus NOTIFY connectionStatusChanged FINAL)
+    Q_PROPERTY(User::UserConnectionStatus connectionStatus READ connectionStatus WRITE setConnectionStatus NOTIFY connectionStatusChanged FINAL)
     Q_PROPERTY(bool myChannelSavesChat READ myChannelSavesChat WRITE setMyChannelSavesChat NOTIFY myChannelSavesChatChanged FINAL)
     Q_PROPERTY(int connectedServerId READ connectedServerId WRITE setConnectedServerId NOTIFY connectedServerIdChanged FINAL) //using m_connectedServerId_onDb
     Q_PROPERTY(QString myAvatarPath READ myAvatarPath WRITE setMyAvatarPath NOTIFY myAvatarPathChanged FINAL)

@@ -6,6 +6,7 @@ import QtQuick.Controls.Material
 import QtQuick.Layouts
 
 import "popups/"
+import BeanChatClient 1.0
 
 Item {
     anchors.fill: parent
@@ -496,6 +497,26 @@ Item {
         id:showToCopyPopup
     }
 
+
+    Rectangle
+    {
+        id:connectionWaitOverlay
+        anchors.fill: parent
+        visible: user.connectionStatus===ConnectionStatus.Connecting? true : false
+        color:"black"
+        // opacity: 0.5
+        z:999999
+        Text
+        {
+            color:"white"
+            anchors.centerIn: parent
+            text: "Connecting ...."
+        }
+        MouseArea
+        {
+            anchors.fill: parent
+        }
+    }
 
     Connections
     {
