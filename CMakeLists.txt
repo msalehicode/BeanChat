@@ -412,7 +412,7 @@ target_compile_definitions(appBeanChat PRIVATE
 
     #audio input default config
     MIC_DEFAULT_PTT_STATUS=false
-    MIC_DEFAULT_PTT_HOTKEY=96 #GraveAccent (tilde) key as default
+    MIC_DEFAULT_PTT_HOTKEY=61 #Equal (=) key as default
     MIC_DEFAULT_VOLUMEGATE_STATUS=true
     MIC_DEFAULT_VOLUMEGATE_THRESHOLD=0.0
     MIC_DEFAULT_RNNOISE_STATUS=false
