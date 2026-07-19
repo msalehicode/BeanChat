@@ -594,7 +594,7 @@ void User::createChannel(QString channelName, QString password, bool saveMessage
 void User::sendVoicePcm(
     const QByteArray& pcm)
 {
-    if(!isConnectedToServer())
+    if(!isConnectedToServer() || myChannelId()==0)
         return;
 
     if(muteMicrophone() || muteHeadphone())
@@ -1520,19 +1520,25 @@ void User::processPacket(const Packet& packet)
             PacketHelpers::unpack<UserJoinedChannelPacket>(
                 packet.payload);
 
-        //update position of user on channelModel, because in next codes we won't see user's change on that channel..
-        m_channelModel->moveUser(resp.userId,resp.channelId);
+        //read user's data from connectedUsersModel
+        ClientUser* user = m_connectedUsersModel->findUser(resp.userId);
 
+        if(resp.channelId==0) //remove him from channel model because he became channel less
+            m_channelModel->removeUser(user); //he left all channels remove him from model
 
         //if user has no channel add him to channelModel
-        if(resp.oldChannelId==0) //if it's 0 means user just connected to server and didnt join any channel yet. so don't need add him channelModel
+        if(resp.oldChannelId==0)
         {
-            //read user's data from connectedUsersModel
-            ClientUser* user = m_connectedUsersModel->findUser(resp.userId);
+            qCInfo(_app) <<" user old channel id = 0 lets add im to channel model";
 
             //add user to channemodel
-            m_channelModel->addUser(resp.channelId, user);
+            if(user)
+                m_channelModel->addUser(resp.channelId, user);
+            else
+                qCWarning(_app) << "couldnt find user in connected users model so couldn't add him to channel model";
         }
+        else //user was in a channel lets move him
+            m_channelModel->moveUser(resp.userId,resp.channelId); //update position of user on channelModel, because in next codes we won't see user's change on that channel..
 
         //check if user was me?
         if(resp.userId == static_cast<quint64>(myId()))
@@ -1547,23 +1553,30 @@ void User::processPacket(const Packet& packet)
             }
             else
             {
-                qCInfo(_app) << "you switched/join a channel.";
-                emit youChannelSwitched();
+                if(resp.channelId>0) //when channel id is 0 dont play sound effect, we left all channels
+                {
+                    qCInfo(_app) << "you switched/join a channel.";
+                    emit youChannelSwitched();
+                }
+                else
+                    qCInfo(_app) << "you left all channels. now you are channel less";
             }
 
             //check if i had channel dont remove me from paritcipant (because wanna keep preview feed)\
                     else remove everyone
-            if(resp.oldChannelId>0)
+            if(resp.oldChannelId>0 && resp.channelId>0) //if we had previous channel and our next channel is not 0 (not channel less)
                 m_currentChannelParticipant->clearExcept(myId()); //reset channel participants except ourself, this way our camera live-preview won't broken and we skipped an unnecessary addUser into currentChannelParticipantModel
             else
                 m_currentChannelParticipant->clear();
 
-            //open mic and speaker
-            if(m_mic && !m_mic->started()) //check is mic start or not if it's start dont restart it!
-                m_mic->start();
-            if(m_speaker && !m_speaker->started())  //check is speaker started or not, if it started dont restart.
-                m_speaker->start();
-
+            if(resp.channelId>0) //if user actually joined a channel (id 0 is not a channel its channel less)
+            {
+                //open mic and speaker
+                if(m_mic && !m_mic->started()) //check is mic start or not if it's start dont restart it!
+                    m_mic->start();
+                if(m_speaker && !m_speaker->started())  //check is speaker started or not, if it started dont restart.
+                    m_speaker->start();
+            }
             //rest talkin status of all previous channel users, because if dont it would show/stuck user is talkin on previous channel..
             m_channelModel->resetChannelTalkingStatus(resp.oldChannelId);
 
@@ -1573,23 +1586,27 @@ void User::processPacket(const Packet& packet)
             setMyChannelName(m_channelModel->getChannelName(m_myChannelId)); //to show on top of Chat also on userConnectedServer.
             setMyChannelSavesChat(m_channelModel->getChannelSaveChats(m_myChannelId)); //to show on top of Chat
 
-            //add each users of this channel of (which user joint) into participantModel
-            ChannelItem* channel = m_channelModel->findChannel(resp.channelId);
-            if(channel)
+            //add participants
+            if(resp.channelId>0) //if user didn't left all channels
             {
-                //add found users into participant model
-                for (const UserItem &user : channel->users)
+                //add each users of this channel of (which user joint) into participantModel
+                ChannelItem* channel = m_channelModel->findChannel(resp.channelId);
+                if(channel)
                 {
-                    //check if its me AND i was in a channel THEN skip adding me because in this case we didnt remove me at all from model
-                    if(user.user->id() == myId() && resp.oldChannelId>0)
-                        continue; //skip this round, we didnt remove ourself so no need add ourself into participant
+                    //add found users into participant model
+                    for (const UserItem &user : channel->users)
+                    {
+                        //check if its me AND i was in a channel THEN skip adding me because in this case we didnt remove me at all from model
+                        if(user.user->id() == myId() && resp.oldChannelId>0)
+                            continue; //skip this round, we didnt remove ourself so no need add ourself into participant
 
-                    if (ClientUser *clientUser = m_clientUserManager->user(user.user->id()))
-                        m_currentChannelParticipant->addUser(clientUser);
+                        if (ClientUser *clientUser = m_clientUserManager->user(user.user->id()))
+                            m_currentChannelParticipant->addUser(clientUser);
+                    }
                 }
+                else
+                    qCWarning(_app) << "could not find channel to add user into, channel-id:" << resp.channelId;
             }
-            else
-                qCWarning(_app) << "could not find channel to add user into, channel-id:" << resp.channelId;
         }
 
         //check did user join into my channel?
@@ -1615,7 +1632,8 @@ void User::processPacket(const Packet& packet)
                 qCWarning(_app) << "user joined, but could not find that channel inside channelModel, channel-id::" << resp.channelId;
 
             //for soundmanager to play effect.
-            emit userJoined();
+            if(resp.channelId>0) //when channel id is 0 (channel less)  dont play sound effect.
+                emit userJoined();
         }
 
         //check did user left my channel?
@@ -1632,7 +1650,8 @@ void User::processPacket(const Packet& packet)
                 user->setIsTalking(false);
 
             //for soundmanager to play effect
-            emit userLeft();
+            if(resp.oldChannelId>0) //when old channel id is 0 (channel less) dont play sound effect.
+                emit userLeft();
         }
         else //user's action is not my concern, no sound effect or additional actions
             qCInfo(_app) << "user (" << resp.userId << ") has left " << resp.oldChannelId << " and joined to " << resp.channelId ;
@@ -1785,12 +1804,12 @@ void User::processPacket(const Packet& packet)
         if(channel)
         {
             //check whether user was on our channel, if was play sound effect
-            if(channel->id == m_myChannelId)
+            if(channel->id == m_myChannelId && channel->id>0) //when channel id is 0 dont play sound effect.
             {
                 if(resp.wasConnectionLost)
                     emit userTimedOut();
                 else
-                    emit userLeft(); //play user left channel sound effect
+                    emit userDisconnected(); //play user disconnected sound effect
             }
         }
         else
@@ -1812,8 +1831,8 @@ void User::processPacket(const Packet& packet)
         // m_clientUserManager->removeUser(resp.id);
 
         //instead removeUser by manager, only remove user from channel and participant
-        m_channelModel->removeUser(resp.id);
-        m_currentChannelParticipant->removeUser(resp.id);
+        m_channelModel->removeUser(user);
+        m_currentChannelParticipant->removeUser(user);
 
         break;
     }
@@ -2385,6 +2404,9 @@ void User::onUdpReadyRead()
         }
         case PacketType::UdpVoiceData:  //voice
         {
+            if(myChannelId()==0)
+                break;
+
             VoicePacket packet;
             in >> packet;
 
@@ -2436,6 +2458,9 @@ void User::onUdpReadyRead()
 
         case PacketType::UdpVideoData: //video
         {
+            if(myChannelId()==0)
+                break;
+
             VideoFragment frag;
 
             in >> frag;

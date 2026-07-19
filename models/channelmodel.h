@@ -74,8 +74,7 @@ public:
     ClientUser* getUser(quint64 channelId, quint64 userId);
     QString getChannelName(quint64 channelId);
 
-    void removeUser(
-        quint64 userId);
+    void removeUser(ClientUser *user);
 
     void moveUser(
         quint64 userId,
@@ -108,7 +107,7 @@ private:
     int findRow(ChannelItem *channel) const;
     int findRow(ClientUser *user) const;
     void observeUser(ClientUser *user);
-
+    void unobserveUser(ClientUser *user);
     quint64 m_currentChannelId=0;
     QTimer m_talkingTimer;
 

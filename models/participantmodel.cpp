@@ -112,15 +112,21 @@ void ParticipantModel::addUser(ClientUser *user)
     endInsertRows();
 }
 
-void ParticipantModel::removeUser(const quint64 &userId)
+void ParticipantModel::removeUser(ClientUser* user)
 {
-    qCInfo(_models) <<  "remove user from participant, id=" << userId;
+    if(!user)
+    {
+        qCWarning(_models) << "REMOVE user from participant model failed, user obj is invalid";
+        return;
+    }
+
+    qCInfo(_models) <<  "remove user from participant, id=" << user->id();
     for(int i=0;i<m_users.size();i++)
     {
         if (!m_users[i].user)
             continue;
 
-        if (m_users[i].user->id() == userId)
+        if (m_users[i].user->id() == user->id())
         {
             beginRemoveRows(
                 QModelIndex(),
@@ -129,14 +135,26 @@ void ParticipantModel::removeUser(const quint64 &userId)
 
             delete m_users[i].videoSink;
             m_users.removeAt(i);
+            unobserveUser(user);
 
             endRemoveRows();
             return;
         }
     }
 
-    qCWarning(_models) << "couldn't find user to remove from participant uid=" << userId;
+    qCWarning(_models) << "couldn't find user to remove from participant uid=" << user->id();
 }
+
+void ParticipantModel::unobserveUser(ClientUser *user)
+{
+    if (!user)
+        return;
+
+    qCInfo(_models) << "remove user to observe in ParticipantModel";
+    QObject::disconnect(user, nullptr, this, nullptr);
+    m_observedUsers.remove(user);
+}
+
 
 void ParticipantModel::clear()
 {

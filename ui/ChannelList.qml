@@ -669,12 +669,14 @@ Item
                         Row
                         {
                             spacing: 5
-                            Item
+                            Image
                             {
-                                //spacer
-                                width: 5
-                                height: parent.height
+                                width: 15
+                                height: 10
+                                source: "icons/curved-arrow-down.png"
+                                anchors.verticalCenter: parent.verticalCenter
                             }
+
                             Image {
                                 width: 15
                                 height: width
@@ -752,6 +754,25 @@ Item
                     width: iconW
                     height: iconW
                     color: "transparent"
+                    Image
+                    {
+                        anchors.fill: parent
+                        source: "icons/leave-channel.png"
+                    }
+
+                    MouseArea
+                    {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: user.joinChannel(0,"") //go to default channel (channel less id is 0)
+                    }
+                }
+
+                Rectangle
+                {
+                    width: iconW
+                    height: iconW
+                    color: "transparent"
 
                     Image
                     {
@@ -766,6 +787,7 @@ Item
                         onClicked: user.disconnect();
                     }
                 }
+
 
                 Rectangle
                 {

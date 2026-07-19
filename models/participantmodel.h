@@ -37,7 +37,7 @@ public:
 
     void addUser(ClientUser *user);
 
-    void removeUser(const quint64 &userId);
+    void removeUser(ClientUser *user);
 
     void clear();
 
@@ -49,6 +49,7 @@ public:
 private:
     int findRow(ClientUser *user) const;
     void observeUser(ClientUser* user);
+    void unobserveUser(ClientUser *user);
     struct ParticipantData
     {
         QPointer<ClientUser> user;

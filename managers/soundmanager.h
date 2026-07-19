@@ -29,6 +29,8 @@ public slots:
     void playUserJoin();
     void playUserLeft();
     void playUserTimedOut();
+    void playUserDisconnected();
+
 
     void playMicMuted();
     void playMicActiavted();
@@ -65,6 +67,7 @@ private:
     QSoundEffect m_userJoin;
     QSoundEffect m_userLeft;
     QSoundEffect m_userTimedOut;
+    QSoundEffect m_userDisconnected;
 
     QSoundEffect m_micMuted;
     QSoundEffect m_micActivated;
@@ -90,6 +93,7 @@ private:
 
     QElapsedTimer m_userJoinCooldown;
     QElapsedTimer m_userLeftCooldown;
+    QElapsedTimer m_userDisconnectedCooldown;
     QElapsedTimer m_userTimedOutCooldown;
 
 

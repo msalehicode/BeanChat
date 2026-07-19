@@ -5,7 +5,7 @@ project(BeanChat VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(APP_CURRENT_VERSION "0.28.39")
+set(APP_CURRENT_VERSION "0.28.44")
 set(APP_TitleName "BeanChat")
 set(APP_OrganizationName "orgBeanChat")
 set(APP_ApplicationName "appBeanChat")
@@ -79,6 +79,7 @@ qt_add_resources(appBeanChat resources
         soundpack/speech/shimmer/user-joined-your-channel.wav
         soundpack/speech/shimmer/user-left-your-channel.wav
         soundpack/speech/shimmer/user-timed-out.wav
+        soundpack/speech/shimmer/user-disconnected.wav
 
         soundpack/speech/shimmer/mic-muted.wav
         soundpack/speech/shimmer/mic-activated.wav
@@ -245,6 +246,8 @@ qt_add_qml_module(appBeanChat
     ui/icons/arrow-right.png
     ui/icons/save.png
     ui/icons/attach.png
+    ui/icons/curved-arrow-down.png
+    ui/icons/leave-channel.png
     ui/icons/user-add-block.png ui/icons/user-is-blocked.png
     ui/icons/user-add-friend.png ui/icons/user-is-friend.png
     ui/icons/endcall.png ui/icons/endcall-red.png

@@ -282,6 +282,7 @@ int main(int argc, char *argv[])
     QObject::connect(&usr, &User::userJoined, &soundManager, &SoundManager::playUserJoin);
     QObject::connect(&usr, &User::userLeft, &soundManager, &SoundManager::playUserLeft);
     QObject::connect(&usr, &User::userTimedOut, &soundManager, &SoundManager::playUserTimedOut);
+    QObject::connect(&usr, &User::userDisconnected, &soundManager, &SoundManager::playUserDisconnected);
 
     QObject::connect(&usr, &User::micClosed, &soundManager, &SoundManager::playMicMuted);
     QObject::connect(&usr, &User::micOpened, &soundManager, &SoundManager::playMicActiavted);

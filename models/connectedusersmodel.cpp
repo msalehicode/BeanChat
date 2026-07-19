@@ -257,20 +257,27 @@ void ConnectedUsersModel::observeUser(ClientUser* user)
 }
 
 
-void ConnectedUsersModel::removeUser(quint64 userId)
+void ConnectedUsersModel::removeUser(ClientUser* user)
 {
-    qCInfo(_models) << "remove user from connectedUsers uid=" << userId;;
+    if(!user)
+    {
+        qCWarning(_models) << "REMOVE user from conneced users model failed, user obj is invalid";
+        return;
+    }
+
+    qCInfo(_models) << "remove user from connectedUsers uid=" << user->id();
     for (int row = 0; row < m_connectedUsers.size(); ++row)
     {
         if (!m_connectedUsers[row])
             continue;
 
-        if (m_connectedUsers[row]->id() == userId)
+        if (m_connectedUsers[row]->id() == user->id())
         {
             beginRemoveRows(QModelIndex(), row, row);
 
 
             m_connectedUsers.removeAt(row);
+            unobserveUser(user);
 
             endRemoveRows();
             emit countChanged();
@@ -279,6 +286,17 @@ void ConnectedUsersModel::removeUser(quint64 userId)
     }
     qCWarning(_models) << "failed remove user from connectedUsers, user not found";
 }
+
+void ConnectedUsersModel::unobserveUser(ClientUser *user)
+{
+    if (!user)
+        return;
+
+    qCInfo(_models) << "remove user to observe in ConnectedUsersModel";
+    QObject::disconnect(user, nullptr, this, nullptr);
+    m_observedUsers.remove(user);
+}
+
 
 int ConnectedUsersModel::findRowById(quint64 userId) const
 {

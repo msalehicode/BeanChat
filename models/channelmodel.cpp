@@ -278,6 +278,16 @@ void ChannelModel::observeUser(ClientUser *user)
             updateRoles);
 }
 
+void ChannelModel::unobserveUser(ClientUser *user)
+{
+    if (!user)
+        return;
+
+    qCInfo(_models) << "remove user to observe in channelModel";
+    QObject::disconnect(user, nullptr, this, nullptr);
+    m_observedUsers.remove(user);
+}
+
 
 void ChannelModel::updateChannel(quint64 id, const QString &name, bool isLocked, bool saveChats)
 {
@@ -384,18 +394,21 @@ bool ChannelModel::getChannelSaveChats(quint64 channelId)
 
 
 
-void ChannelModel::removeUser(
-    quint64 userId)
+void ChannelModel::removeUser(ClientUser* user)
 {
-    qCCritical(_models)
-    << "REMOVE user from channel"
-    << userId;
+    if(!user)
+    {
+        qCWarning(_models) << "REMOVE user from channel model failed, user obj is invalid";
+        return;
+    }
 
-    auto channel = findChannelOfUser(userId);
+    qCInfo(_models) << "REMOVE user from channel model, user id=" << user->id();
+
+    auto channel = findChannelOfUser(user->id());
 
     if(!channel)
     {
-        qCCritical(_models) << "failed to remove user from channel, invalid channel object, userid=" << userId;
+        qCCritical(_models) << "failed to remove user from channel, invalid channel object, userid=" << user->id();
         return;
     }
 
@@ -404,12 +417,15 @@ void ChannelModel::removeUser(
         if (!channel->users[i].user)
             continue;
 
-        if (channel->users[i].user->id() == userId)
+        if (channel->users[i].user->id() == user->id())
         {
             channel->users.removeAt(i);
+            unobserveUser(user);
             break;
         }
     }
+
+
 
     int row = &(*channel) - m_channels.data();
 

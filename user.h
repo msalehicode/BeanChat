@@ -317,6 +317,7 @@ signals:
 
     void userJoined();
     void userLeft();
+    void userDisconnected();
     void userTimedOut();
 
     void cameraOpened();

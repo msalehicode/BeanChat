@@ -75,10 +75,10 @@ void ClientUserManager::removeUser(quint64 id)
 
     m_users.erase(it);
 
-    emit userRemoved(id);
+    emit userRemoved(user);
 
     // user->deleteLater(); //-> cause crash. it removes later
-    delete user; //for test delete obj immediately.
+    // delete user; //for test delete obj immediately. but for now we store all users and dont delete them.
 }
 
 void ClientUserManager::clear()

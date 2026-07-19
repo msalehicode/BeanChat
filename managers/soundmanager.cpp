@@ -17,7 +17,7 @@ SoundManager::SoundManager(QObject* parent)
     m_userJoin.setSource(QUrl("qrc:/soundpack/speech/shimmer/user-joined-your-channel.wav"));
     m_userLeft.setSource(QUrl("qrc:/soundpack/speech/shimmer/user-left-your-channel.wav"));
     m_userTimedOut.setSource(QUrl("qrc:/soundpack/speech/shimmer/user-timed-out.wav"));
-
+    m_userDisconnected.setSource(QUrl("qrc:/soundpack/speech/shimmer/user-disconnected.wav"));
 
     m_micMuted.setSource(QUrl("qrc:/soundpack/speech/shimmer/mic-muted.wav"));
     m_micActivated.setSource(QUrl("qrc:/soundpack/speech/shimmer/mic-activated.wav"));
@@ -36,6 +36,7 @@ SoundManager::SoundManager(QObject* parent)
     m_userJoin.setVolume(m_volume);
     m_userLeft.setVolume(m_volume);
     m_userTimedOut.setVolume(m_volume);
+    m_userDisconnected.setVolume(m_volume);
     m_micMuted.setVolume(m_volume);
     m_micActivated.setVolume(m_volume);
     m_soundMuted.setVolume(m_volume);
@@ -81,6 +82,7 @@ void SoundManager::setVolume(float newVolume)
     m_userJoin.setVolume(m_volume);
     m_userLeft.setVolume(m_volume);
     m_userTimedOut.setVolume(m_volume);
+    m_userDisconnected.setVolume(m_volume);
 
     m_micMuted.setVolume(m_volume);
     m_micActivated.setVolume(m_volume);
@@ -207,6 +209,19 @@ void SoundManager::playUserTimedOut()
 
     m_userTimedOut.play();
 }
+
+void SoundManager::playUserDisconnected()
+{
+    if(!canPlay(
+            m_userDisconnectedCooldown,
+            500))
+    {
+        return;
+    }
+
+    m_userDisconnected.play();
+}
+
 
 void SoundManager::playMicMuted()
 {

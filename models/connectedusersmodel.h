@@ -48,12 +48,13 @@ public:
 
     void clear();
 
-    void removeUser(quint64 userId);
+    void removeUser(ClientUser *user);
 
     ClientUser *findUser(quint64 userId);
 
 private:
     void observeUser(ClientUser *user);
+    void unobserveUser(ClientUser *user);
     int findRowById(quint64 userId) const;
     QList<QPointer<ClientUser>> m_connectedUsers;
     QSet<ClientUser*> m_observedUsers;

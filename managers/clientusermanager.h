@@ -29,7 +29,7 @@ public:
 
 signals:
     void userCreated(ClientUser *user);
-    void userRemoved(quint64 id);
+    void userRemoved(ClientUser* user);
     void cleared();
 
 private:
