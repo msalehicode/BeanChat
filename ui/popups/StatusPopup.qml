@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import BeanChatClient 1.0
-
+import "../constants/"
 Popup
 {
     id: root
@@ -73,7 +73,7 @@ Popup
         StatusItem
         {
             text: "🟢 Online"
-            color: "#3ba55c"
+            color: UiHelpers.statusColor(Presence.Online)
 
             onClicked:
             {
@@ -85,7 +85,7 @@ Popup
         StatusItem
         {
             text: "🌙 Away"
-            color: "#faa61a"
+            color: UiHelpers.statusColor(Presence.Away)
 
             onClicked:
             {
@@ -97,7 +97,7 @@ Popup
         StatusItem
         {
             text: "⛔ Busy"
-            color: "#ed4245"
+            color: UiHelpers.statusColor(Presence.Busy)
 
             onClicked:
             {
@@ -109,7 +109,7 @@ Popup
         StatusItem
         {
             text: "🔕 Do Not Disturb"
-            color: "#ed4245"
+            color: UiHelpers.statusColor(Presence.DoNotDisturb)
 
             onClicked:
             {
@@ -121,7 +121,7 @@ Popup
         StatusItem
         {
             text: "👻 Invisible"
-            color: "#747f8d"
+            color: UiHelpers.statusColor(Presence.Offline)
 
             onClicked:
             {

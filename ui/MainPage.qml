@@ -153,7 +153,14 @@ Item {
             CurrentChannelParticipants
             {
                 id:centerContentBase
+                visible: user.currentTextChannelId===0 //TODO: later make participants if they have camera or .. on mini picture (float) over text channel content
                 //when joint a channel would display current channel users. with their status, camera feed, and ...
+            }
+
+            CurrentTextChannel
+            {
+                id:textChannelContent
+                visible: user.currentTextChannelId>0
             }
 
             Item
@@ -440,7 +447,7 @@ Item {
 
         onPasswordEntered:
         {
-            user.joinChannel(channelId, password)
+            user.joinChannel(channelId, password, isTextChannel)
         }
     }
 
@@ -462,7 +469,7 @@ Item {
     CreateChannelPopup
     {
         id:createChannelPopup
-        onCreateClicked: user.createChannel(channelName,channelPassword,saveChats)
+        onCreateClicked: user.createChannel(channelName,channelPassword,saveChats,isVoiceChannel)
     }
 
     ModifyChannelPopup

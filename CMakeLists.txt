@@ -5,7 +5,7 @@ project(BeanChat VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(APP_CURRENT_VERSION "0.28.44")
+set(APP_CURRENT_VERSION "0.29.49")
 set(APP_TitleName "BeanChat")
 set(APP_OrganizationName "orgBeanChat")
 set(APP_ApplicationName "appBeanChat")
@@ -113,6 +113,7 @@ qt_add_qml_module(appBeanChat
         ui/ChannelList.qml
         ui/CurrentChannelParticipants.qml
         ui/MyServers.qml
+        ui/CurrentTextChannel.qml
 
 
         # notification system (overlays, components, managers)
@@ -415,7 +416,7 @@ target_compile_definitions(appBeanChat PRIVATE
 
     #audio input default config
     MIC_DEFAULT_PTT_STATUS=false
-    MIC_DEFAULT_PTT_HOTKEY=61 #Equal (=) key as default
+    MIC_DEFAULT_PTT_HOTKEY=92 #BackSlash ( \ ) key as default
     MIC_DEFAULT_VOLUMEGATE_STATUS=true
     MIC_DEFAULT_VOLUMEGATE_THRESHOLD=0.0
     MIC_DEFAULT_RNNOISE_STATUS=false

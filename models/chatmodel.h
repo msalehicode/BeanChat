@@ -46,12 +46,12 @@ public:
     void removeMessage(
         quint64 messageId);
 
-private:
     struct ChatItem
     {
         ChatMessagePacket message;
         QPointer<ClientUser> sender;
     };
+private:
     void updateUserMessages(ClientUser *user, const QList<int> &roles);
 
     QList<ChatItem> m_messages;

@@ -28,6 +28,7 @@ Popup
     property alias channelName: channelNameField.text
     property alias channelPassword: passwordField.text
     property alias saveChats: saveChatsCheck.checked
+    property alias isVoiceChannel: channelTypeCheck.checked
 
     function clear()
     {
@@ -229,6 +230,52 @@ Popup
                             anchors.verticalCenter: parent.verticalCenter
 
                             text: "Save chat history"
+                            color: "white"
+                            font.pixelSize: 14
+                        }
+                    }
+                }
+
+
+                CheckBox
+                {
+                    id: channelTypeCheck
+
+                    checked: true
+
+                    indicator: Item {}    // Hide the default indicator
+
+                    contentItem: Row
+                    {
+                        spacing: 10
+
+                        Rectangle
+                        {
+                            width: 18
+                            height: 18
+                            radius: 4
+
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            color: channelTypeCheck.checked ? "#5865F2" : "#1E1F22"
+                            border.color: "#5865F2"
+
+                            Text
+                            {
+                                anchors.centerIn: parent
+                                text: "✓"
+                                visible: channelTypeCheck.checked
+                                color: "white"
+                                font.bold: true
+                                font.pixelSize: 12
+                            }
+                        }
+
+                        Text
+                        {
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            text: "Is Voice Channel?"
                             color: "white"
                             font.pixelSize: 14
                         }

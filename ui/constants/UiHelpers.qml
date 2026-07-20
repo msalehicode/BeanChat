@@ -22,7 +22,7 @@ QtObject
             return "red"
 
         case Presence.DoNotDisturb:
-            return "#ff0066"
+            return "black"
 
         case Presence.Offline:
         default:

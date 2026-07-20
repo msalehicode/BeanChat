@@ -10,7 +10,7 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
            AttachmentImageProvider* attachmentImageProvider,
            CameraCapture* cam, AudioCapture *mic, AudioSpeaker* speaker,
            QObject *parent)
-    : QObject{parent}, m_channelModel(channelModel), m_chatModel(chatModel),
+    : QObject{parent}, m_channelModel(channelModel), m_voiceChatModel(chatModel),
     m_currentChannelParticipant(currentChannelParticipant), m_connectedUsersModel(connectedUsersModel),
     m_myServersModel(myServersModel),
     m_soundManager(sounderManager), m_settingsManager(settingsManager),
@@ -230,20 +230,27 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
 }
 
 
-void User::joinChannel(quint64 channelId, const QString& password)
+void User::joinChannel(quint64 channelId, const QString& password, bool isTextChannel)
 {
-    qCInfo(_tcp) << "sending join channel request";
-    JoinChannelPacket join;
+    if(isTextChannel)
+        qCInfo(_tcp) << "sending joinTextChannel request";
+    else
+        qCInfo(_tcp) << "sending join channel request";
 
-    join.channelId = channelId;
-    join.password =  password;
+        JoinChannelPacket join;
+        join.channelId = channelId;
+        join.password =  password;
 
-    Packet p;
+        Packet p;
 
-    p.type = PacketType::JoinChannel;
-    p.payload = PacketHelpers::pack(join);
+        if(isTextChannel)
+            p.type = PacketType::JoinTextChannel;
+        else
+            p.type = PacketType::JoinChannel;
 
-    socket.write(p.serialize());
+        p.payload = PacketHelpers::pack(join);
+
+        socket.write(p.serialize());
 }
 
 int User::isChannelLocked(quint64 channelId)
@@ -576,13 +583,15 @@ void User::disconnect()
 
 }
 
-void User::createChannel(QString channelName, QString password, bool saveMessages)
+void User::createChannel(QString channelName, QString password, bool saveMessages, bool isVoiceChannel)
 {
     qCInfo(_tcp) << "sending create channel request";
     CreateChannelPacket cc;
     cc.name = channelName;
     cc.password= password;
     cc.saveChats=saveMessages;
+    cc.type= isVoiceChannel ? BeanChatCommon::ChannelType::Type::Voice
+                                                       : BeanChatCommon::ChannelType::Type::Text;
 
     Packet p;
     p.type = PacketType::CreateChannel;
@@ -674,11 +683,18 @@ void User::sendVoicePcm(
     m_channelModel->restartVoiceTimer(myId());
 }
 
-void User::sendMessage(const QString& message)
+void User::sendMessage(const QString& message, quint64 channelId)
 {
     qCInfo(_tcp) << "sending simple message ";
     SendMessagePacket sm;
     sm.text = message;
+
+    if(channelId==0) //this messag sent for voice channel's chat
+        sm.targetTextChannelId=0;
+    else //it's for textChannel chat
+        sm.targetTextChannelId = channelId; //if id is a voice channel id server would ignore it and just check user's current channel
+
+
     sm.type = Msg::Type::Text;
     sm.attachmentId=0;
 
@@ -689,11 +705,13 @@ void User::sendMessage(const QString& message)
     socket.write(p.serialize());
 }
 
-void User::sendMessage(const QString& message,quint64 attachId, const QUrl &url)
+void User::sendMessage(const QString& message,quint64 attachId, const QUrl &url, quint64 channelId)
 {
     qCInfo(_tcp) << "sending message request with attachid="<<attachId;
     SendMessagePacket sm;
     sm.text = message;
+
+    sm.targetTextChannelId = channelId; //if id is a voice channel id server would ignore it and just check user's current channel
 
     QMimeDatabase db;
     QString name = db.mimeTypeForFile(url.toLocalFile()).name();
@@ -725,7 +743,7 @@ void User::sendMessage(const QString& message,quint64 attachId, const QUrl &url)
     socket.write(p.serialize());
 }
 
-void User::sendFile(const QString &filePath)
+void User::sendFile(const QString &filePath, quint64 channelId)
 {
     if (m_uploadFile.isOpen())
     {
@@ -769,6 +787,7 @@ void User::sendFile(const QString &filePath)
     UploadFileBeginPacket up;
 
     up.filename = info.fileName();
+    up.channelId =channelId;
     up.fileSize = m_uploadFile.size();
     up.mimeType = db.mimeTypeForFile(localPath).name();
     up.sha256 = sha256;
@@ -1351,6 +1370,28 @@ void User::processPacket(const Packet& packet)
             PacketHelpers::unpack<DeleteChannelPacket>(
                 packet.payload);
 
+
+        //check if deleted channel was a Text Channel and selected/using by QML List view?
+        ChannelItem* deletedChannel = m_channelModel->findChannel(resp.channelId);
+        if(deletedChannel)
+        {
+            if (currentTextChannelId() == resp.channelId)
+            {
+                qCInfo(_app) << "we are about to delete a currentTextChannel, therefore set currentTextChannelId to 0";
+                setCurrentTextChannelId(0); //dont show current text channel anymore and model to nowhere
+                emit currentTextChatModelChanged();
+            }
+            auto it = m_textChatModels.find(resp.channelId);
+            if (it != m_textChatModels.end())
+            {
+                ChatModel *model = it.value();
+                m_textChatModels.erase(it);
+                model->deleteLater();
+            }
+        }
+        else
+            qCWarning(_app) << "couldn't find deleted channel from channel model. we was about remove that from m_textChatModels";
+
         m_channelModel->removeChannel(resp.channelId);
 
         if(resp.channelId == m_myChannelId)
@@ -1373,7 +1414,10 @@ void User::processPacket(const Packet& packet)
             PacketHelpers::unpack<ChannelCreatedPacket>(
                 packet.payload);
 
-        m_channelModel->addChannel(resp.id,resp.name,resp.isLocked, resp.saveChats);
+        m_channelModel->addChannel(resp.id,resp.name,resp.type, resp.isLocked, resp.saveChats);
+
+        if (resp.type == ChannelType::Text)
+            m_textChatModels.insert(resp.id, new ChatModel(this));
     }break;
 
     case PacketType::UserCameraClosed:
@@ -1837,14 +1881,55 @@ void User::processPacket(const Packet& packet)
         break;
     }
 
+    case PacketType::ChatMessageChunk: //when user joins a Text Message or request load more messages for a textChannel ata
+    {
+        qCInfo(_app) << "a new chat message chunk";
+        auto messageList = PacketHelpers::unpack<ChatMessageChunkPacket>(packet.payload);
+        if(!messageList.messages.isEmpty())
+        {
+            qCInfo(_app) << "message chunk messages count:" << messageList.messages.count();
+
+            ChatModel *model ;
+            //clear chat model for old messages, if dont clear it would duplicate messages.
+            if(messageList.channelId==myChannelId())
+            {
+                m_voiceChatModel->clear();//if channel is temporary doesnt matter message gone, if channel is saveChats would restore them on next join
+                model = m_voiceChatModel;
+            }
+            else
+            {
+                model = m_textChatModels.value(messageList.channelId);
+                if(!model)
+                    break; //text channel model not found.
+            }
+
+
+            for(ChatMessagePacket& msg : messageList.messages)
+            {
+                ClientUser* senderUser = m_clientUserManager->user(msg.senderId);
+
+                if(!senderUser)
+                {
+                    qWarning(_app) << "processing message chunk, sender not found!.";
+                    continue;//sender not found
+                }
+
+                //add message
+                model->addMessage(msg, senderUser);
+            }
+        }
+
+        //when its channel saveChats is OFF (chat is temporary) there is no messages to receive chunk here
+        //therefore in QML we do setCurrentTextChannelId no need here.
+        setCurrentTextChannelId(messageList.channelId);
+
+
+        break;
+    }
     case PacketType::ChatMessage:
     {
         qCInfo(_app) << "a new chat message";
         auto msg = PacketHelpers::unpack<ChatMessagePacket>(packet.payload);
-
-        //show notification dot near chat indicator when chat isn't open
-        if(!m_isChatOpen)
-            setChatUnreadMessages(chatUnreadMessages()+1); //increase unread messages count
 
         if(msg.senderId==myId())
         {
@@ -1855,8 +1940,12 @@ void User::processPacket(const Packet& packet)
         {
             //check if chat is not open (user is in connectedUsersList), \
                     show notification and play effect
-            if(!isChatOpen())
+            if(!isChatOpen()
+                    && msg.channelId==myChannelId())
             {
+                //show notification dot near chat indicator when chat isn't open AND message is for voice chat
+                setChatUnreadMessages(chatUnreadMessages()+1); //increase unread messages count
+
                 emit notificationRequested(NotificationType::Info,
                                            "New Message received.",
                                            NotificationId::Message,
@@ -1867,10 +1956,36 @@ void User::processPacket(const Packet& packet)
         }
 
         ClientUser* senderUser = m_clientUserManager->user(msg.senderId);
-        if(senderUser)
+
+        if(!senderUser)
         {
-            m_chatModel->addMessage(msg,senderUser);
+            qWarning(_app) << "message received but sender not found!.";
+            break;//sender not found
         }
+
+        if(msg.channelId == myChannelId())
+        {
+            m_voiceChatModel->addMessage(msg,senderUser);
+        }
+        else //its for selected text channel
+        {
+            //if text channel is not shown, show as unread message
+            if(currentTextChannelId() != msg.channelId)
+            {
+                m_channelModel->setUnreadMessagesCount(msg.channelId,1,true);//increase one
+            }
+
+            //add message to that model
+            ChatModel *model = m_textChatModels.value(msg.channelId);
+            if(!model)
+                break; //text channel model not found.
+
+            model->addMessage(msg, senderUser);
+
+            qCInfo(_app) << "message received for text channel id=" << msg.channelId;
+        }
+
+
 
     }
     break;
@@ -1889,7 +2004,6 @@ void User::processPacket(const Packet& packet)
          //get avatar path or ask from server, id=RESERVED_TO_ASK_SERVERS_AVATAR server would return his avatarHash and data.
         QString serverAvatarPath = checkAvatar(BeanChatCommon::ReservedIds::ServerAvatar, state.serverInfo.avatarHash);
 
-
         if(!serverAvatarPath.isEmpty())
         {
             //update myServerModel avatar for this server.
@@ -1907,11 +2021,19 @@ void User::processPacket(const Packet& packet)
         qCInfo(_app) << "server channels count= "<< state.channels.count();
         for(auto& c : state.channels)
         {
+            qCInfo(_app) << "channel id= " << c.id << " type=" << static_cast<int>(c.type);
             m_channelModel->addChannel(
                 c.id,
                 c.name,
+                c.type,
                 c.isLocked,
                 c.saveChats);
+
+            if (c.type == ChannelType::Text)
+            {
+                m_textChatModels.insert(c.id,
+                    new ChatModel(this));
+            }
         }
 
         //users
@@ -2083,6 +2205,28 @@ void User::loginToUdpSocket()
                  << ":"
                  << m_serverPort;
     }
+}
+
+quint64 User::currentTextChannelId() const
+{
+    return m_currentTextChannelId;
+}
+
+void User::setCurrentTextChannelId(quint64 newCurrentTextChannelId)
+{
+    if (m_currentTextChannelId == newCurrentTextChannelId)
+        return;
+    m_currentTextChannelId = newCurrentTextChannelId;
+    emit currentTextChannelIdChanged();
+    emit currentTextChatModelChanged();
+
+    //also update message read count for that channel in channel model
+    m_channelModel->setAllMessagesRead(newCurrentTextChannelId);
+}
+
+ChatModel *User::currentTextChatModel() const
+{
+    return m_textChatModels.value(m_currentTextChannelId);
 }
 
 quint64 User::connectedUsersCount() const
@@ -2650,7 +2794,10 @@ void User::resetVariables()
     m_channelModel->clear();
     m_currentChannelParticipant->clear();
     m_connectedUsersModel->clear();
-    m_chatModel->clear();
+    m_voiceChatModel->clear();
+    for (ChatModel *model : m_textChatModels)
+        if (model)
+            model->clear();
 
     //reset variables
     setMyServerName("");
@@ -2671,6 +2818,7 @@ void User::resetVariables()
     setMyAvatarPath("");
     m_clientUserManager->clear();
     m_channelModel->setCurrentChannelId(0); //set current channel to zeor therefore, stop timer for check user isTalking
+    setCurrentTextChannelId(0);
 
     if(!m_switchingServer) //if we are not switching reset/turn-off all server's indicator status
         m_myServersModel->resetPreviousIsActiveServer();

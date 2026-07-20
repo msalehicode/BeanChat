@@ -159,18 +159,47 @@ Item
                             id:theChannelTypeIcon
                             width: 20
                             height: width
+                            visible:  model.channelType===ChannelType.Voice
                             source: "icons/voice.png"
                             anchors.verticalCenter: parent.verticalCenter
                         }
+                        Text
+                        {
+                            text:"#"
+                            color: "grey"
+                            font.pixelSize: 15
+                            visible:  model.channelType===ChannelType.Text
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
                         Text
                         {
                             id:theChannelName
                             anchors.verticalCenter: parent.verticalCenter
                             text: channelName
                             font.pixelSize: 15
+                            font.bold:  model.channelType===ChannelType.Text && user.currentTextChannelId===model.channelId
                             color: "white"
                             width: implicitWidth>250 ? 250 : implicitWidth
                             elide: Text.ElideRight
+                        }
+
+                        Rectangle
+                        {
+                            id:unreadMessagesCountIndicator
+                            color: "red"
+                            width: 20
+                            height: width
+                            radius: width
+                            visible: model.channelType===ChannelType.Text && model.channelUnreadMessagesCount>0
+                            anchors.verticalCenter: parent.verticalCenter
+                            Text {
+                                text: model.channelUnreadMessagesCount
+                                anchors.centerIn: parent
+                                color:"white"
+                                font.bold: true
+                                font.pixelSize: 12
+                            }
                         }
 
                         Image
@@ -190,18 +219,63 @@ Item
                         anchors.fill: parent
                         hoverEnabled: true
 
-                        onDoubleClicked:
+                        onClicked:
                         {
-                            console.log("try to join channel id:" , channelId, " name=", channelName)
-                            if(model.isLocked)
+                            if(model.channelType===ChannelType.Voice)
                             {
-                                //show popup enter password
-                                channelPasswordPopup.channelId=model.channelId;
-                                channelPasswordPopup.channelName=model.channelName;
-                                channelPasswordPopup.open()
+                                if(user.myChannelId===model.channelId)
+                                {
+                                    console.log("we are already in this channel")
+                                    if(user.currentTextChannelId>0) //user was seeing  text channel
+                                    {
+                                        user.currentTextChannelId=0//hide text channel therefore would show current channel pareticipant
+                                    }
+                                    return;
+                                }
+
+                                console.log("try to join channel id:" , channelId, " name=", channelName)
+                                if(model.isLocked)
+                                {
+                                    //show popup enter password
+                                    channelPasswordPopup.channelId=model.channelId;
+                                    channelPasswordPopup.channelName=model.channelName;
+                                    channelPasswordPopup.isTextChannel=false
+                                    channelPasswordPopup.open()
+                                }
+                                else
+                                {
+                                    user.currentTextChannelId=0//hide text channel therefore would show current channel pareticipant
+                                    user.joinChannel(channelId,"") //non locked passwords default password is empty ""
+                                }
                             }
-                            else
-                                user.joinChannel(channelId,"") //non locked passwords default password is empty ""
+                            else if(model.channelType===ChannelType.Text)
+                            {
+                                //prevent rejoin current channel
+                                if(user.currentTextChannelId===model.channelId)
+                                    return;
+
+                                if(model.isLocked)
+                                {
+                                    //show popup enter password
+                                    channelPasswordPopup.channelId=model.channelId;
+                                    channelPasswordPopup.channelName=model.channelName;
+                                    channelPasswordPopup.isTextChannel=true
+                                    channelPasswordPopup.open()
+                                    //if channel join accepted and message chunk received would on C++ side do  currentTextChannelId to channel
+                                }
+                                else
+                                {
+
+                                    if(!model.saveChats) //if message are temporary
+                                    {
+                                        console.log("lets see text channel.. id=" , model.channelId)
+                                        user.currentTextChannelId=model.channelId; //therefore would hide participants and show text channel
+                                    }
+                                    //else when channel join accepted and message chunk received would on C++ side do  currentTextChannelId to channel
+
+                                    user.joinChannel(model.channelId,"",true)
+                                }
+                            }
                         }
                     }
 
@@ -1098,6 +1172,7 @@ Item
             user.updateMyActivityStatus(status)
         }
     }
+
 
 
 }

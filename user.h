@@ -138,12 +138,12 @@ public:
 
 
     //server actions
-    Q_INVOKABLE void joinChannel(quint64 channelId, const QString& password="");
+    Q_INVOKABLE void joinChannel(quint64 channelId, const QString& password="", bool isTextChannel=false);
     Q_INVOKABLE void moveUser(quint64 userId, quint64 channelId, const QString& password);
-    Q_INVOKABLE void createChannel(QString channelName, QString password, bool saveMessages);
-    Q_INVOKABLE void sendMessage(const QString& message,quint64 attachId, const QUrl &url);
-    Q_INVOKABLE void sendMessage(const QString& message);
-    Q_INVOKABLE void sendFile(const QString& filePath);
+    Q_INVOKABLE void createChannel(QString channelName, QString password, bool saveMessages, bool isVoiceChannel);
+    Q_INVOKABLE void sendMessage(const QString& message,quint64 attachId, const QUrl &url, quint64 channelId=0);
+    Q_INVOKABLE void sendMessage(const QString& message, quint64 channelId=0);
+    Q_INVOKABLE void sendFile(const QString& filePath, quint64 channelId=0);
     Q_INVOKABLE void downloadAttachment(quint64 attachId);
     Q_INVOKABLE bool hasAttachmentImage(quint64 attachmentId) const; //to know if image is downloaded or not (when list scorlls image component becomes downloaded=false by default)
     Q_INVOKABLE QUrl attachmentUrl(quint64 id); //for animated images need this to get actual path, imageProvider doesnt work
@@ -287,6 +287,11 @@ public:
     void setConnectedUsersCount(quint64 newConnectedUsersCount, bool increase);
 
 
+    quint64 currentTextChannelId() const;
+    void setCurrentTextChannelId(quint64 newCurrentTextChannelId);
+
+
+    ChatModel* currentTextChatModel() const;
 signals:
 
     void myIdChanged();
@@ -389,6 +394,9 @@ signals:
     void attachmentDownloadProgress(quint64 attachmentId, float progress);
     void attachmentDownloaded(quint64 attachmentId);
     void attachmentDownloadFailed(quint64 attachmentId, const QString &reason);
+
+    void currentTextChannelIdChanged();
+    void currentTextChatModelChanged();
 
 public slots:
     void onTcpReadyRead();
@@ -499,12 +507,16 @@ private:
 
     //pointers to access and contorl esources/models    
     ChannelModel* m_channelModel=nullptr;
-    ChatModel* m_chatModel=nullptr;
     ParticipantModel* m_currentChannelParticipant=nullptr;
     MyServersModel* m_myServersModel=nullptr;
     ConnectedUsersModel* m_connectedUsersModel=nullptr;
 
-
+    //chats
+    ChatModel* m_voiceChatModel=nullptr; //chat for current channel (voice channel)
+    quint64 m_currentTextChannelId=0;//0 is none
+    QHash<quint64, ChatModel*> m_textChatModels;
+    //to expose currentTextModel
+    Q_PROPERTY(ChatModel* currentTextChatModel  READ currentTextChatModel NOTIFY currentTextChatModelChanged)
 
     //update
     UpdateChecker m_updateChecker;
@@ -535,6 +547,7 @@ private:
     Q_PROPERTY(BeanChatCommon::Presence::Status myStatus READ myStatus WRITE setMyStatus NOTIFY myStatusChanged FINAL)
     Q_PROPERTY(quint64 myChannelId READ myChannelId WRITE setMyChannelId NOTIFY myChannelIdChanged FINAL)
     Q_PROPERTY(quint64 connectedUsersCount READ connectedUsersCount WRITE setConnectedUsersCount NOTIFY connectedUsersCountChanged FINAL)
+    Q_PROPERTY(quint64 currentTextChannelId READ currentTextChannelId WRITE setCurrentTextChannelId NOTIFY currentTextChannelIdChanged FINAL)
 };
 
 #endif // USER_H

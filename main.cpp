@@ -186,7 +186,7 @@ int main(int argc, char *argv[])
 
     //---------- models ----------
     ChannelModel channelModel;
-    ChatModel chatModel;
+    ChatModel chatModel; //for voice chat text's
     ParticipantModel participantsModel;//participant = current channel users which has video sink and shown on center of screen
     ConnectedUsersModel connectedUsersModel;
     ConnectedUsersProxyModel connectedUsersProxy;
@@ -365,6 +365,7 @@ int main(int argc, char *argv[])
     qmlRegisterUncreatableType<Relationship>("BeanChatClient", 1, 0, "Relationship", "Enum Only");
     qmlRegisterUncreatableMetaObject(Presence::staticMetaObject, "BeanChatClient", 1, 0, "Presence", "Enums only");
     qmlRegisterUncreatableMetaObject(Msg::staticMetaObject, "BeanChatClient", 1, 0, "MessageType", "Enums only");
+    qmlRegisterUncreatableMetaObject(ChannelType::staticMetaObject, "BeanChatClient", 1, 0, "ChannelType", "Enums only");
     qmlRegisterUncreatableType<User::UserConnectionStatus> ("BeanChatClient", 1, 0, "ConnectionStatus", "Enums only");
 
     //qml

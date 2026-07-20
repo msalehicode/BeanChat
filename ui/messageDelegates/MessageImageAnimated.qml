@@ -10,6 +10,9 @@ Item
     property bool showingImage: user.hasAttachmentImage(attachmentId)
 
 
+    property string statusText: "Download Image"
+    property color statusColor: "white"
+
     property real progress: 0
     property bool downloading: false
 
@@ -41,8 +44,11 @@ Item
             {
                 id:downloadText
                 anchors.centerIn: parent
-                text: downloading ? Math.round(progress * 100) + "%" : "Download Image"
-                color: "white"
+                text: downloading
+                         ? Math.round(progress * 100) + "%"
+                         : root.statusText
+
+                color: root.statusColor
             }
 
             ProgressBar
@@ -143,7 +149,7 @@ Item
             downloading = false
             progress = 1.0
 
-            console.log("ainmated image downloaded fine.. att id=", attachId)
+            console.log("ainmated image downloaded fine.. att id=", id)
             showingImage = true;
         }
 
@@ -153,10 +159,9 @@ Item
                 return
 
             downloading = false
-            console.log("load ainmated image failed.. att id=",attachId)
-            root.downloadError=true
-            downloadText.text= "download failed error: " +errorMessage
-            downloadText.color="red"
+            console.log("load ainmated image failed.. att id=",id)
+            root.statusText= "download failed error: " +reason
+            root.statusColor ="red"
         }
 
     }

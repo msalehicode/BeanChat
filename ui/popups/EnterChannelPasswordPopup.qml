@@ -18,6 +18,7 @@ Popup
     // Parameters
     property string channelName: ""
     property int channelId: -1
+    property bool isTextChannel: false
 
     signal passwordEntered(int channelId, string password)
 

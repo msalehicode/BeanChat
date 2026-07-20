@@ -43,6 +43,12 @@ QVariant ChannelModel::data(
     case NameRole:
         return channel.name;
 
+    case TypeRole:
+        return static_cast<int>(channel.type);
+
+    case UnreadMessagesCountRole:
+        return channel.unreadMessagesCount;
+
     case SaveChatsRole:
         return channel.saveChats;
 
@@ -107,6 +113,8 @@ ChannelModel::roleNames() const
         {
             { IdRole, "channelId" },
             { NameRole, "channelName" },
+            { TypeRole, "channelType"},
+            { UnreadMessagesCountRole, "channelUnreadMessagesCount"},
             { SaveChatsRole, "saveChats"},
             { IsLcokedRole, "isLocked"},
             { UsersRole, "users" }
@@ -126,9 +134,9 @@ void ChannelModel::clear()
 
 void ChannelModel::addChannel(
     quint64 id,
-    const QString& name, bool isLocked, bool saveChat)
+    const QString& name, BeanChatCommon::ChannelType::Type type, bool isLocked, bool saveChat)
 {
-    qCInfo(_models) << "add channel, channel id=" << id;
+    qCInfo(_models) << "add channel, channel id=" << id << "with type" << static_cast<int>(type);
     beginInsertRows(
         QModelIndex(),
         m_channels.size(),
@@ -138,6 +146,7 @@ void ChannelModel::addChannel(
 
     channel.id = id;
     channel.name = name;
+    channel.type = type;
     channel.isLocked = isLocked;
     channel.saveChats = saveChat;
 
@@ -151,12 +160,18 @@ void ChannelModel::addUser(quint64 channelId, ClientUser *user)
 {
     ChannelItem *channel = findChannel(channelId);
 
-
     if (!channel || !user)
     {
         qCCritical(_models) << " add user to channel failed, invalid user OR channel not found.";
         return;
     }
+
+    if(channel->type == BeanChatCommon::ChannelType::Type::Text)
+    {
+        qCWarning(_models) << "cannot add user to a text channel!";
+        return;
+    }
+
     qCCritical(_models)
         << "ADD user to channel"
         << user
@@ -592,6 +607,51 @@ void ChannelModel::setTimerChannelTalkingStatus(bool status)
         m_talkingTimer.start(CHANNEL_MODEL_TALKING_TIMER_INTERAVL);
     else
         m_talkingTimer.stop();
+}
+
+void ChannelModel::setUnreadMessagesCount(quint64 channelId,
+                                          quint64 val,
+                                          bool increase)
+{
+    for (int row = 0; row < m_channels.size(); ++row)
+    {
+        ChannelItem &channel = m_channels[row];
+
+        if (channel.id != channelId)
+            continue;
+
+        if (increase)
+            channel.unreadMessagesCount += val;
+        else
+            channel.unreadMessagesCount -= val;
+
+        emit dataChanged(
+            index(row),
+            index(row),
+            { UnreadMessagesCountRole });
+
+        return;
+    }
+}
+
+void ChannelModel::setAllMessagesRead(quint64 channelId)
+{
+    for (int row = 0; row < m_channels.size(); ++row)
+    {
+        ChannelItem &channel = m_channels[row];
+
+        if (channel.id != channelId)
+            continue;
+
+        channel.unreadMessagesCount=0;
+
+        emit dataChanged(
+            index(row),
+            index(row),
+            { UnreadMessagesCountRole });
+
+        return;
+    }
 }
 
 UserItem *ChannelModel::findUserItem(quint64 userId)

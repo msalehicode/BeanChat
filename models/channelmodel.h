@@ -6,6 +6,7 @@
 #include <QTimer>
 #include "clientuser.h"
 #include <QPointer>
+#include <protocol/commonTypes.h>
 
 struct UserItem
 {
@@ -22,6 +23,9 @@ struct ChannelItem
 {
     quint64 id;
     QString name;
+    BeanChatCommon::ChannelType::Type type;
+    quint64 unreadMessagesCount=0;
+    // bool isMentioned=false; //for later.
     bool isLocked=false;
     bool saveChats=false;
 
@@ -39,6 +43,8 @@ public:
         IdRole = Qt::UserRole + 1,
         NameRole,
         IsLcokedRole,
+        UnreadMessagesCountRole,
+        TypeRole,
         SaveChatsRole,
         UsersRole
     };
@@ -61,7 +67,9 @@ public:
 
     void addChannel(
         quint64 id,
-        const QString& name, bool isLocked, bool saveChat);
+        const QString& name,
+        BeanChatCommon::ChannelType::Type type,
+        bool isLocked, bool saveChat);
 
 
     void updateChannel(quint64 id,
@@ -94,6 +102,8 @@ public:
 
     void setTimerChannelTalkingStatus(bool status); //start/stop check for status isTalking users in channel timer. (when joint to channel start, when left stop)
 
+    void setUnreadMessagesCount(quint64 channelId, quint64 val, bool increase=true);
+    void setAllMessagesRead(quint64 channelId);
 signals:
     void userTalkingStatus(quint64 userId,bool status);
 
