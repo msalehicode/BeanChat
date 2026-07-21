@@ -143,7 +143,7 @@ void ChatModel::observeUser(ClientUser *user)
 
     if (!user || m_observedUsers.contains(user))
     {
-        // qCCritical(_models) << "failed to observe user, invalid user OR user has already exist in observedUsers.";
+        qCCritical(_models) << "failed to observe user, invalid user OR user has already exist in observedUsers (chatmodel).";
         return;
     }
     qCInfo(_models) << "add user to observe for chat";

@@ -5,10 +5,11 @@ project(BeanChat VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(APP_CURRENT_VERSION "0.29.50")
+set(APP_CURRENT_VERSION "0.29.54")
 set(APP_TitleName "BeanChat")
 set(APP_OrganizationName "orgBeanChat")
 set(APP_ApplicationName "appBeanChat")
+
 set(APP_OrganizationDomain "beanchat.ir")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Quick Multimedia Network Sql QuickDialogs2)

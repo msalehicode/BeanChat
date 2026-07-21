@@ -78,7 +78,6 @@ int main(int argc, char *argv[])
                      "and check for any crashes";
 
     LogManager logManager(logsPath);
-    logManager.cleanupOldLogs();
 
     //find crashes
     const auto crashes = logManager.crashLogs();
@@ -404,6 +403,7 @@ int main(int argc, char *argv[])
     auto *window = qobject_cast<QQuickWindow*>(engine.rootObjects().first());
     qCInfo(_main) << "window graphicsApi renderer Interface : " << window->rendererInterface()->graphicsApi();
 
+    logManager.cleanupOldLogs();
 
     return app.exec();
 }

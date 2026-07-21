@@ -107,23 +107,13 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
 
 
     //connect clientUserManager to models when user removed, models obey
-    connect(
-        m_clientUserManager,
-        &ClientUserManager::userRemoved,
-        m_channelModel,
-        &ChannelModel::removeUser);
+    connect(m_clientUserManager, &ClientUserManager::userRemoved, m_channelModel, &ChannelModel::removeUser);
+    connect(m_clientUserManager, &ClientUserManager::userRemoved, m_connectedUsersModel, &ConnectedUsersModel::removeUser);
+    connect(m_clientUserManager, &ClientUserManager::userRemoved, m_currentChannelParticipant, &ParticipantModel::removeUser);
 
-    connect(
-        m_clientUserManager,
-        &ClientUserManager::userRemoved,
-        m_connectedUsersModel,
-        &ConnectedUsersModel::removeUser);
-
-    connect(
-        m_clientUserManager,
-        &ClientUserManager::userRemoved,
-        m_currentChannelParticipant,
-        &ParticipantModel::removeUser);
+    connect(m_clientUserManager, &ClientUserManager::cleared, m_channelModel, &ChannelModel::clear);
+    connect(m_clientUserManager, &ClientUserManager::cleared, m_connectedUsersModel, &ConnectedUsersModel::clear);
+    connect(m_clientUserManager, &ClientUserManager::cleared, m_currentChannelParticipant, &ParticipantModel::clear);
 
 
 
@@ -140,9 +130,23 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
             this, &User::onSocketError);
 
 
-    //setup UDP socket
-    if(!m_udpSocket.bind())
-        qCFatal(_udp) << "failed to bind socket";
+    //try to bind for udp with several attemps if failed do qFatal
+    bool bound = false;
+    for (int i = 0; i < 3; ++i)
+    {
+        if (m_udpSocket.bind())
+        {
+            bound = true;
+            break;
+        }
+
+        qCWarning(_udp) << "Bind attempt " << (i + 1)
+                        << " failed: " << m_udpSocket.errorString();
+    }
+    if (!bound)
+        qCFatal(_udp) << "Failed to bind UDP socket after 3 attempts.";
+
+
 
 
     connect(&m_udpSocket,
@@ -1753,6 +1757,9 @@ void User::processPacket(const Packet& packet)
 
         qCDebug(_app) <<  "User connected:" << u.username << " identity:" << u.identity;
 
+        if(u.id == myId())//if its me ignore because we get me on server's state just testing to find bug why users disappear from channel model
+            break; //when connected, server sends user connected (but actaully server says me (this user) then sends server state there is another me to avoid double me (anyway it ignores to add but ..)
+
         bool userExists = false;
         //check if user is on offline users (server may have showOfflineUsers ON)
         ClientUser* user= m_clientUserManager->user(u.id);
@@ -1778,15 +1785,6 @@ void User::processPacket(const Packet& packet)
                       << u.buildType << "-" << u.osName
                       << "-" << u.osVersion << "- avatar hash= " << u.avatarHash
                       << "avatar path=" << avatarPath << "channelid=";
-
-        //if user is me set myAvatarPath
-        if(u.id == myId())
-        {
-            qCInfo(_app) << "it's me";
-            setMyAvatarPath(avatarPath);
-            user->setSelf(true);
-        }
-
 
         user->setUsername(u.username);
         user->setIdentity(u.identity);
@@ -1877,11 +1875,7 @@ void User::processPacket(const Packet& packet)
         }
 
         //remove user.
-        // m_clientUserManager->removeUser(resp.id);
-
-        //instead removeUser by manager, only remove user from channel and participant
-        m_channelModel->removeUser(user);
-        m_currentChannelParticipant->removeUser(user);
+        m_clientUserManager->removeUser(resp.id); //but actaully to prevent dangling pointer wont delete/deleteLater users from list
 
         break;
     }
@@ -1898,7 +1892,6 @@ void User::processPacket(const Packet& packet)
             //clear chat model for old messages, if dont clear it would duplicate messages.
             if(messageList.channelId==myChannelId())
             {
-                m_voiceChatModel->clear();//if channel is temporary doesnt matter message gone, if channel is saveChats would restore them on next join
                 model = m_voiceChatModel;
             }
             else
@@ -1907,6 +1900,9 @@ void User::processPacket(const Packet& packet)
                 if(!model)
                     break; //text channel model not found.
             }
+
+            model->clear();//to prevent add new chunk with old chunks (duplicated messages) \
+                        if channel is temporary doesnt matter message gone, [if channel is saveChats would restore them on next join]
 
 
             for(ChatMessagePacket& msg : messageList.messages)
@@ -2022,7 +2018,6 @@ void User::processPacket(const Packet& packet)
 
 
         //channels
-        m_channelModel->clear();
         qCInfo(_app) << "server channels count= "<< state.channels.count();
         for(auto& c : state.channels)
         {
@@ -2800,9 +2795,7 @@ void User::resetVariables()
 {
     qCInfo(_app) << "reset variables";
     //clear models
-    m_channelModel->clear();
-    m_currentChannelParticipant->clear();
-    m_connectedUsersModel->clear();
+    m_clientUserManager->clear(); //will trigger clear for all three models (channels, current-participant, connectedUsers)
     m_voiceChatModel->clear();
     for (ChatModel *model : m_textChatModels)
         if (model)
@@ -2825,7 +2818,6 @@ void User::resetVariables()
     setConnectedUsersCount(0);
     m_notFoundAvatars.clear(); //clear list for next connection
     setMyAvatarPath("");
-    m_clientUserManager->clear();
     m_channelModel->setCurrentChannelId(0); //set current channel to zeor therefore, stop timer for check user isTalking
     setCurrentTextChannelId(0);
 
