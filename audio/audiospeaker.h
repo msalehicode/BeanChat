@@ -21,6 +21,7 @@ public:
 
     QStringList audioOutputNames() const;
     int currentAudioOutput() const;
+    int defaultAudioOutputIndex() const;
     void setCurrentAudioOutput(int newCurrentAudioOutput);
     void setAudioOutputs(QList<QAudioDevice> newList);
     bool started() const;

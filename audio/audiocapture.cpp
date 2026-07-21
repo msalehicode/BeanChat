@@ -271,6 +271,7 @@ int AudioCapture::currentAudioInput() const
     return m_currentAudioInput;
 }
 
+
 void AudioCapture::setCurrentAudioInput(int newCurrentAudioInput)
 {
     if (m_currentAudioInput == newCurrentAudioInput)
@@ -283,6 +284,19 @@ void AudioCapture::setCurrentAudioInput(int newCurrentAudioInput)
         qCInfo(_microphone) << "Switching input device to:" << m_audioInputs[m_currentAudioInput].description();
         start(); // This calls the start() logic which handles stopping the old one
     }
+}
+
+int AudioCapture::defaultAudioInputIndex() const
+{
+    QAudioDevice defaultDevice = QMediaDevices::defaultAudioInput();
+
+    for (int i = 0; i < m_audioInputs.size(); ++i)
+    {
+        if (m_audioInputs[i].id() == defaultDevice.id())
+            return i;
+    }
+
+    return -1;
 }
 
 void AudioCapture::setAudioInputs(QList<QAudioDevice> newList)

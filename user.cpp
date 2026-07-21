@@ -3002,8 +3002,14 @@ void User::initOrLoadSettings()
         {
             qCInfo(_app) << "saved audioInput device not found, we did reset it to default.";
 
-            //set to default (first device)
-            QString deviceId = m_mic->audioInputId(MIC_DEFUALT_DEVICE_INDEX);
+            //set to default of system if failed so set to first device
+            QString deviceId;
+            int currentActiveIndex = m_mic->defaultAudioInputIndex();
+            if(currentActiveIndex==-1) //set to index 0
+                deviceId = m_mic->audioInputId(MIC_DEFUALT_DEVICE_INDEX); //get device id (uid)
+            else
+                deviceId =  m_mic->audioInputId(currentActiveIndex); //get device id (uid)
+
             m_mic->setCurrentAudioInput(m_mic->audioInputIndexFromId(deviceId));
             m_settingsManager->setValue(MIC_SETTING_DEVICE, deviceId);
         }
@@ -3035,12 +3041,17 @@ void User::initOrLoadSettings()
             m_speaker->setCurrentAudioOutput(speakerIndex); //m_soundManager->outputDevice would automatically obey this change
         else
         {
-            qCInfo(_app) << "saved audioOutput device not found, we did reset it to default.";
-            m_speaker->setCurrentAudioOutput(SPEAKER_DEFAULT_DEVICE_INDEX); //set to default, note m_soundManager->outputDevice would automatically obey this change
+            qCInfo(_app) << "saved audioOutput device not found, we did reset it to default.";           
 
-            //set to default (first device)
-            QString deviceId = m_speaker->audioOutputId(SPEAKER_DEFAULT_DEVICE_INDEX);
-            m_speaker->setCurrentAudioOutput(m_speaker->audioOutputIndexFromId(deviceId));
+            //set to default of system if failed so set to first device
+            QString deviceId;
+            int currentActiveIndex = m_speaker->defaultAudioOutputIndex();
+            if(currentActiveIndex==-1) //set to index 0
+                deviceId = m_speaker->audioOutputId(SPEAKER_DEFAULT_DEVICE_INDEX); //get device id (uid)
+            else
+                deviceId =  m_speaker->audioOutputId(currentActiveIndex); //get device id (uid)
+
+            m_speaker->setCurrentAudioOutput(m_speaker->audioOutputIndexFromId(deviceId)); //NOTE: m_soundManager->outputDevice would automatically obey this change
             m_settingsManager->setValue(SPEAKER_SETTING_DEVICE, deviceId);
         }
     }

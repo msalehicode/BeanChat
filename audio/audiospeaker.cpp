@@ -180,6 +180,19 @@ int AudioSpeaker::currentAudioOutput() const
     return m_currentAudioOutput;
 }
 
+int AudioSpeaker::defaultAudioOutputIndex() const
+{
+    QAudioDevice defaultDevice = QMediaDevices::defaultAudioOutput();
+
+    for (int i = 0; i < m_audioOutputs.size(); ++i)
+    {
+        if (m_audioOutputs[i].id() == defaultDevice.id())
+            return i;
+    }
+
+    return -1;
+}
+
 void AudioSpeaker::setCurrentAudioOutput(int newCurrentAudioOutput)
 {
     if (m_currentAudioOutput == newCurrentAudioOutput)

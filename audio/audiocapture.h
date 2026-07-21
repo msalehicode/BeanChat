@@ -28,6 +28,7 @@ public:
 
     int currentAudioInput() const;
     void setCurrentAudioInput(int newCurrentAudioInput);
+    int defaultAudioInputIndex() const;
 
     void setAudioInputs(QList<QAudioDevice> newList);
     bool rnnoiseStatus() const;
