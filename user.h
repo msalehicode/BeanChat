@@ -476,6 +476,7 @@ private:
     float m_myVoicePacketLoss=0.0f;
     float m_myVideoPacketLoss=0.0f;
     QTimer m_udpConnectionTimeout;
+    QElapsedTimer m_lastUdpActivity;
     QHostAddress m_serverLookedupAddress; //when user enter domain.com, TCP would lookup automatically but UDP doesnt lookup, so at begin of connection we resolve/lookup that domain's ip store here and use it for udp send packets.
 
     //chat notification

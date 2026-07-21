@@ -150,13 +150,13 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
             this,
             &User::onUdpReadyRead);
 
-    //when request register sent to to udp server, would expect ping request evey xSeconds from server, whenever didn't receive any assuming server is down or connection is lost.
-    m_udpConnectionTimeout.setSingleShot(true);
+    //when request register sent to to udp server, would check evey xSeconds for last activty time, when it exceed from an amount (didn't receive any UDP packet voice/video/ping) assuming server is down or connection is lost.
+    m_udpConnectionTimeout.setInterval(UDP_CONNECTION_LOST_TIMER_INTERVAL);
 
     connect(&m_udpConnectionTimeout, &QTimer::timeout,
             this, [&]()
             {
-                if(isConnectedToServer())
+                if(isConnectedToServer() && m_lastUdpActivity.elapsed()>9000) //max is 9s
                 {
                     qCInfo(_udp) << "server didn't send ping request for a while, so assuming connection has lost.";
                     emit notificationRequested(NotificationType::Error,
@@ -164,11 +164,11 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
                                                NotificationId::ConnectionLost,
                                                NotificationDuration::Long);
                     emit youConnectionLost();
-                }
 
-                //close connection, sometimes user may stuck in middle of connecting and connection lost
-                //so here we make sure close connection even we dont show connection lost messag to them
-                disconnect(); //make sure tcp disconnects and ui show disconnected elemnts
+                    //close connection, sometimes user may stuck in middle of connecting and connection lost
+                    //so here we make sure close connection even we dont show connection lost messag to them
+                    disconnect(); //make sure tcp disconnects and ui show disconnected elemnts
+                }
             });
 
 
@@ -578,6 +578,11 @@ void User::disconnect()
     //disocnnect sockets.
     socket.disconnectFromHost();
     m_udpSocket.disconnectFromHost();
+
+    //stop udp timers for check connection lost
+    m_udpConnectionTimeout.stop();
+    m_lastUdpActivity.invalidate();
+
 
     resetVariables();
 
@@ -2543,13 +2548,16 @@ void User::onUdpReadyRead()
             setIsConnectedToServer(true);
             setConnectionStatus(UserConnectionStatus::Connected);
             //start to expect every xSeconds ping request from server otherwise, assuming UDP connection has failed
-            m_udpConnectionTimeout.start(UDP_CONNECTION_LOST_TIMER_INTERVAL); // 10 seconds
+            m_udpConnectionTimeout.start();
+            m_lastUdpActivity.start();
             break;
         }
         case PacketType::UdpVoiceData:  //voice
         {
             if(myChannelId()==0)
                 break;
+
+            m_lastUdpActivity.restart();
 
             VoicePacket packet;
             in >> packet;
@@ -2605,6 +2613,7 @@ void User::onUdpReadyRead()
             if(myChannelId()==0)
                 break;
 
+            m_lastUdpActivity.restart();
             VideoFragment frag;
 
             in >> frag;
@@ -2680,7 +2689,7 @@ void User::onUdpReadyRead()
 
 
             //a udp request-ping received, now reset connection timeout to later know is udp connection still alive or not
-            m_udpConnectionTimeout.start(UDP_CONNECTION_LOST_TIMER_INTERVAL);
+            m_lastUdpActivity.restart();
 
 
             //send back same sequence..
