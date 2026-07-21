@@ -1062,7 +1062,10 @@ void User::processPacket(const Packet& packet)
         const Identity* identity = m_identityManager->currentIdentity();
 
         if(!identity)
+        {
+            qCCritical(_app) << "current identity is null!";
             return;
+        }
 
 
         LoginPacket proof;
@@ -1273,7 +1276,10 @@ void User::processPacket(const Packet& packet)
                 qCInfo(_app) << "a username changed";
                 ClientUser* user = m_clientUserManager->user(info.userId);
                 if(!user)
+                {
+                    qCCritical(_app) << "but user not found.";
                     return;
+                }
 
                 user->setUsername(info.payloadValue);
                 if(user->self())
@@ -1301,7 +1307,10 @@ void User::processPacket(const Packet& packet)
 
                 ClientUser* user = m_clientUserManager->user(info.userId);
                 if(!user)
+                {
+                    qCCritical(_app) << "but user not found.";
                     return;
+                }
 
                 bool ok=false;
                 int val = info.payloadValue.toInt(&ok);
@@ -1758,7 +1767,10 @@ void User::processPacket(const Packet& packet)
         qCDebug(_app) <<  "User connected:" << u.username << " identity:" << u.identity;
 
         if(u.id == myId())//if its me ignore because we get me on server's state just testing to find bug why users disappear from channel model
+        {
+            qCInfo(_app) << "it's ourself, we ignore it.";
             break; //when connected, server sends user connected (but actaully server says me (this user) then sends server state there is another me to avoid double me (anyway it ignores to add but ..)
+        }
 
         bool userExists = false;
         //check if user is on offline users (server may have showOfflineUsers ON)
@@ -1898,7 +1910,10 @@ void User::processPacket(const Packet& packet)
             {
                 model = m_textChatModels.value(messageList.channelId);
                 if(!model)
-                    break; //text channel model not found.
+                {
+                    qCWarning(_app) << "text channel model not found to add that received message chunk.";
+                    break;
+                }
             }
 
             model->clear();//to prevent add new chunk with old chunks (duplicated messages) \
@@ -1979,7 +1994,10 @@ void User::processPacket(const Packet& packet)
             //add message to that model
             ChatModel *model = m_textChatModels.value(msg.channelId);
             if(!model)
+            {
+                qCWarning(_app) << "text channel model not found to add that received message.";
                 break; //text channel model not found.
+            }
 
             model->addMessage(msg, senderUser);
 
