@@ -108,8 +108,10 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
 
     //connect clientUserManager to models when user removed, models obey
     connect(m_clientUserManager, &ClientUserManager::userRemoved, m_channelModel, &ChannelModel::removeUser);
-    connect(m_clientUserManager, &ClientUserManager::userRemoved, m_connectedUsersModel, &ConnectedUsersModel::removeUser);
     connect(m_clientUserManager, &ClientUserManager::userRemoved, m_currentChannelParticipant, &ParticipantModel::removeUser);
+
+    //we dont remove user even they went offline for now (due to server sends offline users)
+    // connect(m_clientUserManager, &ClientUserManager::userRemoved, m_connectedUsersModel, &ConnectedUsersModel::removeUser);
 
     connect(m_clientUserManager, &ClientUserManager::cleared, m_channelModel, &ChannelModel::clear);
     connect(m_clientUserManager, &ClientUserManager::cleared, m_connectedUsersModel, &ConnectedUsersModel::clear);

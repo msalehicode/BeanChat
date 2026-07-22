@@ -23,17 +23,19 @@ ClientUserManager::~ClientUserManager()
 ClientUser *ClientUserManager::createUser(quint64 id)
 {
     qCInfo(_clientUser) << "createUser id=" <<id;
-    // if (id == 0)
-    // {
-        // qDebug() << "createUser error: id ==0";
-        // return nullptr;
-    // }
+    if (id == 0)
+    {
+        qDebug() << "createUser error: id ==0";
+        return nullptr;
+    }
 
     if (m_users.contains(id))
     {
         qCWarning(_clientUser) << "createUser error: user exists, id=" <<id;
         return nullptr;
     }
+    else
+        qCInfo(_clientUser) << "id not exists creating User. id=" << id;
 
 
     ClientUser *user = new ClientUser(this);
@@ -42,6 +44,7 @@ ClientUser *ClientUserManager::createUser(quint64 id)
 
     m_users.insert(id, user);
 
+    qCInfo(_clientUser) << "created user id=" << id << " add=" <<user;
     emit userCreated(user);
 
     return user;
@@ -49,7 +52,12 @@ ClientUser *ClientUserManager::createUser(quint64 id)
 
 ClientUser *ClientUserManager::user(quint64 id) const
 {
-    return m_users.value(id, nullptr);
+    ClientUser* found = m_users.value(id, nullptr);
+    if(!found)
+        qCInfo(_clientUser) << "id not exists id=" << id;
+    else
+        qCInfo(_clientUser) << "user found, id=" << found->id() << " add=" << found;
+    return found;
 }
 
 
@@ -73,7 +81,7 @@ void ClientUserManager::removeUser(quint64 id)
 
     ClientUser *user = it.value();
 
-    m_users.erase(it);
+    // m_users.erase(it);
 
     emit userRemoved(user);
 
