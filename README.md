@@ -1,7 +1,45 @@
 # BeanChat
 
-🌐 [BeanChat](https://beanchat.ir)
-A modern voice, video and text chat application built with **Qt 6.9 (QML/C++)**.
+<p align="center">
+  <img src="icons/BeanChat.png" width="128" alt="BeanChat Logo">
+</p>
+
+<p align="center">
+  <b>Plant a server. Grow a community.</b><br>
+  Open-source voice, video and text chat for self-hosted communities.
+</p>
+
+---
+
+<p align="center">
+  <a href="https://beanchat.ir">
+    <img src="https://img.shields.io/badge/Website-beanchat.ir-3b82f6?style=for-the-badge&logo=googlechrome&logoColor=white">
+  </a>
+
+  <a href="https://github.com/msalehicode/BeanChat/releases/latest">
+    <img src="https://img.shields.io/github/v/tag/msalehicode/BeanChat?include_prereleases&style=for-the-badge&color=10B981">
+  </a>
+
+  <a href="https://github.com/msalehicode/BeanChat/blob/master/LICENSE">
+    <img src="https://img.shields.io/github/license/msalehicode/BeanChat?style=for-the-badge">
+  </a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/C%2B%2B-17-00599C?style=flat&logo=cplusplus&logoColor=white">
+  <img src="https://img.shields.io/badge/Qt-6.9-41CD52?style=flat&logo=qt&logoColor=white">
+  <img src="https://img.shields.io/badge/QML-Qt%20Quick-41CD52?style=flat">
+ <br/><br/>
+  <img src="https://img.shields.io/badge/Platform-Windows-0078D6?style=flat&logo=windows">
+  <img src="https://img.shields.io/badge/Platform-Linux-FCC624?style=flat&logo=linux&logoColor=black">
+  <img src="https://img.shields.io/badge/Platform-Android-3DDC84?style=flat&logo=android">
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/github/stars/msalehicode/BeanChat?style=flat">
+  <img src="https://img.shields.io/github/last-commit/msalehicode/BeanChat?style=flat">
+  <img src="https://img.shields.io/github/issues/msalehicode/BeanChat?style=flat">
+</p>
 
 ---
 
