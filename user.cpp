@@ -75,7 +75,7 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
 
             if(!sink)
             {
-                qCWarning(_app) << "video sink of current participant not found for senderid="<<sender->id;
+                qCWarning(_app) << "video sink of current participant not found for senderid="<<sender->id();
                 return;
             }
 

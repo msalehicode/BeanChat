@@ -74,6 +74,7 @@ Popup {
             {
                 if (root.clientUser)
                 {
+                    logger.action("changing user's voice volume")
                     root.clientUser.volume = value
                     relationshipManager.setVoiceVolume(root.clientUser.identity, value)
                 }
@@ -157,6 +158,7 @@ Popup {
             {
                 if (root.clientUser)
                 {
+                    logger.action("localMute/unmute user")
                     root.clientUser.localMuted = !root.clientUser.localMuted
                     relationshipManager.setMuted(root.clientUser.identity, root.clientUser.localMuted)
                 }

@@ -189,6 +189,7 @@ Item
                     {
                         if (mouse.button === Qt.RightButton)
                         {
+                            logger.action("right clicked on user (open contextPopup) on connectedusers")
                             var selectedUser = user.clientUser(model.userId)
                             if (selectedUser.self)
                                 return
@@ -225,6 +226,7 @@ Item
 
                         if(mouse.button === Qt.LeftButton)
                         {
+                            logger.action("right clicked on user (open profilePopup) on connectedusers")
                             profilePopup.clientUser = user.clientUser(model.userId)
                             profilePopup.open()
                         }

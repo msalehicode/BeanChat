@@ -115,6 +115,7 @@ void Logger::writeMessage(QtMsgType type,
     }
 
 
+#ifdef QT_NO_DEBUG
     const QString fileName =
         context.file
             ? QFileInfo(context.file).fileName()
@@ -124,6 +125,7 @@ void Logger::writeMessage(QtMsgType type,
         context.function
             ? QString::fromUtf8(context.function)
             : "?";
+#endif
 
     QTextStream stream(&m_file);
 
@@ -137,13 +139,16 @@ void Logger::writeMessage(QtMsgType type,
            << '['
            << QString(context.category).leftJustified(12)
            << "] "
+#ifdef QT_NO_DEBUG
            << '('
            << fileName
            << "::"
            << context.line
            << " ("
            << function
-           << "):\n"
+           << "):"
+#endif
+           <<"\n\n"
            << message
            << "\n"
            << Qt::endl;
@@ -160,10 +165,12 @@ void Logger::writeMessage(QtMsgType type,
     //         qPrintable(message));
 
     //simple
-    // fprintf(stderr,
-    //         "[%s] %s\n",
-    //         qPrintable(level),
-    //         qPrintable(message));
+#ifdef QT_NO_DEBUG
+    fprintf(stderr,
+            "[%s] %s\n",
+            qPrintable(level),
+            qPrintable(message));
+#endif
 
     if (type == QtFatalMsg)
         abort();
@@ -173,40 +180,40 @@ void Logger::writeMessage(QtMsgType type,
 void Logger::debug(const QString &category,
                    const QString &message)
 {
-    // qCDebug(_ui).noquote()
-    // << '[' << category << ']'
-    // << message;
+    qCDebug(_ui).noquote()
+    << '[' << category << ']'
+    << message;
 }
 
 void Logger::info(const QString &category,
                   const QString &message)
 {
-    // qCInfo(_ui).noquote()
-    // << '[' << category << ']'
-    // << message;
+    qCInfo(_ui).noquote()
+    << '[' << category << ']'
+    << message;
 }
 
 void Logger::warning(const QString &category,
                      const QString &message)
 {
-    // qCWarning(_ui).noquote()
-    // << '[' << category << ']'
-    // << message;
+    qCWarning(_ui).noquote()
+    << '[' << category << ']'
+    << message;
 }
 
 void Logger::critical(const QString &category,
                       const QString &message)
 {
-    // qCCritical(_ui).noquote()
-    // << '[' << category << ']'
-    // << message;
+    qCCritical(_ui).noquote()
+    << '[' << category << ']'
+    << message;
 }
 
 void Logger::action(const QString &message)
 {
-    // qCInfo(_ui).noquote()
-    // << "[ACTION] "
-    // << message;
+    qCInfo(_ui).noquote()
+    << "[ACTION] "
+    << message;
 }
 
 

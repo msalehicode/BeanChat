@@ -66,7 +66,7 @@ Item
             {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
-                onClicked: console.log("clicked on beanchat.")
+                onClicked: logger.action("clicked on beanchat.")
             }
         }
 
@@ -175,6 +175,7 @@ Item
                     acceptedButtons: Qt.LeftButton | Qt.RightButton
                     onDoubleClicked:
                     {
+                        logger.action("double clicked on server on myServers. db-index="+model.dbIndex+" model-id="+model.id)
                         //update server id, to know which server is connecting to (for avatars path)
                         user.connectedServerId=model.dbIndex
 
@@ -185,6 +186,7 @@ Item
                     {
                         if (mouse.button === Qt.RightButton)
                         {
+                            logger.action("right clicked on server,  db-index="+model.dbIndex+" model-id="+model.id)
                             var p = mapToItem(null, width, height/2)
 
                             myServersItemMenu.x = p.x + 12
@@ -226,7 +228,11 @@ Item
             {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
-                onClicked: connectPopup.open()
+                onClicked:
+                {
+                    logger.action("clicked on add server")
+                    connectPopup.open()
+                }
             }
         }
     }

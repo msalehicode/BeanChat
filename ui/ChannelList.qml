@@ -93,7 +93,12 @@ Item
             {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
-                onClicked: serverTitle.opened = !serverTitle.opened
+                onClicked:
+                {
+                    logger.action("clicked on server title to open/close server's setting... popup")
+                    serverTitle.opened = !serverTitle.opened
+                }
+
             }
         }
 
@@ -223,20 +228,25 @@ Item
                         {
                             if(model.channelType===ChannelType.Voice)
                             {
+                                logger.action("clicked on channel type = voice")
                                 if(user.myChannelId===model.channelId)
                                 {
-                                    console.log("we are already in this channel")
+                                    logger.info("channelList","we are already in this channel cannot join request wont send.")
                                     if(user.currentTextChannelId>0) //user was seeing  text channel
                                     {
                                         user.currentTextChannelId=0//hide text channel therefore would show current channel pareticipant
+                                        logger.info("channelList","hiding current text channel content")
                                     }
+                                    else
+                                        logger.warning("channelList","currentTextChannelId is 0 or less")
                                     return;
                                 }
 
-                                console.log("try to join channel id:" , channelId, " name=", channelName)
+                                logger.info("channelList", "try to join channel id:"  + channelId + " name="+ channelName)
                                 if(model.isLocked)
                                 {
                                     //show popup enter password
+                                    logger.info("channelList","selected channel is locked, showing enter password popup");
                                     channelPasswordPopup.channelId=model.channelId;
                                     channelPasswordPopup.channelName=model.channelName;
                                     channelPasswordPopup.isTextChannel=false
@@ -244,19 +254,25 @@ Item
                                 }
                                 else
                                 {
+                                    logger.info("channelList","hiding currentTextChannel and sending join request for not locked channel");
                                     user.currentTextChannelId=0//hide text channel therefore would show current channel pareticipant
                                     user.joinChannel(channelId,"") //non locked passwords default password is empty ""
                                 }
                             }
                             else if(model.channelType===ChannelType.Text)
                             {
+                                logger.action("clicked on channel type = text")
                                 //prevent rejoin current channel
                                 if(user.currentTextChannelId===model.channelId)
+                                {
+                                    logger.warning("channelList","user is seeing same text channel so request join wont send")
                                     return;
+                                }
 
                                 if(model.isLocked)
                                 {
                                     //show popup enter password
+                                    logger.info("channelList","selected text channel is locked showing enter password popup")
                                     channelPasswordPopup.channelId=model.channelId;
                                     channelPasswordPopup.channelName=model.channelName;
                                     channelPasswordPopup.isTextChannel=true
@@ -268,11 +284,12 @@ Item
 
                                     if(!model.saveChats) //if message are temporary
                                     {
-                                        console.log("lets see text channel.. id=" , model.channelId)
+                                        logger.info("channelList","selected text channel is temporary lets see text channel.. id=" + model.channelId)
                                         user.currentTextChannelId=model.channelId; //therefore would hide participants and show text channel
                                     }
                                     //else when channel join accepted and message chunk received would on C++ side do  currentTextChannelId to channel
 
+                                    logger.info("channelList", "send join request to server for text channel (not locked)");
                                     user.joinChannel(model.channelId,"",true)
                                 }
                             }
@@ -301,13 +318,11 @@ Item
                         {
                             theChannel.dragHover = false
 
-                            console.log("Move user",
-                                        drop.source.draggedUserId,
-                                        "to channel",
-                                        channelId)
+                            logger.info("channelList","Move user with id "+  drop.source.draggedUserId + " to channel id " + channelId)
 
                             if(user.isChannelLocked(channelId))
                             {
+                                logger.info("channelList", "selected channel (to move user) is locked, showing enter password popup");
                                 channelPasswordForMoveUserPopup.channelId = channelId
                                 channelPasswordForMoveUserPopup.channelName = channelName
 
@@ -344,6 +359,7 @@ Item
                             cursorShape: Qt.PointingHandCursor
                             onClicked:
                             {
+                                logger.action("clicked on channel settings (would open modifyChannelPopup)")
                                 modifyChannelPopup.initialChannelName=model.channelName
                                 modifyChannelPopup.initialChannelPassword= model.isLocked ? "***" : ""
                                 modifyChannelPopup.initialSaveChats=model.saveChats
@@ -511,9 +527,13 @@ Item
                                 {
                                     if (mouse.button === Qt.RightButton)
                                     {
+                                        logger.action("right clicked on user on channelList")
                                         var selectedUser = user.clientUser(modelData.userid)
                                         if (selectedUser.self)
+                                        {
+                                            logger.action("its self, action abort.")
                                             return
+                                        }
 
                                         userContextPopup.userId = modelData.userid
                                         userContextPopup.username = modelData.username
@@ -547,6 +567,7 @@ Item
 
                                     if (mouse.button === Qt.LeftButton)
                                     {
+                                        logger.action("open user's profile by channelList")
                                         profilePopup.clientUser = user.clientUser(modelData.userid)
                                         profilePopup.open()
                                     }
@@ -622,6 +643,7 @@ Item
                         cursorShape: Qt.PointingHandCursor
                         onClicked:
                         {
+                            logger.action("clicked on signal base (open/close it)")
                             parent.infoVisible = !parent.infoVisible
                         }
                     }
@@ -680,7 +702,11 @@ Item
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
 
-                                onClicked:  signalBase.infoVisible=false
+                                onClicked:
+                                {
+                                    logger.action("clicked on close button connectio info")
+                                    signalBase.infoVisible=false
+                                }
                             }
                         }
 
@@ -819,7 +845,7 @@ Item
                     {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: console.log("share screen")
+                        onClicked: logger.action("clicked on sharescreen")
                     }
                 }
 
@@ -838,7 +864,11 @@ Item
                     {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: user.joinChannel(0,"") //go to default channel (channel less id is 0)
+                        onClicked:
+                        {
+                            logger.action("clicked on leave channel")
+                            user.joinChannel(0,"") //go to default channel (channel less id is 0)
+                        }
                     }
                 }
 
@@ -858,7 +888,11 @@ Item
                     {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: user.disconnect();
+                        onClicked:
+                        {
+                            logger.action("clicked on disconnect")
+                            user.disconnect();
+                        }
                     }
                 }
 
@@ -879,7 +913,11 @@ Item
                     {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: Qt.openUrlExternally(user.serverWebsite)
+                        onClicked:
+                        {
+                            logger.action("clicked on open website of server")
+                            Qt.openUrlExternally(user.serverWebsite)
+                        }
                     }
                 }
 
@@ -931,6 +969,7 @@ Item
                         cursorShape: Qt.PointingHandCursor
                         onClicked:
                         {
+                            logger.action("clicked on myAvatar (would open statusPopup)")
                             var p = userStatus.mapToItem(statusPopup.parent, 0, 0)
 
                             statusPopup.x = p.x + userStatus.width //- statusPopup.width + 100
@@ -966,6 +1005,7 @@ Item
                             cursorShape: Qt.PointingHandCursor
                             onClicked:
                             {
+                                logger.action("clicked on statusIndicator (would open statusPopup)")
                                 var p = userStatus.mapToItem(statusPopup.parent, 0, 0)
 
                                 statusPopup.x = p.x + userStatus.width //- statusPopup.width + 100
@@ -990,6 +1030,7 @@ Item
                         cursorShape: Qt.PointingHandCursor
                         onClicked:
                         {
+                            logger.action("clicked on username (would open modifyProfilePopup)")
                             modifyProfilePopup.avatarSource=user.myAvatarPath
                             modifyProfilePopup.open()
                         }
@@ -1027,7 +1068,11 @@ Item
                     {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: user.muteMicrophone = !user.muteMicrophone
+                        onClicked:
+                        {
+                            logger.action("clicked on mute/unmute microphone")
+                            user.muteMicrophone = !user.muteMicrophone
+                        }
                     }
                 }
 
@@ -1050,7 +1095,11 @@ Item
                     {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: user.muteHeadphone = !user.muteHeadphone
+                        onClicked:
+                        {
+                            logger.action("clicked on deaf/undeaf headphone")
+                            user.muteHeadphone = !user.muteHeadphone
+                        }
                     }
                 }
 
@@ -1071,7 +1120,11 @@ Item
                     {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: changePage("settings")
+                        onClicked:
+                        {
+                            logger.action("clicked on user settings")
+                            changePage("settings")
+                        }
                     }
                 }
             }
@@ -1097,6 +1150,7 @@ Item
 
             onPressed: function(mouse)
             {
+                logger.action("pressed on handle of channelList")
                 startX = mouse.x
                 startWidth = channelList.width
             }
@@ -1113,6 +1167,7 @@ Item
                         pos=channelList.handleMaximumWidth
 
                     channelList.width = pos
+                    logger.action("chaning position of channelList by handle")
                 }
             }
         }
@@ -1131,7 +1186,11 @@ Item
         MouseArea
         {
             anchors.fill: parent
-            onClicked: serverTitle.opened = false
+            onClicked:
+            {
+                logger.action("closing servermenu by bgServerMenuClickToClose")
+                serverTitle.opened = false
+            }
         }
     }
 
@@ -1148,12 +1207,14 @@ Item
 
         onCreateChannelClicked:
         {
+            logger.action("clicked on create channel by serverMenu")
             serverTitle.opened = false
             createChannelPopup.open()
         }
 
         onSettingsClicked:
         {
+            logger.action("clicked on settings by serverMenu")
             serverTitle.opened = false
             console.log("Settings")
         }
@@ -1168,7 +1229,7 @@ Item
 
         onStatusSelected:
         {
-            console.log("status selected=",status)
+            logger.info("channelList", "activity status selected="+status)
             user.updateMyActivityStatus(status)
         }
     }

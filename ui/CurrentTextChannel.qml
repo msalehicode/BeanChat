@@ -27,7 +27,7 @@ Item
     {
         if(root.uploadingFile)
         {
-            console.log("a file is being uploaded, wait to fail or success, cant cancel it")
+            logger.info("currentTextChannel","a file is being uploaded, wait to fail or success, cant cancel it")
             return;
         }
 
@@ -76,6 +76,7 @@ Item
 
         onAccepted:
         {
+            logger.action("a file accepted by file dialog on CurrentTextChannel")
             //to know name and show as selected file to user
             root.selectedFilePath = selectedFile.toString()
             uploadSelectedFile()
@@ -83,7 +84,7 @@ Item
 
         onRejected:
         {
-            console.log("rejected")
+            logger.info("CurrentTextChannel", "file dialog rejected")
         }
     }
 
@@ -266,6 +267,7 @@ Item
 
                         onClicked:
                         {
+                            logger.action("clicked on userProfileAvatar to open profilePopup by CurrentTextChannel")
                             profilePopup.clientUser = user.clientUser(model.senderId)
                             profilePopup.open()
                         }
@@ -320,6 +322,7 @@ Item
 
                                 onClicked:
                                 {
+                                    logger.action("clicked senderName to open profilePopup by CurrentTextChannel")
                                     profilePopup.clientUser = user.clientUser(model.senderId)
                                     profilePopup.open()
                                 }
@@ -339,6 +342,9 @@ Item
                         id:messageContentBase
                         width: parent.width
                         spacing: 6
+                        height: visible? implicitHeight : 0
+                        visible: model.senderRelation === Relationship.Blocked && !blockedOverlay.revealed ? false : true
+
 
                         //make sure show end of long messages
                         onHeightChanged:
@@ -357,7 +363,7 @@ Item
 
                             source:
                             {
-                                    console.log("messageType by source =", model.messageType, "MessageType.Image=",MessageType.Image)
+                                    logger.info("CurrentTextChannel","loader loading message, messageType ="+model.messageType)
 
                                     switch (model.messageType)
                                     {
@@ -370,6 +376,7 @@ Item
                                     case MessageType.Audio:
                                         return "messageDelegates/MessageAudio.qml"
                                     default:
+                                        logger.warning("currentTextChannel","undefined messageType")
                                         return ""
                                     }
                             }
@@ -491,7 +498,11 @@ Item
                         {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: blockedOverlay.revealed = true
+                            onClicked:
+                            {
+                                logger.action("clicked on reveal for blocked content (from blocked user) on currentTextChannel")
+                                blockedOverlay.revealed = true
+                            }
                         }
                     }
                 }
@@ -531,7 +542,11 @@ Item
         {
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
-            onClicked: chatView.positionViewAtEnd()
+            onClicked:
+            {
+                logger.action("clicked on scroll to bottom in CurrentTextChannel")
+                chatView.positionViewAtEnd()
+            }
         }
 
     }
@@ -544,7 +559,7 @@ Item
         {
             if(root.uploadingFile)
             {
-                console.log("sendMessage: a file is being uploaded...")
+                logger.info("currentTextChannel"," send message ignored because a file is being uploaded...")
                 return; //should wait to upload.. or fail upload
             }
 
@@ -553,7 +568,7 @@ Item
             //a file is uploaded and ready to send with caption to it.
             if(root.uploadedFileAttachedId>0)
             {
-                console.log("sendMessage: a file is uploaded we have attachedid",root.uploadedFileAttachedId )
+                logger.info("currentTextChannel", "send message: a file is uploaded we have attachid="+root.uploadedFileAttachedId)
                 msg = messageInput.text.trim()
 
                 user.sendMessage(msg, root.uploadedFileAttachedId, root.selectedFilePath, user.currentTextChannelId)
@@ -568,13 +583,12 @@ Item
             if (msg.length === 0)
                 return
 
-            console.log("sendMessage: sending simple meesage.")
+            logger.info("currentTextChannel","sendMessage: sending simple meesage without any attachment")
             user.sendMessage(msg, user.currentTextChannelId)
 
             messageInput.clear()
 
             // chatView.positionViewAtEnd()
-
         }
 
         anchors {
@@ -678,7 +692,11 @@ Item
                         anchors.fill: parent
                         enabled: !root.uploadingFile
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: root.resetAttachFile()
+                        onClicked:
+                        {
+                            logger.action("clicked on remove attached file in currentTextChannel")
+                            root.resetAttachFile()
+                        }
                     }
                 }
             }
@@ -744,6 +762,7 @@ Item
 
                         onClicked:
                         {
+                            logger.action("clicked on attach button on currentTextChannel")
                             fileDialog.open()
                         }
                     }
@@ -784,6 +803,7 @@ Item
                                 && !(event.modifiers & Qt.ShiftModifier))
                             {
                                 event.accepted = true
+                                logger.action("send message by keypressed on textinput of currentTExtChannel")
                                 enterTextBase.sendMessage()
                             }
                         }
@@ -812,7 +832,11 @@ Item
                     {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: enterTextBase.sendMessage()
+                        onClicked:
+                        {
+                            logger.action("send message by send button of currentTExtChannel")
+                            enterTextBase.sendMessage()
+                        }
                     }
 
                 }
@@ -920,6 +944,7 @@ Item
 
                             onClicked:
                             {
+                                logger.action("clicked on ok for errorDialogVisible (upload) in currentTextChannel")
                                 root.errorDialogVisible = false
                             }
                         }
@@ -951,6 +976,7 @@ Item
 
             // for (let i = 0; i < drop.urls.length; ++i)
             // {
+                    logger.action("a file dropped into currentTextChannel")
                     root.selectedFilePath = drop.urls[0] //for now we only support one file at the time.
                     uploadSelectedFile()
             // }

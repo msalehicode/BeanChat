@@ -148,6 +148,7 @@ Popup
 
                         onClicked:
                         {
+                            logger.action("clicked on copy to clipboard")
                             clipboardHelper.copy(root.value)
 
                             copyLabel.text = "Copied!"

@@ -178,6 +178,7 @@ Popup
                 visible: !clientUser.self //dont show for self
                 function updateNote()
                 {
+                        logger.action("setNote for user on userProfile.")
                         relationshipManager.setNote(clientUser.identity, userNoteField.text)
                         clientUser.note=userNoteField.text
                 }
@@ -320,6 +321,7 @@ Popup
 
                                 onClicked:
                                 {
+                                    logger.action("clicked on  copy to clipboard user's identity on user profile")
                                     clipboardHelper.copy(identityText.text)
 
                                     copyLabel.text = "Copied!"
@@ -396,11 +398,13 @@ Popup
                                    {
                                        if(clientUser.relationship===Relationship.None)
                                        {
+                                           logger.action("clicked on add firend user.")
                                            relationshipManager.addFriend(clientUser.identity)
                                            clientUser.relationship=Relationship.Friend
                                        }
                                        else if(clientUser.relationship===Relationship.Friend)
                                        {
+                                           logger.action("clicked on remove friend user.")
                                            relationshipManager.removeFriend(clientUser.identity)
                                            clientUser.relationship=Relationship.None
                                        }
@@ -430,6 +434,7 @@ Popup
                                    {
                                        if(clientUser.relationship===Relationship.None)
                                        {
+                                           logger.action("clicked on blockuser")
                                            relationshipManager.blockUser(clientUser.identity)
                                            clientUser.relationship=Relationship.Blocked
                                            relationshipManager.setMuted(clientUser.identity,true)
@@ -437,6 +442,7 @@ Popup
                                        }
                                        else if(clientUser.relationship===Relationship.Blocked)
                                        {
+                                           logger.action("clicked on unblockuser")
                                            relationshipManager.unblockUser(clientUser.identity)
                                            clientUser.relationship=Relationship.None
                                            relationshipManager.setMuted(clientUser.identity,false)
@@ -516,7 +522,7 @@ Popup
                                     if(clientUser)
                                     {
                                         var channelId = clientUser.channelId;
-                                        console.log("try to join channel id:" , channelId, " via join button from profile.")
+                                        logger.info("userProfile", "try to join channel id: " + channelId + " via join button from profile.")
                                         if(user.isChannelLocked(channelId))
                                         {
                                             //show popup enter password
@@ -605,7 +611,7 @@ Popup
 
                         onClicked:
                         {
-                            // TODO
+                            logger.action("clicked on send message in userprofile")
                         }
                     }
                 }
@@ -634,7 +640,7 @@ Popup
 
                         onClicked:
                         {
-                            // TODO
+                            logger.action("clicked on call in userprofile")
                         }
                     }
                 }

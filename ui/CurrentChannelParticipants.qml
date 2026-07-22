@@ -87,7 +87,7 @@ Item
                         radius: 90 //due to its C++ Property radius value may be varied to normal qml radiuses. e.g 30 has to be 45 too looks simular
                         Component.onCompleted:
                         {
-                            console.log("building VideItem, username=",username, "sink=",videoSink, "isCameraOpen=",isCameraOpen)
+                            logger.info("currentParticipant","building VideItem, username="+username+ "sink="+videoSink+"isCameraOpen="+isCameraOpen)
                         }
                     }
                 }
@@ -214,6 +214,7 @@ Item
                     {                       
                         if (mouse.button === Qt.RightButton)
                         {
+                            logger.action("right clicked on user (would show contextPopup) on currentPariticpant")
                             var selectedUser = user.clientUser(model.userId)
                             if (selectedUser.self)
                                 return
@@ -250,6 +251,7 @@ Item
 
                         if (mouse.button === Qt.LeftButton)
                         {
+                            logger.action("left clicked on user (would show profilePopup) on currentPariticpant")
                             profilePopup.clientUser = user.clientUser(model.userId)
                             profilePopup.open()
                         }

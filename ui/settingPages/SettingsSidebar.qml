@@ -71,23 +71,23 @@ Item
                 {
                     title: "Video",
                     icon: "🎥"
-                },
-                {
-                    title: "Appearance",
-                    icon: "🎨"
-                },
-                {
-                    title: "Notifications",
-                    icon: "🔔"
-                },
-                {
-                    title: "Privacy & Safety",
-                    icon: "🛡"
-                },
-                {
-                    title: "Advanced",
-                    icon: "⚙"
                 }
+                // {
+                //     title: "Appearance",
+                //     icon: "🎨"
+                // },
+                // {
+                //     title: "Notifications",
+                //     icon: "🔔"
+                // },
+                // {
+                //     title: "Privacy & Safety",
+                //     icon: "🛡"
+                // },
+                // {
+                //     title: "Advanced",
+                //     icon: "⚙"
+                // }
             ]
 
             delegate: Rectangle

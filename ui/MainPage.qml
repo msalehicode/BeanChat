@@ -88,9 +88,10 @@ Item {
                             {
                                 importantNotifierBar.visible=false
                                 importantNotifierBar.nActionButtonTask()
+                                logger.action("clicked on action Important MouseArea")
                             }
                             else
-                                console.log("action not defined.")
+                                logger.action("clicked on action Important MouseArea but action not defined")
                         }
                     }
                 }
@@ -124,7 +125,11 @@ Item {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
                         hoverEnabled: true
-                        onClicked: importantNotifierBar.visible=false
+                        onClicked:
+                        {
+                            logger.action("clicked on closeButtonNotifierBar")
+                            importantNotifierBar.visible=false
+                        }
                     }
                 }
 
@@ -220,6 +225,7 @@ Item {
                                         rightPanel.currentTab = 0
                                         user.isChatOpen=false
                                         rightPanel.width=300
+                                        logger.action("clicked on open connected users tab")
                                     }
                                 }
                             }
@@ -282,6 +288,7 @@ Item {
                                         user.chatUnreadMessages=0; //reset unread messags count
                                         user.isChatOpen=true
                                         rightPanel.width=400
+                                        logger.action("clicked on open tab for channel chat ")
                                     }
                                 }
                             }
@@ -325,6 +332,7 @@ Item {
                             {
                                 startX = mouse.x
                                 startWidth = rightPanel.width
+                                logger.action("pressed on righthandle")
                             }
 
                             onPositionChanged: function(mouse)
@@ -339,6 +347,7 @@ Item {
                                         pos = 800
 
                                     rightPanel.width = pos
+                                    logger.action("position of the right handle changed")
                                 }
                             }
                         }
@@ -361,6 +370,7 @@ Item {
         connectButton.onClicked:
         {
             //update server id, to know which server is connecting to (for avatars path)
+            logger.action("clicked on connect button by myServersItemMenu")
             user.connectedServerId=dbIndex
 
             //connect
@@ -372,12 +382,14 @@ Item {
 
         disconnectButton.onClicked:
         {
+            logger.action("clicked on disconnect button by myServersItemMenu")
             user.disconnect()
             close()
         }
 
         modifyButton.onClicked:
         {
+            logger.action("clicked on modify button by myServersItemMenu")
             modifySavedServerPopup.dbIndex = dbIndex;
             modifySavedServerPopup.currentIp = ip;
             modifySavedServerPopup.currentPort = port;
@@ -390,6 +402,7 @@ Item {
 
         shareQRcodeButton.onClicked:
         {
+            logger.action("clicked on share QRcode button by myServersItemMenu")
             close()
             showQRcodePopup.qrData=ip+":"+port
             showQRcodePopup.titleText="Join Me (" + serverName + ")"
@@ -400,6 +413,7 @@ Item {
 
         shareServerCodeButton.onClicked:
         {
+            logger.action("clicked on share serverCode button by myServersItemMenu")
             close()
             showToCopyPopup.value=serverCode.encode(ip,Number(port))
             showToCopyPopup.titleText="Share via ServerCode"
@@ -409,6 +423,7 @@ Item {
 
         deleteButton.onClicked:
         {
+            logger.action("clicked on delete button by myServersItemMenu")
             user.deleteSavedServer(id,dbIndex)
             close()
         }
@@ -427,6 +442,7 @@ Item {
         id:modifySavedServerPopup
         onSaveClicked:
         {
+            logger.action("clicked on save button on modifySavedServerPopup")
             user.updateSavedServer(serverId,
                         dbIndex,
                         serverName,
@@ -447,6 +463,7 @@ Item {
 
         onPasswordEntered:
         {
+            logger.action("clicked on enter button on channelPasswordPopup")
             user.joinChannel(channelId, password, isTextChannel)
         }
     }
@@ -469,14 +486,26 @@ Item {
     CreateChannelPopup
     {
         id:createChannelPopup
-        onCreateClicked: user.createChannel(channelName,channelPassword,saveChats,isVoiceChannel)
+        onCreateClicked:
+        {
+            logger.action("clicked on create button on createChannelPopup")
+            user.createChannel(channelName,channelPassword,saveChats,isVoiceChannel)
+        }
     }
 
     ModifyChannelPopup
     {
         id:modifyChannelPopup
-        onSaveClicked: user.updateChannel(targetChannelId, channelName, channelPassword, saveChats)
-        onDeleteClicked: user.deleteChannel(targetChannelId)
+        onSaveClicked:
+        {
+            logger.action("clicked on save button on modifyChannelPopup")
+            user.updateChannel(targetChannelId, channelName, channelPassword, saveChats)
+        }
+        onDeleteClicked:
+        {
+            logger.action("clicked on delete button on modifyChannelPopup")
+            user.deleteChannel(targetChannelId)
+        }
     }
 
     ModifyProfilePopup
