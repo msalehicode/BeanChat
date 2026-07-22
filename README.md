@@ -30,10 +30,10 @@ or browse
 
 | Platform | Status | Stage | Version | Download |
 |-----------|--------|--------|--------|--------|
-| 🗄️ Server | ✅ | Beta | 0.17.16 | [⬇️](https://beanchat.ir) |
-| 🪟 Windows Client | ✅ | Beta | v0.25.24 | [⬇️ beta](https://beanchat.ir) |
-| 🐧 Linux Client | ✅ | Beta | v0.25.24 | Working on |
-| 🤖 Android Client | 🛠️ | Debug | v?.?.? | [⬇️ debug](https://beanchat.ir) |
+| 🗄️ Server | ✅ | Beta | 0.21.26 | [⬇️](https://beanchat.ir/bc/#server) |
+| 🪟 Windows Client | ✅ | Beta | v0.29.62 | [⬇️ beta](https://beanchat.ir/bc/#downloads) |
+| 🤖 Android Client | 🛠️ | Debug | v?.?.? | [⬇️ debug](https://beanchat.ir/bc/#downloads) |
+| 🐧 Linux Client | ✅ | Beta | v0.29.62 | Working on |
 | 🍎 macOS Client | - | - | - | - |
 | 📱 iOS Client | - | - | - | - |
 
@@ -87,13 +87,25 @@ https://github.com/user-attachments/assets/9dd1aafb-20a4-4aa3-b21d-816efbbe39e1
 19. **Mute/Unmute** users' voice locally, also can **adjust voice volume** of users by right click on their name in user's setting popup.
 20. **identity** system for login into accounts. also can switch/rename/create/delete identities when user is disconnected from any server.
 21. **Add Friend, Block User, Save Note for other users**
-    - blocked user -> change username to red, hide their avatar, mute locally, blur their text messages (only can be shown by clock reveal per message. 
+    - blocked user -> change username to red, hide their avatar, mute locally, blur their text messages (only can be shown by clock reveal per message.
     - added friend users -> change their username and isTalking to green.
     - enter note/details for eavh user, to recognize them later. it would shown on any server because it saved for that user's identity.
-23. **share server via serverCode** (servers with ip:port), enter serverCode to connect to server.
-24. **share server via QR code image** (ip:port or domain address) [THIS IS FOR FUTURE TO SHARE SERVER WITH PHONE]
-25. **copy to clipboard** (for serverCode to copy code, and UserProfile to copy identity)
-26. **check for new updates on start** if its available show on importantNotificationBar with UPDATE NOW button, when clicked on update now, try open updater then close self to let update. (**BeanChatUpdater** repository to checks for missing/different files then download changes and install them). 
+22. **share server via serverCode** (servers with ip:port), enter serverCode to connect to server.
+23. **share server via QR code image** (ip:port or domain address) [THIS IS FOR FUTURE TO SHARE SERVER WITH PHONE]
+24. **copy to clipboard** (for serverCode to copy code, and UserProfile to copy identity)
+25. **check for new updates on start** if its available show on importantNotificationBar with UPDATE NOW button, when clicked on update now, try open updater then close self to let update. (**BeanChatUpdater** repository to checks for missing/different files then download changes and install them).
+26. **logger** save important events / errors of application and only report those crashes ones to our sever to know bugs and fix them.
+27. **show offline users of server** and list in connectedUsers
+28. **upload/download file** in chat
+    - show icon, name of uploaded/attached file in chat before sending and can remove that attached file
+    - drag and drop file to chat works (but only one file by the time)
+    - a simple player for video and audio files
+    - show image and animated-image (gif) in chat with small size and when clicked open popup with larger size
+    - show error if exsits before upload file (server may say no, e.g to large files)
+29. **text channel type** with save and load messages
+    - send file is possible
+    - can keep them private with password
+    - also can be temporary (won't save and load chats) 
 ---
 
 # 🛠 Building
