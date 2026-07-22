@@ -66,12 +66,18 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
             ClientUser *sender = m_currentChannelParticipant->findUser(senderId);
 
             if(!sender)
+            {
+                qCWarning(_app) << "sender of video not found, id=" << senderId;
                 return;
+            }
 
             VideoSink *sink = m_currentChannelParticipant->videoSink(sender->id());
 
             if(!sink)
+            {
+                qCWarning(_app) << "video sink of current participant not found for senderid="<<sender->id;
                 return;
+            }
 
             sink->setImage(image);
         });
@@ -162,9 +168,9 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
     connect(&m_udpConnectionTimeout, &QTimer::timeout,
             this, [&]()
             {
-                if(isConnectedToServer() && m_lastUdpActivity.elapsed()>9000) //max is 9s
+                if(isConnectedToServer() && m_lastUdpActivity.elapsed()>14000) //max is 14s
                 {
-                    qCInfo(_udp) << "server didn't send ping request for a while, so assuming connection has lost.";
+                    qCInfo(_udp) << "server didn't send ping request for a while, so assuming connection has lost lastUdpActivity=" <<  m_lastUdpActivity.elapsed();
                     emit notificationRequested(NotificationType::Error,
                                                "Connection Lost",
                                                NotificationId::ConnectionLost,
@@ -2572,8 +2578,6 @@ void User::onUdpReadyRead()
             if(myChannelId()==0)
                 break;
 
-            m_lastUdpActivity.restart();
-
             VoicePacket packet;
             in >> packet;
 
@@ -2582,7 +2586,10 @@ void User::onUdpReadyRead()
                 ClientUser* senderUser = m_channelModel->getUser(m_myChannelId, packet.senderId);
 
                 if(!senderUser)
+                {
+                    qCWarning(_app) << "sender of voice data has not found senderid=" << packet.senderId;
                     continue;
+                }
 
                 if(!senderUser->isTalking())
                     senderUser->setIsTalking(true);
@@ -2705,6 +2712,7 @@ void User::onUdpReadyRead()
 
             //a udp request-ping received, now reset connection timeout to later know is udp connection still alive or not
             m_lastUdpActivity.restart();
+            qCInfo(_app) << "ping received: " << p.lastPing;
 
 
             //send back same sequence..
