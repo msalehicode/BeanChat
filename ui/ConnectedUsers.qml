@@ -147,35 +147,6 @@ Item
                 }
 
 
-                Image
-                {
-                    id:iconUserOs
-                    source: getOsIcon(model.userOsName)
-                    width: 20
-                    height: 20
-                    visible: model.userStatus!==Presence.Offline
-                    anchors
-                    {
-                        right:parent.right
-                        rightMargin: 20
-                        verticalCenter:parent.verticalCenter
-                    }
-
-                    function getOsIcon(name)
-                    {
-                        switch(name)
-                        {
-                            case "Android": return "icons/os/android.png";
-                            case "Windows": return "icons/os/windows.png";
-                            case "iOS": return "icons/os/ios.png";
-                            case "macOS": return "icons/os/macos.png";
-                            case "Linux": return "icons/os/linux.png";
-                            default: return "";
-                        }
-                    }
-                }
-
-
 
                 MouseArea
                 {
@@ -235,6 +206,94 @@ Item
 
 
                 }
+
+
+                Row
+                {
+                    id:badgesRow
+                    anchors
+                    {
+                        right:parent.right
+                        rightMargin: 10
+                        verticalCenter:parent.verticalCenter
+                    }
+                    spacing: 3
+                    visible: model.userStatus!==Presence.Offline
+
+                    readonly property int iconBadgeSize:22
+
+
+
+                    Image
+                    {
+                        id:iconBadgeDeveloper
+                        source: "icons/badges/developer.png"
+                        width: badgesRow.iconBadgeSize
+                        height: badgesRow.iconBadgeSize
+                        anchors.verticalCenter:parent.verticalCenter
+                        visible: badgesRow.visible ? user.hasBadge(model.userId, Badge.Developer) : false
+
+                        HoverHandler { id: hoverBadge1}
+                        ToolTip.visible: hoverBadge1.hovered
+                        ToolTip.text: "Developer"
+                    }
+
+                    Image
+                    {
+                        id:iconBadgeDonator
+                        source: "icons/badges/donator.png"
+                        width: badgesRow.iconBadgeSize
+                        height: badgesRow.iconBadgeSize
+                        anchors.verticalCenter:parent.verticalCenter
+                        visible: badgesRow.visible ? user.hasBadge(model.userId, Badge.Donator) : false
+
+                        HoverHandler { id: hoverBadge2}
+                        ToolTip.visible: hoverBadge2.hovered
+                        ToolTip.text: "Donator"
+                    }
+
+
+                    Image
+                    {
+                        id:iconBadgeDebugger
+                        source: "icons/badges/debugger.png"
+                        width: badgesRow.iconBadgeSize
+                        height: badgesRow.iconBadgeSize
+                        anchors.verticalCenter:parent.verticalCenter
+                        visible: badgesRow.visible ? user.hasBadge(model.userId, Badge.Debugger) : false
+
+                        HoverHandler { id: hoverBadge3 }
+                        ToolTip.visible: hoverBadge3.hovered
+                        ToolTip.text: "Debugger"
+                    }
+
+                    Image
+                    {
+                        id:iconUserOs
+                        source: getOsIcon(model.userOsName)
+                        width: badgesRow.iconBadgeSize
+                        height: badgesRow.iconBadgeSize
+                        anchors.verticalCenter:parent.verticalCenter
+
+                        HoverHandler { id: hoverUserOs }
+                        ToolTip.visible: hoverUserOs.hovered
+                        ToolTip.text: model.userOsName
+                        function getOsIcon(name)
+                        {
+                            switch(name)
+                            {
+                                case "Android": return "icons/os/android.png";
+                                case "Windows": return "icons/os/windows.png";
+                                case "iOS": return "icons/os/ios.png";
+                                case "macOS": return "icons/os/macos.png";
+                                case "Linux": return "icons/os/linux.png";
+                                default: return "";
+                            }
+                        }
+                    }
+
+                }
+
 
             }
         }

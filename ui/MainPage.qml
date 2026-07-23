@@ -171,7 +171,7 @@ Item {
             Item
             {
                 id:rightPanel
-                width: 250
+                width: 300
                 height: parent.height
                 clip: true
                 property int currentTab: 0
@@ -341,8 +341,8 @@ Item {
                                 {
                                     let dx = mouse.x - startX
                                     let pos = Math.max(50, startWidth - dx);
-                                    if (pos < 250)
-                                        pos = 250
+                                    if (pos < 300)
+                                        pos = 300
                                     else if (pos > 800)
                                         pos = 800
 

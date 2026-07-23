@@ -41,6 +41,7 @@
 #include "managers/clientusermanager.h"
 #include "managers/identitymanager.h"
 #include "managers/relationshipmanager.h"
+#include "managers/badgemanager.h"
 #include "audio/audiomixer.h"
 
 
@@ -366,6 +367,7 @@ int main(int argc, char *argv[])
     qmlRegisterUncreatableMetaObject(Msg::staticMetaObject, "BeanChatClient", 1, 0, "MessageType", "Enums only");
     qmlRegisterUncreatableMetaObject(ChannelType::staticMetaObject, "BeanChatClient", 1, 0, "ChannelType", "Enums only");
     qmlRegisterUncreatableType<User::UserConnectionStatus> ("BeanChatClient", 1, 0, "ConnectionStatus", "Enums only");
+    qmlRegisterUncreatableType<BadgeManager>("BeanChatClient", 1, 0, "Badge", "Enums only");
 
     //qml
     QQmlApplicationEngine engine;

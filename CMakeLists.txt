@@ -5,7 +5,7 @@ project(BeanChat VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(APP_CURRENT_VERSION "0.29.62")
+set(APP_CURRENT_VERSION "0.30.62")
 set(APP_TitleName "BeanChat")
 set(APP_OrganizationName "orgBeanChat")
 set(APP_ApplicationName "appBeanChat")
@@ -179,6 +179,7 @@ qt_add_qml_module(appBeanChat
         managers/identitymanager.h managers/identitymanager.cpp
         managers/relationshipmanager.h managers/relationshipmanager.cpp
         managers/logmanager.h managers/logmanager.cpp
+        managers/badgemanager.h managers/badgemanager.cpp
 
         #logger
         logging/logger.h logging/logger.cpp
@@ -258,6 +259,11 @@ qt_add_qml_module(appBeanChat
     ui/icons/headphone.png ui/icons/headphone-closed.png ui/icons/headphone-red.png
     ui/icons/microphone.png ui/icons/microphone-closed.png ui/icons/microphone-red.png
     ui/icons/screen.png ui/icons/screen-closed.png ui/icons/screen-red.png
+
+    #badge icons
+    ui/icons/badges/debugger.png
+    ui/icons/badges/developer.png
+    ui/icons/badges/donator.png
 
     #signal icons
     ui/icons/signal.png ui/icons/signal-green.png ui/icons/signal-orange.png ui/icons/signal-red.png ui/icons/signal-yellow.png

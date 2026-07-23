@@ -17,6 +17,11 @@ public:
 
     QString manifestUrl() const;
 
+    [[nodiscard]]
+    QString badgesUrl() const;
+
+private:
+
 private:
     bool m_success = false;
     bool m_updateAvailable = false;
@@ -25,4 +30,5 @@ private:
     QVersionNumber m_latestVersion;
 
     QString m_manifestUrl;
+    QString m_badgesUrl;
 };

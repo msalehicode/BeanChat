@@ -52,6 +52,7 @@ using namespace BeanChatCommon;
 #include "managers/clientusermanager.h"
 #include "managers/identitymanager.h"
 #include "managers/relationshipmanager.h"
+#include "managers/badgemanager.h"
 
 #include "models/identity.h"
 #include <QStandardPaths>
@@ -165,6 +166,8 @@ public:
     //myServers actions
     Q_INVOKABLE void updateSavedServer(quint64 serverId, quint64 dbIndex, const QString &name, const QString &ip, const QString &port);
     Q_INVOKABLE void deleteSavedServer(quint64 serverId, quint64 serverDbIndex=-1);
+
+    Q_INVOKABLE bool hasBadge(quint64 userId, BadgeManager::Badge badge) const;
 
     void askForServerState();
     void askForNotFoundAvatars();
@@ -520,7 +523,10 @@ private:
     Q_PROPERTY(ChatModel* currentTextChatModel  READ currentTextChatModel NOTIFY currentTextChatModelChanged)
 
     //update
-    UpdateChecker m_updateChecker;
+    BadgeManager m_badgeManager;
+    UpdateChecker* m_updateChecker=nullptr;
+
+
 
 
     Q_PROPERTY(int myId READ myId WRITE setMyId NOTIFY myIdChanged FINAL)

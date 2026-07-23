@@ -203,42 +203,67 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
 
 
     //setup update checker
-    connect(&m_updateChecker,
-            &UpdateChecker::updateAvailable,
-            this,
-            [this](const LatestResponse &response)
-            {
-                qCInfo(_app) << "update available, update to " << response.latestVersion().toString() << "current version = " << myAppVersion();
-                emit showImportantNotifierBar("Update "+ response.latestVersion().toString() + " is available",
-                                                                         ImportantNotificationColor::Blue);
-            });
+    m_updateChecker = new UpdateChecker(&m_badgeManager,this);
 
-    connect(&m_updateChecker,
-            &UpdateChecker::noUpdateAvailable,
-            this,
-            []()
-            {
-                qCInfo(_app) << "Already up to date.";
-            });
+    if(m_updateChecker)
+    {
+        connect(m_updateChecker,
+                &UpdateChecker::updateAvailable,
+                this,
+                [this](const LatestResponse &response)
+                {
+                    qCInfo(_app) << "update available, update to " << response.latestVersion().toString() << "current version = " << myAppVersion();
+                    emit showImportantNotifierBar("Update "+ response.latestVersion().toString() + " is available",
+                                                  ImportantNotificationColor::Blue);
+                });
 
-    connect(&m_updateChecker,
-            &UpdateChecker::errorOccurred,
-            this,
-            [this](const QString &err)
-            {
-                qCWarning(_app) << "error to check for update err=" << err;
-                // emit showImportantNotifierBar("Failed to check for update, "+err,
-                //                               ImportantNotificationColor::Red);
-            });
+        connect(m_updateChecker,
+                &UpdateChecker::noUpdateAvailable,
+                this,
+                []()
+                {
+                    qCInfo(_app) << "Already up to date.";
+                });
+
+        connect(m_updateChecker,
+                &UpdateChecker::errorOccurred,
+                this,
+                [this](const QString &err)
+                {
+                    qCWarning(_app) << "error to check for update err=" << err;
+                    // emit showImportantNotifierBar("Failed to check for update, "+err,
+                    //                               ImportantNotificationColor::Red);
+                });
+
+        connect(m_updateChecker,
+                &UpdateChecker::errorLoadingBadges,
+                this,
+                [this](const QString &err)
+                {
+                    qCWarning(_app) << "error to load badges err=" << err;
+                });
 
 
-    //check for update at startup
-    QString targetPlatform =  platformName();
-    if(targetPlatform=="Windows") targetPlatform="windows-x64";
-    else if(targetPlatform=="Linux") targetPlatform="linux-x64";
-    else if(targetPlatform=="Android") targetPlatform="android-arm8";
+        connect(m_updateChecker,
+                &UpdateChecker::badgesDownloaded,
+                this,
+                []()
+                {
+                    qCInfo(_app) << "badges downloaded";
+                });
 
-    m_updateChecker.checkForUpdates(targetPlatform, myAppVersion());
+
+        //check for update at startup
+        QString targetPlatform =  platformName();
+        if(targetPlatform=="Windows") targetPlatform="windows-x64";
+        else if(targetPlatform=="Linux") targetPlatform="linux-x64";
+        else if(targetPlatform=="Android") targetPlatform="android-arm8";
+        m_updateChecker->checkForUpdates(targetPlatform, myAppVersion()); //check for updates and get badges
+    }
+    else
+        qCCritical(_app) << "failed to setup update manager.";
+
+
 }
 
 
@@ -560,6 +585,19 @@ void User::deleteSavedServer(quint64 serverId, quint64 serverDbIndex)
 
     //anyway delete from model
     m_myServersModel->removeServer(serverId);
+}
+
+bool User::hasBadge(quint64 userId, BadgeManager::Badge badge) const
+{
+    ClientUser* usr = m_clientUserManager->user(userId);
+    if(!usr)
+    {
+        qCWarning(_app) << "user not found to check badge";
+        return false;
+    }
+    bool result= m_badgeManager.hasBadge(usr->identity(), static_cast<quint32>(badge));
+    qCInfo(_app) <<  usr->id() << " has badge : " << static_cast<int>(badge) << " has: " << result;
+    return result;
 }
 
 void User::switchOrConnectToServer(const QString &serverIp, const QString &str_serverPort, int serverId)

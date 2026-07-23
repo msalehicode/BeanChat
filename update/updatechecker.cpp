@@ -6,8 +6,9 @@
 
 #include "logging/loggingcategories.h"
 
-UpdateChecker::UpdateChecker(QObject *parent)
+UpdateChecker::UpdateChecker(BadgeManager *badgeManager, QObject *parent)
     : QObject(parent)
+    , m_badgeManager(badgeManager)
 {
 }
 
@@ -63,6 +64,36 @@ void UpdateChecker::checkForUpdates(const QString &platform,
                     qCInfo(_updater) << "no update available.";
                     emit noUpdateAvailable();
                 }
+
+
+                //download bages
+                downloadBadges(m_latestResponse.badgesUrl());
+
+                reply->deleteLater();
+            });
+}
+
+
+void UpdateChecker::downloadBadges(const QString &url)
+{
+    QNetworkReply *reply =
+        m_network.get(QNetworkRequest(QUrl(url)));
+
+    connect(reply,
+            &QNetworkReply::finished,
+            this,
+            [this, reply]()
+            {
+                if (reply->error() != QNetworkReply::NoError)
+                {
+                    qCWarning(_updater) << "server replied error for badges=" << reply->errorString();
+                    emit errorLoadingBadges(reply->errorString());
+                    reply->deleteLater();
+                    return;
+                }
+
+                emit badgesDownloaded();
+                m_badgeManager->load(reply->readAll());
 
                 reply->deleteLater();
             });

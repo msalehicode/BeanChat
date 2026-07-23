@@ -15,6 +15,7 @@ bool LatestResponse::load(const QByteArray &json)
     m_mandatory = false;
     m_latestVersion = {};
     m_manifestUrl.clear();
+    m_badgesUrl.clear();
 
     QJsonParseError error;
 
@@ -54,12 +55,16 @@ bool LatestResponse::load(const QByteArray &json)
     m_manifestUrl =
         root["manifest"].toString();
 
+    m_badgesUrl =
+        root["badges"].toString();
+
     qCInfo(_updater) << "====== Latest Response ======";
     qCInfo(_updater) << "Success :" << m_success;
     qCInfo(_updater) << "Update? :" << m_updateAvailable;
     qCInfo(_updater) << "Mandatory:" << m_mandatory;
     qCInfo(_updater) << "Version :" << m_latestVersion.toString();
     qCInfo(_updater) << "Manifest:" << m_manifestUrl;
+    qCInfo(_updater) << "Badges:" << m_badgesUrl;
     qCInfo(_updater) << "=============================";
 
     return true;
@@ -89,4 +94,9 @@ QVersionNumber LatestResponse::latestVersion() const
 QString LatestResponse::manifestUrl() const
 {
     return m_manifestUrl;
+}
+
+QString LatestResponse::badgesUrl() const
+{
+    return m_badgesUrl;
 }
