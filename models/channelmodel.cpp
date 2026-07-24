@@ -453,6 +453,7 @@ void ChannelModel::moveUser(
     quint64 userId,
     quint64 newChannelId)
 {
+    qCInfo(_models) << "move user to channel called";
     UserItem user;
 
     bool found = false;
@@ -462,7 +463,10 @@ void ChannelModel::moveUser(
         for(int i=0; i<channel.users.size(); ++i)
         {
             if (!channel.users[i].user)
+            {
+                qCCritical(_models) << "failed to move user id=" <<userId <<" into newChannelid=" << newChannelId << " invalid user";
                 continue;
+            }
 
             if(channel.users[i].user->id() == userId)
             {

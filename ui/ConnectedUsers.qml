@@ -197,7 +197,7 @@ Item
 
                         if(mouse.button === Qt.LeftButton)
                         {
-                            logger.action("right clicked on user (open profilePopup) on connectedusers")
+                            logger.action("left clicked on user (open profilePopup) on connectedusers")
                             profilePopup.clientUser = user.clientUser(model.userId)
                             profilePopup.open()
                         }

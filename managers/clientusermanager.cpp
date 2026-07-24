@@ -42,6 +42,13 @@ ClientUser *ClientUserManager::createUser(quint64 id)
 
     user->setId(id);
 
+    //test to know whne destoryed..
+    connect(user, &QObject::destroyed, this,
+            [id]()
+            {
+                qCCritical(_clientUser)  << "======================= =CLIENT USER DESTROYED id =" << id;
+            });
+
     m_users.insert(id, user);
 
     qCInfo(_clientUser) << "created user id=" << id << " add=" <<user;
@@ -55,8 +62,8 @@ ClientUser *ClientUserManager::user(quint64 id) const
     ClientUser* found = m_users.value(id, nullptr);
     if(!found)
         qCInfo(_clientUser) << "id not exists id=" << id;
-    else
-        qCInfo(_clientUser) << "user found, id=" << found->id() << " add=" << found;
+    // else
+        // qCInfo(_clientUser) << "user found, id=" << found->id() << " add=" << found;
     return found;
 }
 
@@ -91,10 +98,9 @@ void ClientUserManager::removeUser(quint64 id)
 
 void ClientUserManager::clear()
 {
+    emit cleared();
+
     qCInfo(_clientUser) << "clear ClientUserManager";
     qDeleteAll(m_users);
-
     m_users.clear();
-
-    emit cleared();
 }

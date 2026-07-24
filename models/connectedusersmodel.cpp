@@ -107,6 +107,7 @@ void ConnectedUsersModel::clear()
 
 void ConnectedUsersModel::addUser(ClientUser* user)
 {
+    qCInfo(_models) << "add user to connectedUserModel";
     if(!user)
     {
         qCCritical(_models) << "failed to add user to connected users model. invalid user obj";

@@ -826,7 +826,11 @@ Item
                     {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: user.isCameraOpen = !user.isCameraOpen
+                        onClicked:
+                        {
+                            logger.action("clicked on open/close camera")
+                            user.isCameraOpen = !user.isCameraOpen
+                        }
                     }
                 }
 
