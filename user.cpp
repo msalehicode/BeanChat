@@ -132,7 +132,7 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
             &User::onTcpReadyRead);
 
     connect(&socket, &QTcpSocket::disconnected,
-            this, &User::onDisconnected);
+            this, &User::disconnect);
 
     connect(&socket, &QTcpSocket::errorOccurred,
             this, &User::onSocketError);
@@ -168,9 +168,9 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
     connect(&m_udpConnectionTimeout, &QTimer::timeout,
             this, [&]()
             {
-                if(isConnectedToServer() && m_lastUdpActivity.elapsed()>14000) //max is 14s
+                if(isConnectedToServer() && (m_lastUdpActivity.elapsed()>14000 || m_lastTcpActivity.elapsed()>270000)) //max is 14s for udp AND 4.5minutes for tcp
                 {
-                    qCInfo(_udp) << "server didn't send ping request for a while, so assuming connection has lost lastUdpActivity=" <<  m_lastUdpActivity.elapsed();
+            qCInfo(_udp) << "server didn't send ping request for a while, so assuming connection has lost lastUdpActivity=" <<  m_lastUdpActivity.elapsed() << " lastTcpActivity="<<m_lastTcpActivity.elapsed();
                     emit notificationRequested(NotificationType::Error,
                                                "Connection Lost",
                                                NotificationId::ConnectionLost,
@@ -278,16 +278,10 @@ void User::joinChannel(quint64 channelId, const QString& password, bool isTextCh
         join.channelId = channelId;
         join.password =  password;
 
-        Packet p;
-
         if(isTextChannel)
-            p.type = PacketType::JoinTextChannel;
+            sendPacket(PacketType::JoinTextChannel,join);
         else
-            p.type = PacketType::JoinChannel;
-
-        p.payload = PacketHelpers::pack(join);
-
-        socket.write(p.serialize());
+            sendPacket(PacketType::JoinChannel,join);
 }
 
 int User::isChannelLocked(quint64 channelId)
@@ -361,12 +355,7 @@ void User::moveUser(quint64 userId, quint64 channelId, const QString& password)
     mv.userId=userId;
     mv.channelPassword=password;
 
-    Packet p;
-
-    p.type = PacketType::MoveUser;
-    p.payload = PacketHelpers::pack(mv);
-
-    socket.write(p.serialize());
+    sendPacket(PacketType::MoveUser,mv);
 }
 
 void User::connectToServer(bool saveThisConnection, const QString& serverIp, const QString& str_serverPort)
@@ -496,10 +485,6 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
     login.osVersion = QSysInfo::prettyProductName();
 
 
-    Packet p;
-    p.type = PacketType::LoginRequest;
-    p.payload = PacketHelpers::pack(login);
-
     //store in variables for different parts of app
     m_serverIp=serverIp;
     m_serverPort=serverPort;
@@ -513,8 +498,7 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
     qCInfo(_tcp) << "sending login request.. will wait for response.. connecting server is "
              << m_serverIp << ":" << m_serverPort  << " name=" << myUsername() << "identity=" << myIdentity() ;
 
-    socket.write(p.serialize());
-
+    sendPacket(PacketType::LoginRequest,login);
 
     //reset flag for next use.
     m_switchingServer=false;
@@ -629,11 +613,6 @@ void User::disconnect()
     socket.disconnectFromHost();
     m_udpSocket.disconnectFromHost();
 
-    //stop udp timers for check connection lost
-    m_udpConnectionTimeout.stop();
-    m_lastUdpActivity.invalidate();
-
-
     resetVariables();
 
 }
@@ -648,11 +627,7 @@ void User::createChannel(QString channelName, QString password, bool saveMessage
     cc.type= isVoiceChannel ? BeanChatCommon::ChannelType::Type::Voice
                                                        : BeanChatCommon::ChannelType::Type::Text;
 
-    Packet p;
-    p.type = PacketType::CreateChannel;
-    p.payload = PacketHelpers::pack(cc);
-
-    socket.write(p.serialize());
+    sendPacket(PacketType::CreateChannel,cc);
 }
 
 void User::sendVoicePcm(
@@ -716,10 +691,7 @@ void User::sendVoicePcm(
         out << PacketType::UdpVoiceData;
         out << voice;
 
-        m_udpSocket.writeDatagram(
-            data,
-            m_serverLookedupAddress,
-            m_serverPort);
+        sendUdp(data);
 
         sentPacket = true;
     }
@@ -753,11 +725,7 @@ void User::sendMessage(const QString& message, quint64 channelId)
     sm.type = Msg::Type::Text;
     sm.attachmentId=0;
 
-    Packet p;
-    p.type = PacketType::ChatMessage;
-    p.payload = PacketHelpers::pack(sm);
-
-    socket.write(p.serialize());
+    sendPacket(PacketType::ChatMessage, sm);
 }
 
 void User::sendMessage(const QString& message,quint64 attachId, const QUrl &url, quint64 channelId)
@@ -791,11 +759,7 @@ void User::sendMessage(const QString& message,quint64 attachId, const QUrl &url,
     }
     sm.attachmentId=attachId;
 
-    Packet p;
-    p.type = PacketType::ChatMessage;
-    p.payload = PacketHelpers::pack(sm);
-
-    socket.write(p.serialize());
+    sendPacket(PacketType::ChatMessage,sm);
 }
 
 void User::sendFile(const QString &filePath, quint64 channelId)
@@ -853,12 +817,8 @@ void User::sendFile(const QString &filePath, quint64 channelId)
         << up.fileSize
         << up.mimeType;
 
-    Packet p;
-    p.type = PacketType::UploadFileBegin;
-    p.payload = PacketHelpers::pack(up);
-
     qCInfo(_tcp) << "sending UploadFileBegin to server.";
-    socket.write(p.serialize());
+    sendPacket(PacketType::UploadFileBegin, up);
 }
 
 void User::downloadAttachment(quint64 attachId)
@@ -866,12 +826,9 @@ void User::downloadAttachment(quint64 attachId)
     DownloadAttachmentPacket packet;
     packet.attachmentId = attachId;
 
-    Packet p;
-    p.type = PacketType::DownloadAttachment;
-    p.payload = PacketHelpers::pack(packet);
 
     qCInfo(_tcp) << "Sending DownloadAttachment request. attachId =" << attachId;
-    socket.write(p.serialize());
+    sendPacket(PacketType::DownloadAttachment, packet);
 }
 
 bool User::hasAttachmentImage(quint64 attachmentId) const
@@ -899,11 +856,7 @@ void User::updateChannel(quint64 channelId, const QString &name, const QString &
     uc.password = pass;
     uc.saveChats = saveMessages;
 
-    Packet p;
-    p.type = PacketType::UpdateChannel;
-    p.payload = PacketHelpers::pack(uc);
-
-    socket.write(p.serialize());
+    sendPacket(PacketType::UpdateChannel,uc);
 }
 
 QString User::getChannelName(quint64 channelId)
@@ -917,11 +870,7 @@ void User::deleteChannel(quint64 channelId)
     DeleteChannelPacket d;
     d.channelId = channelId;
 
-    Packet p;
-    p.type = PacketType::DeleteChannel;
-    p.payload = PacketHelpers::pack(d);
-
-    socket.write(p.serialize());
+    sendPacket(PacketType::DeleteChannel, d);
 }
 
 ClientUser *User::clientUser(quint64 id)
@@ -949,11 +898,7 @@ void User::askForServerState()
     qCInfo(_tcp) << "asking for server State packet..";
     ServerStatePacket ssp;
 
-    Packet p;
-    p.type = PacketType::RequestServerState;
-    p.payload = PacketHelpers::pack(ssp);
-
-    socket.write(p.serialize());
+    sendPacket(PacketType::RequestServerState, ssp);
 }
 
 void User::askForNotFoundAvatars()
@@ -964,11 +909,7 @@ void User::askForNotFoundAvatars()
         RequestAvatarsPacket ra;
         ra.notFoundIds = m_notFoundAvatars;
 
-        Packet p;
-        p.type = PacketType::RequestAvatars;
-        p.payload = PacketHelpers::pack(ra);
-
-        socket.write(p.serialize());
+        sendPacket(PacketType::RequestAvatars, ra);
     }
 }
 
@@ -1047,7 +988,7 @@ void User::newAvatarArrived(quint64 userId,
 void User::onTcpReadyRead()
 {
     m_tcpBuffer += socket.readAll();
-
+    m_lastTcpActivity.restart();
     while (true)
     {
 
@@ -1078,6 +1019,12 @@ void User::onTcpReadyRead()
         packet.type = static_cast<PacketType>(type);
         packet.payload = payload;
 
+
+        // Statistics
+        m_totalTcpPacketsReceived++;
+        m_totalTcpBytesReceived += 6 + payloadSize;
+        // emit networkStatsChanged();
+
         processPacket(packet);
 
         m_tcpBuffer.remove(0, 6 + payloadSize);
@@ -1092,11 +1039,8 @@ void User::processPacket(const Packet& packet)
     {
         qCInfo(_app) << "IsEverythingsOk received";
 
-        Packet p;
-        p.type = PacketType::YesEverythingIsOk;
-
         qCInfo(_tcp) << "sending response YesEverythingIsOk to server.";
-        socket.write(p.serialize());
+        sendPacket(PacketType::YesEverythingIsOk);
         break;
     }
 
@@ -1122,12 +1066,9 @@ void User::processPacket(const Packet& packet)
 
         qCInfo(_app) <<  "proofing Signature:" << signature.toBase64();
 
-        Packet p;
-        p.type = PacketType::LoginProof;
-        p.payload = PacketHelpers::pack(proof);
 
         qCInfo(_tcp) << "sending proof to server.";
-        socket.write(p.serialize());
+        sendPacket(PacketType::LoginProof,proof);
 
         break;
     }
@@ -1156,24 +1097,16 @@ void User::processPacket(const Packet& packet)
             chunk.uploadId = m_currentUploadId;
             chunk.payload = m_uploadFile.read(ChunkSize);
 
-            Packet p;
-            p.type = PacketType::UploadFileChunk;
-            p.payload = PacketHelpers::pack(chunk);
-
             qCInfo(_tcp) << "sending UploadFileChunk to server.";
-            socket.write(p.serialize());
+            sendPacket(PacketType::UploadFileChunk, chunk);
         }
 
         UploadFileFinishPacket finish;
 
         finish.uploadId = m_currentUploadId;
 
-        Packet p;
-        p.type = PacketType::UploadFileFinish;
-        p.payload = PacketHelpers::pack(finish);
-
         qCInfo(_tcp) << "sending UploadFileFinish to server.";
-        socket.write(p.serialize());
+        sendPacket(PacketType::UploadFileFinish, finish);
 
         break;
     }
@@ -1628,8 +1561,7 @@ void User::processPacket(const Packet& packet)
             PacketHelpers::unpack<UserJoinedChannelPacket>(
                 packet.payload);
 
-        //read user's data from connectedUsersModel
-        ClientUser* user = m_connectedUsersModel->findUser(resp.userId);
+        ClientUser* user = m_clientUserManager->user(resp.userId);
 
         if(resp.channelId==0) //remove him from channel model because he became channel less
             m_channelModel->removeUser(user); //he left all channels remove him from model
@@ -2251,25 +2183,9 @@ void User::loginToUdpSocket()
 
 
     qCInfo(_udp) << "sending udp login request";
-    qint64 bytes = m_udpSocket.writeDatagram(
-        data,
-        m_serverLookedupAddress,
-        m_serverPort);
-
-    if (bytes == -1)
-    {
-        qCInfo(_udp) << "send failed:" << m_udpSocket.errorString();
-    }
-    else
-    {
-        qCInfo(_udp) << "sent"
-                 << bytes
-                 << "bytes to"
-                 << m_serverIp
-                 << ":"
-                 << m_serverPort;
-    }
+    sendUdp(data);
 }
+
 
 quint64 User::currentTextChannelId() const
 {
@@ -2433,10 +2349,7 @@ void User::updateMyActivityStatus(BeanChatCommon::Presence::Status status)
         uu.updateType = UpdateUserInfoType::ActivityStatus;
         uu.payloadValue = QString::number(static_cast<int>(status));
 
-        Packet p;
-        p.type = PacketType::UpdateUserInfo;
-        p.payload = PacketHelpers::pack(uu);
-        socket.write(p.serialize());
+        sendPacket(PacketType::UpdateUserInfo,uu);
     }
     else
     {
@@ -2466,10 +2379,7 @@ void User::updateMyProfile(const QString &username, const QString &avatarPath)
             uu.updateType = UpdateUserInfoType::Username;
             uu.payloadValue = username;
 
-            Packet p;
-            p.type = PacketType::UpdateUserInfo;
-            p.payload = PacketHelpers::pack(uu);
-            socket.write(p.serialize());
+            sendPacket(PacketType::UpdateUserInfo,uu);
         }
         else
         {
@@ -2489,11 +2399,7 @@ void User::updateMyProfile(const QString &username, const QString &avatarPath)
             uu.paylaodData = m_avatarManager.imageFileToBytes(avatarPath);
             qCInfo(_tcp) << "avatar size=" << uu.paylaodData.size();
 
-            Packet p;
-
-            p.type = PacketType::UpdateUserInfo;
-            p.payload = PacketHelpers::pack(uu);
-            socket.write(p.serialize());
+            sendPacket(PacketType::UpdateUserInfo,uu);
         }
         else
             qCInfo(_app) << "you are not connected to any server therefore can't send request update avatar.";
@@ -2531,12 +2437,6 @@ QString User::checkAvatar(quint64 userId, const QString &avatarHash, bool askFor
     return "";
 }
 
-
-void User::onDisconnected()
-{
-    qCInfo(_tcp) << "Server disconnected";
-    disconnect();
-}
 
 void User::onSocketError(QAbstractSocket::SocketError error)
 {
@@ -2589,6 +2489,11 @@ void User::onUdpReadyRead()
         QByteArray data =
             datagram.data();
 
+        // Statistics
+        m_totalUdpPacketsReceived++;
+        m_totalUdpBytesReceived += static_cast<quint64>(data.size());
+        // emit networkStatsChanged();
+
         QDataStream in(data);
 
         quint16 type;
@@ -2609,6 +2514,7 @@ void User::onUdpReadyRead()
             //start to expect every xSeconds ping request from server otherwise, assuming UDP connection has failed
             m_udpConnectionTimeout.start();
             m_lastUdpActivity.start();
+            m_lastTcpActivity.start();
             break;
         }
         case PacketType::UdpVoiceData:  //voice
@@ -2616,6 +2522,7 @@ void User::onUdpReadyRead()
             if(myChannelId()==0)
                 break;
 
+            m_lastUdpActivity.restart();
             VoicePacket packet;
             in >> packet;
 
@@ -2749,9 +2656,8 @@ void User::onUdpReadyRead()
 
 
             //a udp request-ping received, now reset connection timeout to later know is udp connection still alive or not
+            // qCInfo(_app) << "ping received: " << p.lastPing;
             m_lastUdpActivity.restart();
-            qCInfo(_app) << "ping received: " << p.lastPing;
-
 
             //send back same sequence..
             QByteArray data2;
@@ -2764,10 +2670,7 @@ void User::onUdpReadyRead()
             out << p;
 
             // qCDebug(_udp) << "sending pong to server.";
-            m_udpSocket.writeDatagram(
-                data2,
-                m_serverLookedupAddress,
-                m_serverPort);
+            sendUdp(data2);
 
             break;
             }
@@ -2824,10 +2727,7 @@ void User::sendVideoFrame(const QByteArray &videoData)
             << frag.payload.size();
 #endif
 
-        m_udpSocket.writeDatagram(
-            datagram,
-            m_serverLookedupAddress,
-            m_serverPort);
+        sendUdp(datagram);
     }
 }
 
@@ -2867,6 +2767,12 @@ void User::resetVariables()
         if (model)
             model->clear();
 
+
+    //stop timers for check connection lost
+    m_udpConnectionTimeout.stop();
+    m_lastUdpActivity.invalidate();
+    m_lastTcpActivity.invalidate();
+
     //reset variables
     setMyServerName("");
     setMyChannelName("");
@@ -2886,6 +2792,21 @@ void User::resetVariables()
     setMyAvatarPath("");
     m_channelModel->setCurrentChannelId(0); //set current channel to zeor therefore, stop timer for check user isTalking
     setCurrentTextChannelId(0);
+
+
+    //reset network statistics
+    m_totalTcpBytesSent = 0;
+    m_totalTcpPacketsSent = 0;
+
+    m_totalUdpBytesSent = 0;
+    m_totalUdpPacketsSent = 0;
+
+    m_totalTcpBytesReceived = 0;
+    m_totalTcpPacketsReceived = 0;
+
+    m_totalUdpBytesReceived = 0;
+    m_totalUdpPacketsReceived = 0;
+
 
     if(!m_switchingServer) //if we are not switching reset/turn-off all server's indicator status
         m_myServersModel->resetPreviousIsActiveServer();
@@ -3261,13 +3182,10 @@ void User::setIsCameraOpen(bool status)
 
     //send request to server.
     qCInfo(_tcp) << "sending open/close camera request.";
-    Packet p;
     if(status)
-        p.type = PacketType::UserCameraOpened;
+        sendPacket(PacketType::UserCameraOpened);
     else
-        p.type = PacketType::UserCameraClosed;
-
-    socket.write(p.serialize());
+        sendPacket(PacketType::UserCameraClosed);
 }
 
 bool User::muteMicrophone() const
@@ -3282,13 +3200,10 @@ void User::setMuteMicrophone(bool status)
 
     //send request to server.
     qCInfo(_tcp) << "sending mute/unmute microphone request.";
-    Packet p;
     if(status)
-        p.type = PacketType::UserMuted;
+        sendPacket(PacketType::UserMuted);
     else
-        p.type = PacketType::UserUnmuted;
-
-    socket.write(p.serialize());
+        sendPacket(PacketType::UserUnmuted);
 }
 
 bool User::muteHeadphone() const
@@ -3303,13 +3218,10 @@ void User::setMuteHeadphone(bool status)
 
     //send request to server.
     qCInfo(_tcp) << "sending deafened/undeafened headphone request.";
-    Packet p;
     if(status)
-        p.type = PacketType::UserDeafened;
+        sendPacket(PacketType::UserDeafened);
     else
-        p.type = PacketType::UserUndeafened;
-
-    socket.write(p.serialize());
+        sendPacket(PacketType::UserUndeafened);
 }
 
 QString User::myUsername() const
@@ -3359,3 +3271,75 @@ void User::setMyChannelName(const QString& name)
     emit myChannelNameChanged();
 }
 
+
+template<typename T>
+void User::sendPacket(PacketType type, const T &payload)
+{
+    Packet p;
+    p.type = type;
+    p.payload = PacketHelpers::pack(payload);
+
+    QByteArray data = p.serialize();
+    m_totalTcpPacketsSent++;
+    m_totalTcpBytesSent += data.size();
+
+    socket.write(data);
+    // emit networkStatsChanged();
+}
+
+void User::sendPacket(PacketType type)
+{
+    Packet p;
+    p.type = type;
+    p.payload.clear();
+
+    QByteArray data = p.serialize();
+    m_totalTcpPacketsSent++;
+    m_totalTcpBytesSent += data.size();
+
+    socket.write(data);
+    // emit networkStatsChanged();
+}
+
+quint64 User::totalPacketsReceived()
+{
+    return m_totalTcpPacketsReceived + m_totalUdpPacketsReceived;
+}
+
+quint64 User::totalPacketsSent()
+{
+    return m_totalTcpPacketsSent + m_totalUdpPacketsSent;
+}
+
+QString User::totalBytesReceived()
+{
+    return QLocale().formattedDataSize(m_totalTcpBytesReceived+m_totalUdpBytesReceived);
+}
+
+QString User::totalBytesSent()
+{
+    return QLocale().formattedDataSize(m_totalTcpBytesSent+m_totalUdpBytesSent);
+}
+
+
+// user.cpp
+qint64 User::sendUdp(const QByteArray &data)
+{
+    qint64 sent = m_udpSocket.writeDatagram(
+        data,
+        m_serverLookedupAddress,
+        m_serverPort);
+
+    if (sent > 0)
+    {
+        m_totalUdpPacketsSent++;
+        m_totalUdpBytesSent+= static_cast<quint64>(sent);
+        // emit networkStatsChanged();
+    }
+    else if (sent == -1)
+    {
+        qCInfo(_udp) << "send failed: " << m_udpSocket.errorString();
+    }
+
+    return sent;
+}

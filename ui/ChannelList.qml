@@ -652,8 +652,8 @@ Item
                     {
                         visible: parent.infoVisible
 
-                        width: 170
-                        height: 111
+                        width: 190
+                        height: 200
 
                         radius: 8
 
@@ -661,7 +661,7 @@ Item
                         border.color: "#333333"
 
                         anchors.bottom: parent.top
-                        anchors.bottomMargin: 10
+                        anchors.bottomMargin: 16
 
                         anchors.left: parent.left
 
@@ -742,6 +742,32 @@ Item
                                 text: "Video Packet Loss: " + Number(user.myVideoPacketLoss).toFixed(2) + "%"
                                 color: "#b5bac1"
                             }
+
+                            Text
+                            {
+                                text: "Total Packets Sent: " + user.totalPacketsSent
+                                color: "#b5bac1"
+                            }
+
+                            Text
+                            {
+                                text: "Total Packets Received: " + user.totalPacketsReceived
+                                color: "#b5bac1"
+                            }
+
+
+                            Text
+                            {
+                                text: "Total Data Sent: " + user.totalBytesSent
+                                color: "#b5bac1"
+                            }
+
+                            Text
+                            {
+                                text: "Total Data Received: " + user.totalBytesReceived
+                                color: "#b5bac1"
+                            }
+
                         }
                     }
                 }

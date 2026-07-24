@@ -69,6 +69,8 @@ using namespace BeanChatCommon;
 #include <QMimeDatabase>
 #include <QCryptographicHash>
 
+#include <QLocale>
+
 
 //donwload attachment
 #include "models/downloadsession.h"
@@ -161,7 +163,7 @@ public:
     //connect,disconnect
     Q_INVOKABLE void connectToServer(bool saveThisConnection, const QString& serverIp, const QString& str_serverPort);
     Q_INVOKABLE void switchOrConnectToServer(const QString& serverIp, const QString& str_serverPort, int serverId);
-    Q_INVOKABLE void disconnect();
+
 
     //myServers actions
     Q_INVOKABLE void updateSavedServer(quint64 serverId, quint64 dbIndex, const QString &name, const QString &ip, const QString &port);
@@ -295,6 +297,17 @@ public:
 
 
     ChatModel* currentTextChatModel() const;
+
+    template<typename T>
+    void sendPacket(PacketType type, const T &payload);
+    void sendPacket(PacketType type); // no payload
+
+    qint64 sendUdp(const QByteArray &data);
+
+    quint64 totalPacketsReceived();
+    quint64 totalPacketsSent();
+    QString totalBytesReceived();
+    QString totalBytesSent();
 signals:
 
     void myIdChanged();
@@ -401,9 +414,13 @@ signals:
     void currentTextChannelIdChanged();
     void currentTextChatModelChanged();
 
+
+    //network stats like packets sent and received..
+    void networkStatsChanged();
+
 public slots:
     void onTcpReadyRead();
-    void onDisconnected();
+    Q_INVOKABLE void disconnect();
     void onSocketError(QAbstractSocket::SocketError error);
 
     void onUdpReadyRead();
@@ -471,16 +488,39 @@ private:
 
     //TCP connection
     QTcpSocket socket;
-    int m_myPing=-1;
     QByteArray m_tcpBuffer;
+
+    //hold TCP  statistics
+    quint64 m_totalTcpBytesSent = 0;
+    quint64 m_totalTcpPacketsSent = 0;
+
+    quint64 m_totalUdpBytesSent = 0;
+    quint64 m_totalUdpPacketsSent = 0;
+
+    quint64 m_totalTcpBytesReceived = 0;
+    quint64 m_totalTcpPacketsReceived = 0;
+
+    quint64 m_totalUdpBytesReceived = 0;
+    quint64 m_totalUdpPacketsReceived = 0;
+
+    Q_PROPERTY(quint64 totalPacketsReceived READ totalPacketsReceived NOTIFY myPingChanged FINAL) //networkStatsChanged
+    Q_PROPERTY(quint64 totalPacketsSent READ totalPacketsSent NOTIFY myPingChanged FINAL) //networkStatsChanged
+
+    Q_PROPERTY(QString totalBytesReceived READ totalBytesReceived NOTIFY myPingChanged FINAL) //networkStatsChanged
+    Q_PROPERTY(QString totalBytesSent READ totalBytesSent NOTIFY myPingChanged FINAL) //networkStatsChanged
+
 
     //UDP connection
     QUdpSocket m_udpSocket;
+    int m_myPing=-1;
     float m_myVoicePacketLoss=0.0f;
     float m_myVideoPacketLoss=0.0f;
     QTimer m_udpConnectionTimeout;
     QElapsedTimer m_lastUdpActivity;
+    QElapsedTimer m_lastTcpActivity; //to know is tcp alive or not so sometimes after tcp socket being idle would os kill it and we dont know are we online?! e.g max time is 5minutes
     QHostAddress m_serverLookedupAddress; //when user enter domain.com, TCP would lookup automatically but UDP doesnt lookup, so at begin of connection we resolve/lookup that domain's ip store here and use it for udp send packets.
+
+
 
     //chat notification
     bool m_isChatOpen=false;//a flag to know is chatTab is active or not
