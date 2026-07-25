@@ -239,9 +239,11 @@ public:
         ConnectionLost,
         Rejected,
         Error,
+        Disconnecting, //when we are busy with reset variables..
         Disconnected
     };
     Q_ENUM(UserConnectionStatus)
+
     UserConnectionStatus connectionStatus() const;
     void setConnectionStatus(UserConnectionStatus newConnectionStatus);
 
@@ -567,6 +569,17 @@ private:
     UpdateChecker* m_updateChecker=nullptr;
 
 
+    //reconnect when connection lost
+    short m_reconnectTryCount=0;
+    QTimer m_reconnectTimer; //when connection lost try every x seconds to re-connect
+
+    //reconnect last server
+    QString m_lastServerIp="";
+    QString m_lastServerPort="";
+
+    //re-join last channel
+    quint64 m_lastChannelId=0;
+    QString m_lastChannelPassword="";
 
 
     Q_PROPERTY(int myId READ myId WRITE setMyId NOTIFY myIdChanged FINAL)

@@ -538,15 +538,19 @@ Item {
     {
         id:connectionWaitOverlay
         anchors.fill: parent
-        visible: user.connectionStatus===ConnectionStatus.Connecting? true : false
+        visible: user.connectionStatus===ConnectionStatus.Connecting
+                 || user.connectionStatus===ConnectionStatus.Disconnecting ? true : false
         color:"black"
-        // opacity: 0.5
+        opacity: 0.8
         z:999999
         Text
         {
             color:"white"
             anchors.centerIn: parent
-            text: "Connecting ...."
+            font.pixelSize: 30
+            text: user.connectionStatus===ConnectionStatus.Connecting ? "Connecting ...."
+                                                                      : user.connectionStatus===ConnectionStatus.Disconnecting ? "Disconnecting ..."
+                                                                                                                               : "Unkown = " + user.connectionStatus
         }
         MouseArea
         {

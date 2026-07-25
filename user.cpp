@@ -131,6 +131,66 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
             this,
             &User::onTcpReadyRead);
 
+    connect(&socket, &QTcpSocket::connected,
+            this, [&]()
+            {
+        LoginRequestPacket login;
+
+        if(m_myUsername=="")
+        {
+            //do a default and random name..
+            setMyUsername("BeanUser"+QString::number(QRandomGenerator::global()->bounded(100)));
+        }
+
+
+        login.username = myUsername();
+        login.status =myStatus();
+        if(!m_identityManager->currentIdentity())
+        {
+            qCInfo(_app) << "connect failed. no identity selected... create one";
+            if(m_identityManager->createIdentity("Default"+QString::number(QRandomGenerator::global()->bounded(100))))
+            {
+                qCInfo(_app) << "we create one new identity for you";
+            }
+            else
+            {
+                qCWarning(_app) << "you didnt have an identity and sadly we couldn't create one for you!";
+                return;
+            }
+        }
+        login.publicKey = m_identityManager->currentIdentity()->publicKey;
+
+        //system info.
+        login.appVersion = myAppVersion();
+        login.appProtocolVersion = BeanChatCommon::Protocol::Version;
+        login.buildType = buildType();
+        login.machineId = QString(QSysInfo::machineUniqueId().toHex());
+        login.machineName = QSysInfo::machineHostName();
+        login.osName =  platformName();
+        login.osVersion = QSysInfo::prettyProductName();
+
+
+
+        //stop reconnect timer
+        if(m_reconnectTimer.isActive())
+        {
+            m_reconnectTimer.stop();
+
+            //re-join to previous channel.
+            qCInfo(_app) << "reconnected lets do login.";
+            if(m_lastChannelId>0)
+            {
+                qCInfo(_app) << "rejoin old channel, filling login request with previous voice channel id="<<m_lastChannelId;
+                login.joinChannelId=m_lastChannelId;
+                login.joinChannelPassword=m_lastChannelPassword;
+            }
+        }
+
+        qCInfo(_tcp) << "sending login request.. will wait for response.. connecting server is "
+                     << m_serverIp << ":" << m_serverPort  << " name=" << myUsername() << " identity=" << myIdentity() ;
+
+        sendPacket(PacketType::LoginRequest,login);
+    });
     connect(&socket, &QTcpSocket::disconnected,
             this, &User::disconnect);
 
@@ -162,6 +222,29 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
             this,
             &User::onUdpReadyRead);
 
+    //reconnect when connection lost
+    m_reconnectTimer.setInterval(TRY_RECONNECT_TIMER_INTERVAL);
+    connect(&m_reconnectTimer, &QTimer::timeout, this, [&]()
+        {
+            if(connectionStatus()==UserConnectionStatus::Disconnected)
+            {
+                    if(m_reconnectTryCount<TRY_RECONNECT_MAX_COUNT)
+                    {
+                        m_reconnectTryCount++;
+                        qCInfo(_app) << "================== RE-CONNECTING ================";
+                        qCInfo(_app) << "trying to re-connect lost connection... try number=" << m_reconnectTryCount;
+
+                        connectToServer(false,m_lastServerIp,m_lastServerPort);
+                    }
+                    else
+                    {
+                        qCInfo(_app) << "reconnect hit max count, stopping reconnet timer.";
+                        m_reconnectTimer.stop();
+                    }
+            }
+        });
+
+
     //when request register sent to to udp server, would check evey xSeconds for last activty time, when it exceed from an amount (didn't receive any UDP packet voice/video/ping) assuming server is down or connection is lost.
     m_udpConnectionTimeout.setInterval(UDP_CONNECTION_LOST_TIMER_INTERVAL);
 
@@ -177,9 +260,16 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
                                                NotificationDuration::Long);
                     emit youConnectionLost();
 
+
+
                     //close connection, sometimes user may stuck in middle of connecting and connection lost
                     //so here we make sure close connection even we dont show connection lost messag to them
                     disconnect(); //make sure tcp disconnects and ui show disconnected elemnts
+
+
+                    //try to reconnect
+                    m_reconnectTimer.start();
+                    m_reconnectTryCount=0;
                 }
             });
 
@@ -278,10 +368,18 @@ void User::joinChannel(quint64 channelId, const QString& password, bool isTextCh
         join.channelId = channelId;
         join.password =  password;
 
+
         if(isTextChannel)
+        {
             sendPacket(PacketType::JoinTextChannel,join);
+        }
         else
+        {
             sendPacket(PacketType::JoinChannel,join);
+
+            m_lastChannelId=channelId;
+            m_lastChannelPassword=password;
+        }
 }
 
 int User::isChannelLocked(quint64 channelId)
@@ -385,6 +483,11 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
     }
 
 
+    //for reonnect when connection lost
+    m_lastServerIp=serverIp;
+    m_lastServerPort=str_serverPort;
+
+
     //validate entered ip and ports
     //code here
 
@@ -449,41 +552,6 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
             setMyServerName("The Server");
     }
 
-    LoginRequestPacket login;
-
-    if(m_myUsername=="")
-    {
-        //do a default and random name..
-        setMyUsername("BeanUser"+QString::number(QRandomGenerator::global()->bounded(100)));
-    }
-
-
-    login.username = myUsername();
-    login.status =myStatus();
-    if(!m_identityManager->currentIdentity())
-    {
-        qCInfo(_app) << "connect failed. no identity selected... create one";
-        if(m_identityManager->createIdentity("Default"+QString::number(QRandomGenerator::global()->bounded(100))))
-        {
-            qCInfo(_app) << "we create one new identity for you";
-        }
-        else
-        {
-            qCWarning(_app) << "you didnt have an identity and sadly we couldn't create one for you!";
-            return;
-        }
-    }
-    login.publicKey = m_identityManager->currentIdentity()->publicKey;
-
-    //system info.
-    login.appVersion = myAppVersion();
-    login.appProtocolVersion = BeanChatCommon::Protocol::Version;
-    login.buildType = buildType();
-    login.machineId = QString(QSysInfo::machineUniqueId().toHex());
-    login.machineName = QSysInfo::machineHostName();
-    login.osName =  platformName();
-    login.osVersion = QSysInfo::prettyProductName();
-
 
     //store in variables for different parts of app
     m_serverIp=serverIp;
@@ -493,12 +561,6 @@ void User::connectToServer(bool saveThisConnection, const QString& serverIp, con
     socket.connectToHost(
         m_serverIp,
         m_serverPort);
-
-
-    qCInfo(_tcp) << "sending login request.. will wait for response.. connecting server is "
-             << m_serverIp << ":" << m_serverPort  << " name=" << myUsername() << "identity=" << myIdentity() ;
-
-    sendPacket(PacketType::LoginRequest,login);
 
     //reset flag for next use.
     m_switchingServer=false;
@@ -598,9 +660,16 @@ void User::switchOrConnectToServer(const QString &serverIp, const QString &str_s
 
 void User::disconnect()
 {
-    qCInfo(_app) << "disconnect.";
-    if(!isConnectedToServer()) //to prevent double run this function, first user do disconnect manually/switched to antoher server, then QTCPSocket::Disconnect would run this again..
+    // Already completely disconnected. (to prevent multiple call for disconnect while is not connected)
+    if (socket.state() == QAbstractSocket::UnconnectedState &&
+        m_udpSocket.state() == QAbstractSocket::UnconnectedState)
+    {
+        qCWarning(_app) << " disconnect called but we aren't connected anywhere.";
         return;
+    }
+
+    qCInfo(_app) << "disconnect.";
+    setConnectionStatus(UserConnectionStatus::Disconnecting);
 
     emit notificationRequested(NotificationType::Error,
                                "Disconnected",
@@ -1338,6 +1407,7 @@ void User::processPacket(const Packet& packet)
             //save avatars and apply into models
             newAvatarArrived(avatar.userId, avatar.avatarHash, avatar.oldHash, avatar.imageData);
         }
+
         break;
     }
     case PacketType::ChannelUpdated:
@@ -1564,7 +1634,13 @@ void User::processPacket(const Packet& packet)
         ClientUser* user = m_clientUserManager->user(resp.userId);
 
         if(resp.channelId==0) //remove him from channel model because he became channel less
+        {
             m_channelModel->removeUser(user); //he left all channels remove him from model
+
+            //reset previous channel when connection lost avoid rejoin any channel
+            m_lastChannelId=0;
+            m_lastChannelPassword="";
+        }
 
         //if user has no channel add him to channelModel
         if(resp.oldChannelId==0)
@@ -2476,7 +2552,8 @@ void User::onSocketError(QAbstractSocket::SocketError error)
 
     //make sure UDP socket is closed too.
     qCInfo(_udp) << "tcp connection has error so force disconnect udp from host.";
-    disconnect();
+
+    resetVariables();
 }
 
 void User::onUdpReadyRead()
@@ -2515,6 +2592,8 @@ void User::onUdpReadyRead()
             m_udpConnectionTimeout.start();
             m_lastUdpActivity.start();
             m_lastTcpActivity.start();
+
+
             break;
         }
         case PacketType::UdpVoiceData:  //voice
@@ -2778,12 +2857,10 @@ void User::resetVariables()
     setMyChannelName("");
     setMyChannelId(0);
     setMyChannelSavesChat(false);
-    setIsConnectedToServer(false);
     setConnectedServerId(-1); //this is serverIndexDb which would use in saving user's avatar in each server's directory
     m_connectedServerId_onDb=-1;
     m_serverIp.clear();
     m_serverPort=0;
-    setConnectionStatus(UserConnectionStatus::Disconnected);
     setMyPing(-1);
     setMyVideoPacketLoss(0.0f);
     setMyVoicePacketLoss(0.0f);
@@ -2793,6 +2870,8 @@ void User::resetVariables()
     m_channelModel->setCurrentChannelId(0); //set current channel to zeor therefore, stop timer for check user isTalking
     setCurrentTextChannelId(0);
 
+    //reset flag for next use.
+    m_switchingServer=false;
 
     //reset network statistics
     m_totalTcpBytesSent = 0;
@@ -2833,6 +2912,10 @@ void User::resetVariables()
 
     if(m_speaker)
         m_speaker->stop();
+
+    setIsConnectedToServer(false);
+    setConnectionStatus(UserConnectionStatus::Disconnected);
+    qCInfo(_app) << "================================= variables are clean for next connection ====================";
 }
 
 User::UserConnectionStatus User::connectionStatus() const
@@ -2844,6 +2927,8 @@ void User::setConnectionStatus(UserConnectionStatus newConnectionStatus)
 {
     if (m_connectionStatus == newConnectionStatus)
         return;
+
+    qCInfo(_app) << "set connection status to " << static_cast<int>(newConnectionStatus);
     m_connectionStatus = newConnectionStatus;
     emit connectionStatusChanged();
 }
@@ -3338,7 +3423,7 @@ qint64 User::sendUdp(const QByteArray &data)
     }
     else if (sent == -1)
     {
-        qCInfo(_udp) << "send failed: " << m_udpSocket.errorString();
+        qCInfo(_udp) << "send failed: " << m_udpSocket.errorString() << " datasize=" << data.size();
     }
 
     return sent;

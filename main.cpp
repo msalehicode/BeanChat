@@ -366,7 +366,7 @@ int main(int argc, char *argv[])
     qmlRegisterUncreatableMetaObject(Presence::staticMetaObject, "BeanChatClient", 1, 0, "Presence", "Enums only");
     qmlRegisterUncreatableMetaObject(Msg::staticMetaObject, "BeanChatClient", 1, 0, "MessageType", "Enums only");
     qmlRegisterUncreatableMetaObject(ChannelType::staticMetaObject, "BeanChatClient", 1, 0, "ChannelType", "Enums only");
-    qmlRegisterUncreatableType<User::UserConnectionStatus> ("BeanChatClient", 1, 0, "ConnectionStatus", "Enums only");
+    qmlRegisterUncreatableType<User> ("BeanChatClient", 1, 0, "ConnectionStatus", "Enums only");
     qmlRegisterUncreatableType<BadgeManager>("BeanChatClient", 1, 0, "Badge", "Enums only");
 
     //qml
