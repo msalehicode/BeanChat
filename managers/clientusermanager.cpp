@@ -17,7 +17,11 @@ ClientUserManager::ClientUserManager(QObject *parent)
 
 ClientUserManager::~ClientUserManager()
 {
-    qCWarning(_clientUser) << "clientUserManager destructor called.";
+    qWarning() << "MANAGER DEAD" << this;
+    connect(this,&QObject::destroyed,[]()
+            {
+                qCritical()<<"MANAGER OBJECT DESTROYED";
+            });
 }
 
 ClientUser *ClientUserManager::createUser(quint64 id)
@@ -40,14 +44,25 @@ ClientUser *ClientUserManager::createUser(quint64 id)
 
     ClientUser *user = new ClientUser(this);
 
+
+    //forbid qml from destroy our object even if it gets ClinetUser*
+    QQmlEngine::setObjectOwnership(user, QQmlEngine::CppOwnership);
+
     user->setId(id);
 
     //test to know whne destoryed..
     connect(user, &QObject::destroyed, this,
-            [id]()
+            [id,this]()
             {
                 qCCritical(_clientUser)  << "======================= =CLIENT USER DESTROYED id =" << id;
+        qCCritical(_clientUser)
+            << "ClientUser destroyed"
+            << "id=" << id
+            << "parent=" << parent()
+            << "this=" << this;
             });
+
+
 
     m_users.insert(id, user);
 
@@ -80,6 +95,10 @@ int ClientUserManager::count() const
 
 void ClientUserManager::removeUser(quint64 id)
 {
+    qCCritical(_clientUser) << "REMOVE USER CALLED" << id;
+    qCDebug(_clientUser) << "stack?"
+             << Q_FUNC_INFO;
+
     qCInfo(_clientUser) << "remove user id=" <<id;
     auto it = m_users.find(id);
 

@@ -35,7 +35,7 @@ class ClientUser : public QObject
 
 public:
     explicit ClientUser(QObject *parent = nullptr);
-
+    ~ClientUser();
     quint64 id() const;
     void setId(quint64 newId);
 

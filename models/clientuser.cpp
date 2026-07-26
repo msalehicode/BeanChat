@@ -1,10 +1,21 @@
 #include "clientuser.h"
-
+#include "logging/loggingcategories.h"
 ClientUser::ClientUser(QObject *parent)
 {
-
+    qCWarning(_app)
+    << "CREATE ClientUser"
+    << this
+    << "parent="
+    << parent;
 }
 
+ClientUser::~ClientUser()
+{
+    qCWarning(_app)
+    << "CLIENT USER DESTRUCTOR"
+    << "id=" << m_id
+    << "parent=" << parent();
+}
 quint64 ClientUser::id() const
 {
     return m_id;

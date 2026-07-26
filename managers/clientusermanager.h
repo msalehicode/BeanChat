@@ -5,6 +5,8 @@
 #include <QDebug>
 #include "../models/clientuser.h"
 
+#include <QQmlEngine>
+
 
 class ClientUser;
 
