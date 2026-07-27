@@ -652,7 +652,7 @@ Item
                     {
                         visible: parent.infoVisible
 
-                        width: 190
+                        width: 270
                         height: 200
 
                         radius: 8
@@ -731,41 +731,151 @@ Item
                                 color: "#b5bac1"
                             }
 
-                            Text
-                            {
-                                text: "Voice Packet Loss: " + Number(user.myVoicePacketLoss).toFixed(2) + "%"
-                                color: "#b5bac1"
-                            }
-
-                            Text
-                            {
-                                text: "Video Packet Loss: " + Number(user.myVideoPacketLoss).toFixed(2) + "%"
-                                color: "#b5bac1"
-                            }
-
-                            Text
-                            {
-                                text: "Total Packets Sent: " + user.totalPacketsSent
-                                color: "#b5bac1"
-                            }
-
-                            Text
-                            {
-                                text: "Total Packets Received: " + user.totalPacketsReceived
-                                color: "#b5bac1"
-                            }
 
 
-                            Text
+                            GridLayout
                             {
-                                text: "Total Data Sent: " + user.totalBytesSent
-                                color: "#b5bac1"
-                            }
+                                   width: parent.width
+                                   columns: 3
 
-                            Text
-                            {
-                                text: "Total Data Received: " + user.totalBytesReceived
-                                color: "#b5bac1"
+                                   columnSpacing: 15
+                                   rowSpacing: 4
+
+                                   clip: true
+
+                                   Rectangle
+                                   {
+                                       Layout.columnSpan: 3
+                                       Layout.fillWidth: true
+                                       height: 1
+                                       color: "#3f4147"
+                                   }
+
+                                   // Column widths
+                                   Text
+                                   {
+                                       text: ""
+                                       Layout.preferredWidth: 80
+                                   }
+
+                                   Text
+                                    {
+                                        text: "Voice"
+                                        color: "#b5bac1"
+                                        font.bold: true
+                                        Layout.preferredWidth: 70
+                                        elide: Text.ElideRight
+                                    }
+
+                                    Text
+                                    {
+                                        text: "Video"
+                                        color: "#b5bac1"
+                                        font.bold: true
+                                        Layout.preferredWidth: 70
+                                        elide: Text.ElideRight
+                                    }
+                                    Text
+                                    {
+                                        text: "Packet Loss:"
+                                        color: "#b5bac1"
+                                        elide: Text.ElideRight
+                                    }
+
+                                    Text
+                                    {
+                                        text: Number(user.myVoicePacketLoss).toFixed(2) + "%"
+                                        color: "#b5bac1"
+                                        Layout.preferredWidth: 70
+                                        elide: Text.ElideRight
+                                    }
+                                    Text
+                                    {
+                                        text: Number(user.myVideoPacketLoss).toFixed(2) + "%"
+                                        color: "#b5bac1"
+                                        Layout.preferredWidth: 70
+                                        elide: Text.ElideRight
+                                    }
+
+
+                                    Rectangle
+                                    {
+                                        Layout.columnSpan: 3
+                                        Layout.fillWidth: true
+                                        height: 1
+                                        color: "#3f4147"
+                                    }
+
+                                    Text
+                                    {
+                                        text: ""
+                                        Layout.preferredWidth: 80
+                                    }
+
+                                    Text
+                                     {
+                                         text: "Sent"
+                                         color: "#b5bac1"
+                                         font.bold: true
+                                         Layout.preferredWidth: 70
+                                         elide: Text.ElideRight
+                                     }
+
+                                     Text
+                                     {
+                                         text: "Received"
+                                         color: "#b5bac1"
+                                         font.bold: true
+                                         Layout.preferredWidth: 70
+                                         elide: Text.ElideRight
+                                     }
+                                    Text
+                                    {
+                                        text: "Packets:"
+                                        color: "#b5bac1"
+                                        elide: Text.ElideRight
+                                    }
+
+                                    Text
+                                    {
+                                        text: user.totalPacketsSent
+                                        color: "#b5bac1"
+                                        Layout.preferredWidth: 70
+                                        elide: Text.ElideRight
+                                    }
+
+                                    Text
+                                    {
+                                        text: user.totalPacketsReceived
+                                        color: "#b5bac1"
+                                        Layout.preferredWidth: 70
+                                        elide: Text.ElideRight
+                                    }
+
+
+                                    Text
+                                    {
+                                        text: "Data:"
+                                        color: "#b5bac1"
+                                        elide: Text.ElideRight
+                                    }
+
+                                    Text
+                                    {
+                                        text: user.totalBytesSent
+                                        color: "#b5bac1"
+                                        Layout.preferredWidth: 70
+                                        elide: Text.ElideRight
+                                    }
+
+                                    Text
+                                    {
+                                        text: user.totalBytesReceived
+                                        color: "#b5bac1"
+                                        Layout.preferredWidth: 70
+                                        elide: Text.ElideRight
+                                    }
+
                             }
 
                         }
