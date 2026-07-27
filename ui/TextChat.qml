@@ -362,6 +362,8 @@ Item
 
                                     switch (model.messageType)
                                     {
+                                    case MessageType.Text:
+                                        return "";
                                     case MessageType.Image:
                                         return "messageDelegates/MessageImage.qml"
                                     case MessageType.AnimatedImage:
