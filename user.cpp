@@ -458,11 +458,14 @@ void User::moveUser(quint64 userId, quint64 channelId, const QString& password)
 
 void User::connectToServer(bool saveThisConnection, const QString& serverIp, const QString& str_serverPort)
 {
-    setConnectionStatus(UserConnectionStatus::Connecting);
-    qCInfo(_app) << "connect to server.";
     //if user is connected to somewhere, disconnect before new connection
     if(isConnectedToServer())
         disconnect();
+
+
+    setConnectionStatus(UserConnectionStatus::Connecting);
+    qCInfo(_app) << "connect to server.";
+
 
 
     //check is server saved or is temporary?
