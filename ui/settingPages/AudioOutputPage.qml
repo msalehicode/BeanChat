@@ -126,15 +126,109 @@ Page
                         }
                     }
 
+                }
+
+            }
+
+
+
+
+            ///////////////////////////////////////////////////////
+            // OUTPUT OVERALL VOLUME
+            ///////////////////////////////////////////////////////
+
+
+            Rectangle
+            {
+                width: parent.width
+                radius: 10
+                color: "#2B2D31"
+                border.color: "#404249"
+                implicitHeight: content.implicitHeight + 32
+
+                Column
+                {
+                    anchors.fill: parent
+                    anchors.margins: 16
+
+                    spacing: 14
+
                     Label
                     {
-                        text: "Interface Effects Volume"
-
+                        text: "Output Volume"
                         color: "white"
-
+                        font.pixelSize: 18
                         font.bold: true
                     }
 
+                    Label
+                    {
+                        text: "Change overall output volume"
+                        color: "#B5BAC1"
+                        wrapMode: Text.WordWrap
+                    }
+
+                    SettingSliderWithBoost
+                    {
+                        id: overallVolume
+                        width: parent.width
+                        value: speaker.volume
+                        onMoved:
+                        {
+                            speaker.volume = value
+                            settings.setValue("AudioOutput/OverallVolume", value)
+                        }
+                    }
+
+                }
+
+            }
+
+
+
+
+            ///////////////////////////////////////////////////////
+            // OUTPUT SOUND EFFECT VOLUME
+            ///////////////////////////////////////////////////////
+
+
+            Rectangle
+            {
+                width: parent.width
+
+                radius: 10
+
+                color: "#2B2D31"
+
+                border.color: "#404249"
+
+                implicitHeight: content.implicitHeight + 32
+
+                Column
+                {
+                    anchors.fill: parent
+                    anchors.margins: 16
+
+                    spacing: 14
+
+                    Label
+                    {
+                        text: "Sound Effect/Pack Volume"
+
+                        color: "white"
+
+                        font.pixelSize: 18
+                        font.bold: true
+                    }
+
+                    Label
+                    {
+                        text: "Change Interface sound Effects/Pack output volume"
+
+                        color: "#B5BAC1"
+
+                        wrapMode: Text.WordWrap
+                    }
                     SettingSlider
                     {
                         id:effectVolume
@@ -151,8 +245,13 @@ Page
                             settings.setValue("AudioOutput/EffectsVolume", value)
                         }
                     }
+
                 }
+
             }
+
+
+
         }
     }
 }

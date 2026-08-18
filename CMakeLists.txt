@@ -5,7 +5,7 @@ project(BeanChat VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(APP_CURRENT_VERSION "0.31.80")
+set(APP_CURRENT_VERSION "0.31.81")
 set(APP_TitleName "BeanChat")
 set(APP_OrganizationName "orgBeanChat")
 set(APP_ApplicationName "appBeanChat")
@@ -158,6 +158,7 @@ qt_add_qml_module(appBeanChat
         ui/settingPages/AdvancePage.qml
         ui/settingPages/CameraInputPage.qml
         ui/settingPages/AudioOutputPage.qml
+        ui/settingPages/SettingSliderWithBoost.qml
 
         #message delegates
         ui/messageDelegates/MessageImage.qml
@@ -445,10 +446,12 @@ target_compile_definitions(appBeanChat PRIVATE
 
     #audio output default config
     SPEAKER_DEFAULT_DEVICE_INDEX=0
+    SPEAKER_DEFAULT_OVERALL_VOLUME=5 #overall sound of voice 5% is much! also can be boosted till 200
     SPEAKER_DEFAULT_EFFECTS_VOLUME=0.5
 
     # qsettings group and keys , also these values are inside ui/settingPages/AudioOutputPage.qml too
     SPEAKER_SETTING_DEVICE="AudioOutput/Device"
+    SPEAKER_SETTING_OVERALL_VOLUME="AudioOutput/OverallVolume"
     SPEAKER_SETTING_EFFECTS_VOLUME="AudioOutput/EffectsVolume"
 
 

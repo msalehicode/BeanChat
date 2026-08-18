@@ -3021,6 +3021,7 @@ void User::initOrLoadSettings()
     }
 
 
+
     //user info
     if(m_settingsManager->contains(USER_SETTING_USERNAME))
         setMyUsername(m_settingsManager->value(USER_SETTING_USERNAME, "").toString());
@@ -3081,12 +3082,23 @@ void User::initOrLoadSettings()
 
     // =================================== read and set audiooutput settings
 
+    //sound effect volume
     if(m_settingsManager->contains(SPEAKER_SETTING_EFFECTS_VOLUME))
         m_soundManager->setVolume(m_settingsManager->value(SPEAKER_SETTING_EFFECTS_VOLUME, SPEAKER_DEFAULT_EFFECTS_VOLUME).toFloat());
     else //set default setting.
     {
         m_settingsManager->setValue(SPEAKER_SETTING_EFFECTS_VOLUME, SPEAKER_DEFAULT_EFFECTS_VOLUME);
         m_soundManager->setVolume(SPEAKER_DEFAULT_EFFECTS_VOLUME);
+    }
+
+
+    //overall sound volume
+    if(m_settingsManager->contains(SPEAKER_SETTING_OVERALL_VOLUME))
+        m_speaker->setVolume(m_settingsManager->value(SPEAKER_SETTING_OVERALL_VOLUME, SPEAKER_DEFAULT_OVERALL_VOLUME).toFloat());
+    else //set default setting.
+    {
+        m_settingsManager->setValue(SPEAKER_SETTING_OVERALL_VOLUME, SPEAKER_DEFAULT_OVERALL_VOLUME);
+        m_speaker->setVolume(SPEAKER_DEFAULT_OVERALL_VOLUME);
     }
 
 

@@ -19,6 +19,9 @@ public:
     void stop();
 
 
+    int volume() const;
+    void setVolume(int newVolume);
+
     QStringList audioOutputNames() const;
     int currentAudioOutput() const;
     int defaultAudioOutputIndex() const;
@@ -36,6 +39,7 @@ signals:
 
     void currentAudioOutputChanged(QAudioDevice* output);
 
+    void volumeChanged();
 public slots:
     void playPcm(const QByteArray &pcm);
 
@@ -48,12 +52,14 @@ private:
     QIODevice *m_device = nullptr;
 
     QAudioFormat m_format;
+    int m_volume=SPEAKER_DEFAULT_OVERALL_VOLUME;
 
     QList<QAudioDevice> m_audioOutputs;
     QMediaDevices m_mediaDevices;
     int m_currentAudioOutput=0;
     QStringList m_audioOutputNames;
 
+    Q_PROPERTY(int volume READ volume WRITE setVolume NOTIFY volumeChanged FINAL)
     Q_PROPERTY(QStringList audioOutputNames READ audioOutputNames NOTIFY audioOutputsChanged)
     Q_PROPERTY(int currentAudioOutput READ currentAudioOutput WRITE setCurrentAudioOutput NOTIFY currentAudioOutputChanged FINAL)
 };

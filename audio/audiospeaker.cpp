@@ -116,29 +116,75 @@ void AudioSpeaker::stop()
     m_device = nullptr;
 }
 
+int AudioSpeaker::volume() const
+{
+    return m_volume;
+}
 
+void AudioSpeaker::setVolume(int newVolume)
+{
+    if (m_volume == newVolume)
+        return;
+    m_volume = newVolume;
+
+    qCInfo(_speaker) << "set overall volume to " << newVolume;
+    emit volumeChanged();
+}
+
+
+
+// void AudioSpeaker::playPcm(const QByteArray &pcm)
+// {
+//     if (!m_device)
+//         return;
+
+//     qint64 written = m_device->write(pcm);
+// #if D_PRINT_SPEAKER_INFO
+//     if (written != pcm.size())
+//     {
+//         qDebug()
+//         << "SHORT WRITE"
+//         << written
+//         << "/"
+//         << pcm.size();
+//     }
+//     qDebug()
+//         << "write"
+//         << pcm.size()
+//         << "returned"
+//         << m_device->write(pcm);
+// #endif
+// }
 
 void AudioSpeaker::playPcm(const QByteArray &pcm)
 {
-    if (!m_device)
+    if (!m_device || pcm.isEmpty())
         return;
 
-    qint64 written = m_device->write(pcm);
-#if D_PRINT_SPEAKER_INFO
-    if (written != pcm.size())
+    if (qFuzzyCompare(m_volume, 1.0f))
     {
-        qDebug()
-        << "SHORT WRITE"
-        << written
-        << "/"
-        << pcm.size();
+        m_device->write(pcm);
+        return;
     }
-    qDebug()
-        << "write"
-        << pcm.size()
-        << "returned"
-        << m_device->write(pcm);
-#endif
+
+    QByteArray adjusted = pcm;
+
+    qint16 *samples =
+        reinterpret_cast<qint16 *>(adjusted.data());
+
+    const int sampleCount =
+        adjusted.size() / sizeof(qint16);
+
+    for (int i = 0; i < sampleCount; ++i)
+    {
+        int sample = static_cast<int>(samples[i] * m_volume);
+
+        sample = qBound(-32768, sample, 32767);
+
+        samples[i] = static_cast<qint16>(sample);
+    }
+
+    m_device->write(adjusted);
 }
 
 
