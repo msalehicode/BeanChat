@@ -5,6 +5,8 @@
 #include "userrelationship.h"
 #include <protocol/commonTypes.h>
 
+
+#include "../audio/opuscodec.h"
 class ClientUser : public QObject
 {
     Q_OBJECT
@@ -105,6 +107,8 @@ public:
     QString description() const;
     void setDescription(const QString &newDescription);
 
+    OpusCodec& decoder();
+
 signals:
 
 
@@ -187,5 +191,10 @@ private:
     bool m_hasCamera = false;
     bool m_isAdmin = false;
     BeanChatCommon::Presence::Status m_status= BeanChatCommon::Presence::Status::Online;
+
+
+    //voice
+    OpusCodec m_decoder;
+
 
 };

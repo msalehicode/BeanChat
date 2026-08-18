@@ -7,6 +7,9 @@ ClientUser::ClientUser(QObject *parent)
     << this
     << "parent="
     << parent;
+
+
+    m_decoder.initialize();
 }
 
 ClientUser::~ClientUser()
@@ -15,6 +18,8 @@ ClientUser::~ClientUser()
     << "CLIENT USER DESTRUCTOR"
     << "id=" << m_id
     << "parent=" << parent();
+
+    m_decoder.shutdown();
 }
 quint64 ClientUser::id() const
 {
@@ -318,4 +323,9 @@ void ClientUser::setDescription(const QString &newDescription)
         return;
     m_description = newDescription;
     emit descriptionChanged();
+}
+
+OpusCodec &ClientUser::decoder()
+{
+    return m_decoder;
 }

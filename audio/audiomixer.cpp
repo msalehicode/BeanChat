@@ -3,6 +3,7 @@
 AudioMixer::AudioMixer(QObject *parent)
     : QObject(parent)
 {
+    m_mixTimer.setTimerType(Qt::PreciseTimer);
     m_mixTimer.setInterval(20);
 
     connect(&m_mixTimer,
@@ -21,20 +22,27 @@ void AudioMixer::addVoice(
 {
     QMutexLocker locker(&m_mutex);
 
+    auto &queue = m_pendingFrames[userId];
+
+    // Drop old frames if we're falling behind.
+    while (queue.size() >= 2)
+        queue.dequeue();
+
     VoiceFrame frame;
     frame.pcm = pcm;
     frame.volume = volume;
 
-    m_pendingFrames[userId].enqueue(std::move(frame));
+    queue.enqueue(std::move(frame));
 
 #if D_PRINT_AUDIO_INFO
     qDebug()
         << "user"
         << userId
         << "queue size:"
-        << m_pendingFrames[userId].size();
+        << queue.size();
 #endif
 }
+
 
 void AudioMixer::mix()
 {
@@ -73,6 +81,7 @@ void AudioMixer::mix()
                 ++it;
                 continue;
             }
+
 
             VoiceFrame frame = queue.dequeue();
 

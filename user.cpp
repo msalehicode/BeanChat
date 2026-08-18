@@ -2633,7 +2633,8 @@ void User::onUdpReadyRead()
                 QElapsedTimer t;
                 t.start();
 #endif
-                QByteArray pcm = m_opus.decode(packet.audioData);
+                QByteArray pcm = senderUser->decoder().decode(packet.audioData);
+
 #if D_PRINT_AUDIO_INFO
                 qCDebug(_udp) << "decode =" << t.nsecsElapsed()/1000000.0 << "ms";
 #endif
