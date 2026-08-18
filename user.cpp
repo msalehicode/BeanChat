@@ -2265,6 +2265,33 @@ void User::loginToUdpSocket()
     sendUdp(data);
 }
 
+bool User::currentTextChannelSaveMessages() const
+{
+    return m_currentTextChannelSaveMessages;
+}
+
+void User::setCurrentTextChannelSaveMessages(bool newCurrentTextChannelSaveMessages)
+{
+    if (m_currentTextChannelSaveMessages == newCurrentTextChannelSaveMessages)
+        return;
+    m_currentTextChannelSaveMessages = newCurrentTextChannelSaveMessages;
+    emit currentTextChannelSaveMessagesChanged();
+}
+
+QString User::currentTextChannelName() const
+{
+    return m_currentTextChannelName;
+}
+
+void User::setCurrentTextChannelName(const QString &newCurrentTextChannelName)
+{
+    if (m_currentTextChannelName == newCurrentTextChannelName)
+        return;
+    qDebug() << " m_currentTextChannelName = " <<newCurrentTextChannelName;
+    m_currentTextChannelName = newCurrentTextChannelName;
+    emit currentTextChannelNameChanged();
+}
+
 
 quint64 User::currentTextChannelId() const
 {

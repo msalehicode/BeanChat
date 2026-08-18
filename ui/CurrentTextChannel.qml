@@ -110,7 +110,7 @@ Item
             spacing:7
             Text
             {
-                text: "Chat in " + user.myChannelName
+                text: "Chat in " + user.currentTextChannelName
                 color: "white"
                 font.pixelSize: 18
                 font.bold: true
@@ -123,7 +123,7 @@ Item
                 width:30
                 height: width
                 source: "icons/save.png"
-                visible: user.myChannelSavesChat
+                visible: user.currentTextChannelSaveMessages
                 anchors.verticalCenter: parent.verticalCenter
             }
         }

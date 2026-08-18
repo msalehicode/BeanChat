@@ -310,6 +310,12 @@ public:
     quint64 totalPacketsSent();
     QString totalBytesReceived();
     QString totalBytesSent();
+    QString currentTextChannelName() const;
+    void setCurrentTextChannelName(const QString &newCurrentTextChannelName);
+
+    bool currentTextChannelSaveMessages() const;
+    void setCurrentTextChannelSaveMessages(bool newCurrentTextChannelSaveMessages);
+
 signals:
 
     void myIdChanged();
@@ -419,6 +425,10 @@ signals:
 
     //network stats like packets sent and received..
     void networkStatsChanged();
+
+    void currentTextChannelNameChanged();
+
+    void currentTextChannelSaveMessagesChanged();
 
 public slots:
     void onTcpReadyRead();
@@ -560,6 +570,9 @@ private:
     //chats
     ChatModel* m_voiceChatModel=nullptr; //chat for current channel (voice channel)
     quint64 m_currentTextChannelId=0;//0 is none
+    QString m_currentTextChannelName="";
+    bool m_currentTextChannelSaveMessages=false;
+
     QHash<quint64, ChatModel*> m_textChatModels;
     //to expose currentTextModel
     Q_PROPERTY(ChatModel* currentTextChatModel  READ currentTextChatModel NOTIFY currentTextChatModelChanged)
@@ -608,6 +621,8 @@ private:
     Q_PROPERTY(quint64 myChannelId READ myChannelId WRITE setMyChannelId NOTIFY myChannelIdChanged FINAL)
     Q_PROPERTY(quint64 connectedUsersCount READ connectedUsersCount WRITE setConnectedUsersCount NOTIFY connectedUsersCountChanged FINAL)
     Q_PROPERTY(quint64 currentTextChannelId READ currentTextChannelId WRITE setCurrentTextChannelId NOTIFY currentTextChannelIdChanged FINAL)
+    Q_PROPERTY(QString currentTextChannelName READ currentTextChannelName WRITE setCurrentTextChannelName NOTIFY currentTextChannelNameChanged FINAL)
+    Q_PROPERTY(bool currentTextChannelSaveMessages READ currentTextChannelSaveMessages WRITE setCurrentTextChannelSaveMessages NOTIFY currentTextChannelSaveMessagesChanged FINAL)
 };
 
 #endif // USER_H

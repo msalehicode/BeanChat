@@ -262,6 +262,10 @@ Item
                             else if(model.channelType===ChannelType.Text)
                             {
                                 logger.action("clicked on channel type = text")
+
+                                user.currentTextChannelName=model.channelName;
+                                user.currentTextChannelSaveMessages=model.saveChats;
+
                                 //prevent rejoin current channel
                                 if(user.currentTextChannelId===model.channelId)
                                 {
