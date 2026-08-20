@@ -41,12 +41,33 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
     emit myIdentityChanged();
 
 
+
+    //opus codec
     if (!m_opus.initialize(OPUS_DEFAULT_SAMPLE_RATE,
                            OPUS_DEFAULT_CHANNELS,
                            OPUS_DEFAULT_BITRATE))
     {
         qCFatal(_opus) << "Failed to initialize Opus";
     }
+
+    //make voice codec worker
+    m_voiceWorker = new VoiceWorker();
+
+    m_voiceWorker->moveToThread(&m_voiceThread);
+
+    connect(&m_voiceThread, &QThread::finished,
+            m_voiceWorker, &QObject::deleteLater);
+
+    connect(this, &User::decodeVoice,
+            m_voiceWorker, &VoiceWorker::decode, Qt::QueuedConnection);
+
+    connect(m_voiceWorker, &VoiceWorker::pcmDecoded,
+            this, &User::onPcmDecoded, Qt::QueuedConnection);
+
+    m_voiceThread.start();
+
+
+
 
 
 
@@ -354,6 +375,12 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
         qCCritical(_app) << "failed to setup update manager.";
 
 
+}
+
+User::~User()
+{
+    m_voiceThread.quit();
+    m_voiceThread.wait();
 }
 
 
@@ -2278,6 +2305,16 @@ void User::setCurrentTextChannelSaveMessages(bool newCurrentTextChannelSaveMessa
     emit currentTextChannelSaveMessagesChanged();
 }
 
+void User::onPcmDecoded(quint64 senderId, QByteArray pcm)
+{
+    ClientUser *senderUser = m_clientUserManager->user(senderId);
+
+    if (!senderUser)
+        return;
+
+    emit voiceReceived(senderId, pcm, senderUser->volume());
+}
+
 QString User::currentTextChannelName() const
 {
     return m_currentTextChannelName;
@@ -2655,34 +2692,11 @@ void User::onUdpReadyRead()
                     break;
 
 
-                //decode
-#if D_PRINT_AUDIO_INFO
-                QElapsedTimer t;
-                t.start();
-#endif
-                QByteArray pcm = senderUser->decoder().decode(packet.audioData);
+                //tell voiceWorker to  decode for us then would emit pcmDecoded
+                emit decodeVoice(senderUser->id(), packet.audioData);
 
-#if D_PRINT_AUDIO_INFO
-                qCDebug(_udp) << "decode =" << t.nsecsElapsed()/1000000.0 << "ms";
-#endif
-#if D_PRINT_VOICE_INFO
-                qCDebug(_udp) << "received opus=" << pcm.size() << " raw pcm=" << packet.audioData.size();
-#endif
-
-                if (!pcm.isEmpty())
-                    emit voiceReceived(senderUser->id(),
-                                       pcm, senderUser->volume());
+                break;
             }
-#if D_PRINT_AUDIO_INFO
-            qCDebug(_udp)
-                << "Voice received from"
-                << packet.senderId
-                << "seq"
-                << packet.sequence
-                << "size"
-                << packet.audioData.size();
-#endif
-            break;
         }
 
         case PacketType::UdpVideoData: //video

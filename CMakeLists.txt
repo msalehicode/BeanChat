@@ -5,7 +5,7 @@ project(BeanChat VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(APP_CURRENT_VERSION "0.31.82")
+set(APP_CURRENT_VERSION "0.31.83")
 set(APP_TitleName "BeanChat")
 set(APP_OrganizationName "orgBeanChat")
 set(APP_ApplicationName "appBeanChat")
@@ -181,6 +181,9 @@ qt_add_qml_module(appBeanChat
         managers/relationshipmanager.h managers/relationshipmanager.cpp
         managers/logmanager.h managers/logmanager.cpp
         managers/badgemanager.h managers/badgemanager.cpp
+
+        #workers
+        voiceworker.h voiceworker.cpp
 
         #logger
         logging/logger.h logging/logger.cpp

@@ -76,6 +76,10 @@ using namespace BeanChatCommon;
 #include "models/downloadsession.h"
 
 
+//opus codec thread
+#include <QThread>
+#include "voiceworker.h"
+
 enum class ImportantNotificationColor
 {
     Unknown=0,
@@ -124,6 +128,7 @@ enum class NotificationDuration : int
     VeryVeryLong = 10000
 };
 
+
 class User : public QObject
 {
     Q_OBJECT
@@ -137,7 +142,7 @@ public:
                   AttachmentImageProvider* attachmentImageProvider,
                   CameraCapture* cam, AudioCapture* mic, AudioSpeaker* speaker,
                   QObject *parent = nullptr);
-
+    ~User();
 
 
     //server actions
@@ -430,6 +435,14 @@ signals:
 
     void currentTextChannelSaveMessagesChanged();
 
+
+    //talk with other thread (voice thread)
+    void decodeVoice(quint64 senderId, QByteArray opusData);
+
+
+private slots:
+    void onPcmDecoded(quint64 senderId, QByteArray pcm);
+
 public slots:
     void onTcpReadyRead();
     Q_INVOKABLE void disconnect();
@@ -444,6 +457,12 @@ private:
     void resetVariables(); //when wanna disconnect and get ready for next connection
     void processPacket(const Packet& packet);
     void loginToUdpSocket();
+
+
+    //voice
+    QThread m_voiceThread;
+    VoiceWorker* m_voiceWorker = nullptr;
+
 
     Database* m_database;
     SoundManager* m_soundManager;
