@@ -58,11 +58,22 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
     connect(&m_voiceThread, &QThread::finished,
             m_voiceWorker, &QObject::deleteLater);
 
+    //opus decode received voices
     connect(this, &User::decodeVoice,
             m_voiceWorker, &VoiceWorker::decode, Qt::QueuedConnection);
 
     connect(m_voiceWorker, &VoiceWorker::pcmDecoded,
             this, &User::onPcmDecoded, Qt::QueuedConnection);
+
+
+    //opus encode mic
+    connect(m_mic, &AudioCapture::pcmReady,
+            m_voiceWorker, &VoiceWorker::encode,
+            Qt::QueuedConnection);
+
+    QObject::connect(m_voiceWorker, &VoiceWorker::opusEncoded,
+        this, &User::sendVoiceOpus,
+        Qt::QueuedConnection);
 
     m_voiceThread.start();
 
@@ -729,8 +740,7 @@ void User::createChannel(QString channelName, QString password, bool saveMessage
     sendPacket(PacketType::CreateChannel,cc);
 }
 
-void User::sendVoicePcm(
-    const QByteArray& pcm)
+void User::sendVoiceOpus(const QByteArray& opus)
 {
     if(!isConnectedToServer() || myChannelId()==0)
         return;
@@ -747,65 +757,38 @@ void User::sendVoicePcm(
         return;
     }
 
+    //we want when mic is empty (for when its PTT still send data!)
+    // if (opus.isEmpty())
+    //     return;
 
-    // Accumulate microphone PCM
-    m_sendPcmBuffer.append(pcm);
+    VoicePacket voice;
+    voice.senderId = static_cast<quint64>(myId());
+    voice.sequence = ++m_sequence;
+    voice.audioData = opus;
 
-    bool sentPacket = false;
+    QByteArray data;
 
+    QDataStream out(
+        &data,
+        QIODevice::WriteOnly);
 
-    constexpr int FRAME_BYTES = 960 * sizeof(qint16);
+    out << PacketType::UdpVoiceData;
+    out << voice;
 
-    // Encode every complete 20ms frame
-    while (m_sendPcmBuffer.size() >= FRAME_BYTES)
-    {
-        QByteArray frame = m_sendPcmBuffer.left(FRAME_BYTES);
-        m_sendPcmBuffer.remove(0, FRAME_BYTES);
-
-        VoicePacket voice;
-
-        voice.senderId =
-            static_cast<quint64>(myId());
-
-        voice.sequence =
-            ++m_sequence;
-
-        voice.audioData = m_opus.encode(frame);
-
-        if (voice.audioData.isEmpty())
-            continue;
-
-#if D_PRINT_VOICE_INFO
-        qDebug() << "sending Opus:" << voice.audioData.size()
-                 << "frame:" << frame.size()
-                 << "pcm raw " << pcm.size();
-#endif
-
-        QByteArray data;
-
-        QDataStream out(
-            &data,
-            QIODevice::WriteOnly);
-
-        out << PacketType::UdpVoiceData;
-        out << voice;
-
-        sendUdp(data);
-
-        sentPacket = true;
-    }
-
-
-    if (!sentPacket)
-        return;
+    sendUdp(data);
 
     //update isTalking ourself
-    ClientUser *senderUser = m_channelModel->getUser(m_myChannelId, myId());
+    ClientUser *senderUser =
+        m_channelModel->getUser(
+            m_myChannelId,
+            myId());
+
     if(!senderUser)
         return;
 
     if (!senderUser->isTalking())
         senderUser->setIsTalking(true);
+
     m_channelModel->restartVoiceTimer(myId());
 }
 

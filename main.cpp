@@ -256,19 +256,6 @@ int main(int argc, char *argv[])
     }
 
 
-
-
-
-    //---------- microphone connection ----------
-    QObject::connect(
-        &audio,
-        &AudioCapture::pcmReady,
-        &usr,
-        &User::sendVoicePcm);
-
-
-
-
     //---------- sound pack connection ----------
     QObject::connect(&usr, &User::newMessage, &soundManager, &SoundManager::playNewMessage);
 
@@ -296,7 +283,6 @@ int main(int argc, char *argv[])
 
 
     // ---------- speaker connection ----------
-
     QObject::connect(
         &usr,
         &User::voiceReceived,

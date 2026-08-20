@@ -63,10 +63,22 @@ void VoiceWorker::clearDecoders()
 
 void VoiceWorker::encode(const QByteArray &pcm)
 {
-    // QByteArray opus = m_encoder.encode(pcm);
+    m_encodePcmBuffer.append(pcm);
 
-    // if (!opus.isEmpty())
-    // {
-    //     emit opusEncoded(opus);
-    // }
+    constexpr int FRAME_BYTES = 960 * sizeof(qint16);
+
+    // Encode every complete 20ms frame
+    while (m_encodePcmBuffer.size() >= FRAME_BYTES)
+    {
+        QByteArray frame = m_encodePcmBuffer.left(FRAME_BYTES);
+
+        m_encodePcmBuffer.remove(0, FRAME_BYTES);
+
+        QByteArray opus = m_encoder.encode(frame);
+
+        if (opus.isEmpty())
+            continue;
+
+        emit opusEncoded(opus);
+    }
 }

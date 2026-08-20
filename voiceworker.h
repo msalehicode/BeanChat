@@ -36,4 +36,6 @@ private:
     QHash<quint64, OpusCodec*> m_decoders;
 
     OpusCodec m_encoder;
+    QByteArray m_encodePcmBuffer;
+
 };

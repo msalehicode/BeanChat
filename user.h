@@ -194,7 +194,6 @@ public:
     QString myUsername() const;
     void setMyUsername(const QString &newMyUsername);
 
-    void sendVoicePcm(const QByteArray& pcm);
     bool muteHeadphone() const;
     void setMuteHeadphone(bool status);
 
@@ -452,6 +451,9 @@ public slots:
     void sendVideoFrame(const QByteArray& videoData);
 
     void currentIdentityChangedTo(const QString& name);
+
+    void sendVoiceOpus(const QByteArray& opus);
+
 private:
     QString platformName();
     void resetVariables(); //when wanna disconnect and get ready for next connection
