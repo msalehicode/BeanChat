@@ -34,6 +34,7 @@ Item {
         {
             id:importantNotifierBar
             property string nColor:"red"
+            property string ntextColor:"white"
             property string nText: "Example important notification text"
             property string nActionButtonText: "Button"
             property var nActionButtonTask:null
@@ -49,7 +50,7 @@ Item {
                     id:importantNotifierBarText
                     text:  importantNotifierBar.nText
                     anchors.centerIn: parent
-                    color:"white"
+                    color:importantNotifierBar.ntextColor
                     font.bold: true
                 }
 
@@ -579,12 +580,22 @@ Item {
             if(nColor===3) //bluc update,
             {
                 importantNotifierBar.nColor="#5865F2"
+                importantNotifierBar.ntextColor="white"
                 importantNotifierBar.nText=nText
                 importantNotifierBar.nActionButtonText="UPDATE NOW"
                 importantNotifierBar.nActionButtonTask= function()
                 {
                     user.updateApp()
                 }
+                importantNotifierBar.visible=true
+            }
+            else
+            {
+                importantNotifierBar.nColor="red"
+                importantNotifierBar.ntextColor="white"
+                importantNotifierBar.nText=nText
+                importantNotifierBar.nActionButtonText=""
+                importantNotifierBar.nActionButtonTask=null
                 importantNotifierBar.visible=true
             }
         }

@@ -156,6 +156,8 @@ public:
     Q_INVOKABLE bool hasAttachmentImage(quint64 attachmentId) const; //to know if image is downloaded or not (when list scorlls image component becomes downloaded=false by default)
     Q_INVOKABLE QUrl attachmentUrl(quint64 id); //for animated images need this to get actual path, imageProvider doesnt work
 
+    Q_INVOKABLE void checkForUpdate();
+
     Q_INVOKABLE void updateChannel(quint64 channelId, const QString& name,
                                     const QString& pass, bool saveMessages);
     Q_INVOKABLE QString getChannelName(quint64 channelId); //to show channlename inside user's profile
@@ -320,6 +322,12 @@ public:
     bool currentTextChannelSaveMessages() const;
     void setCurrentTextChannelSaveMessages(bool newCurrentTextChannelSaveMessages);
 
+    bool checkUpdate() const;
+    void setCheckUpdate(bool newCheckUpdate);
+
+    QString updateRepositoryAddress() const;
+    void setUpdateRepositoryAddress(const QString &newUpdateRepositoryAddress);
+
 signals:
 
     void myIdChanged();
@@ -438,6 +446,10 @@ signals:
     //talk with other thread (voice thread)
     void decodeVoice(quint64 senderId, QByteArray opusData);
 
+
+    void checkUpdateChanged();
+
+    void updateRepositoryAddressChanged();
 
 private slots:
     void onPcmDecoded(quint64 senderId, QByteArray pcm);
@@ -601,7 +613,8 @@ private:
     //update
     BadgeManager m_badgeManager;
     UpdateChecker* m_updateChecker=nullptr;
-
+    bool m_checkUpdate=false;
+    QString m_updateRepositoryAddress="";
 
     //reconnect when connection lost
     short m_reconnectTryCount=0;
@@ -644,6 +657,8 @@ private:
     Q_PROPERTY(quint64 currentTextChannelId READ currentTextChannelId WRITE setCurrentTextChannelId NOTIFY currentTextChannelIdChanged FINAL)
     Q_PROPERTY(QString currentTextChannelName READ currentTextChannelName WRITE setCurrentTextChannelName NOTIFY currentTextChannelNameChanged FINAL)
     Q_PROPERTY(bool currentTextChannelSaveMessages READ currentTextChannelSaveMessages WRITE setCurrentTextChannelSaveMessages NOTIFY currentTextChannelSaveMessagesChanged FINAL)
+    Q_PROPERTY(bool checkUpdate READ checkUpdate WRITE setCheckUpdate NOTIFY checkUpdateChanged FINAL)
+    Q_PROPERTY(QString updateRepositoryAddress READ updateRepositoryAddress WRITE setUpdateRepositoryAddress NOTIFY updateRepositoryAddressChanged FINAL)
 };
 
 #endif // USER_H

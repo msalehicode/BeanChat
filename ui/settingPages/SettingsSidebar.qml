@@ -71,11 +71,11 @@ Item
                 {
                     title: "Video",
                     icon: "🎥"
+                },
+                {
+                    title: "Updates",
+                    icon: "⬆️"
                 }
-                // {
-                //     title: "Appearance",
-                //     icon: "🎨"
-                // },
                 // {
                 //     title: "Notifications",
                 //     icon: "🔔"

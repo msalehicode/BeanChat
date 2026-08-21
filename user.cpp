@@ -322,69 +322,8 @@ User::User(ChannelModel *channelModel, ChatModel *chatModel,
 
 
 
-
-
-    //setup update checker
-    m_updateChecker = new UpdateChecker(&m_badgeManager,this);
-
-    if(m_updateChecker)
-    {
-        connect(m_updateChecker,
-                &UpdateChecker::updateAvailable,
-                this,
-                [this](const LatestResponse &response)
-                {
-                    qCInfo(_app) << "update available, update to " << response.latestVersion().toString() << "current version = " << myAppVersion();
-                    emit showImportantNotifierBar("Update "+ response.latestVersion().toString() + " is available",
-                                                  ImportantNotificationColor::Blue);
-                });
-
-        connect(m_updateChecker,
-                &UpdateChecker::noUpdateAvailable,
-                this,
-                []()
-                {
-                    qCInfo(_app) << "Already up to date.";
-                });
-
-        connect(m_updateChecker,
-                &UpdateChecker::errorOccurred,
-                this,
-                [this](const QString &err)
-                {
-                    qCWarning(_app) << "error to check for update err=" << err;
-                    // emit showImportantNotifierBar("Failed to check for update, "+err,
-                    //                               ImportantNotificationColor::Red);
-                });
-
-        connect(m_updateChecker,
-                &UpdateChecker::errorLoadingBadges,
-                this,
-                [this](const QString &err)
-                {
-                    qCWarning(_app) << "error to load badges err=" << err;
-                });
-
-
-        connect(m_updateChecker,
-                &UpdateChecker::badgesDownloaded,
-                this,
-                []()
-                {
-                    qCInfo(_app) << "badges downloaded";
-                });
-
-
-        //check for update at startup
-        QString targetPlatform =  platformName();
-        if(targetPlatform=="Windows") targetPlatform="windows-x64";
-        else if(targetPlatform=="Linux") targetPlatform="linux-x64";
-        else if(targetPlatform=="Android") targetPlatform="android-arm8";
-        m_updateChecker->checkForUpdates(targetPlatform, myAppVersion()); //check for updates and get badges
-    }
-    else
-        qCCritical(_app) << "failed to setup update manager.";
-
+    if(checkUpdate())
+        checkForUpdate();
 
 }
 
@@ -926,6 +865,77 @@ QUrl User::attachmentUrl(quint64 id)
         return {};
 
     return QUrl::fromLocalFile(path);
+}
+
+void User::checkForUpdate()
+{
+    if(!m_updateChecker)
+        m_updateChecker = new UpdateChecker(&m_badgeManager,this);
+
+    if(m_updateChecker)
+    {
+        qCInfo(_app) << "checking for update and bages.";
+
+        //read latest repository address
+        m_updateChecker->m_latestPath=m_updateRepositoryAddress;
+
+        connect(m_updateChecker,
+                &UpdateChecker::updateAvailable,
+                this,
+                [this](const LatestResponse &response)
+                {
+                    qCInfo(_app) << "update available, update to " << response.latestVersion().toString() << "current version = " << myAppVersion();
+                    emit showImportantNotifierBar("Update "+ response.latestVersion().toString() + " is available",
+                                                  ImportantNotificationColor::Blue);
+                });
+
+        connect(m_updateChecker,
+                &UpdateChecker::noUpdateAvailable,
+                this,
+                []()
+                {
+                    qCInfo(_app) << "Already up to date.";
+                });
+
+        connect(m_updateChecker,
+                &UpdateChecker::errorOccurred,
+                this,
+                [this](const QString &err)
+                {
+                    qCWarning(_app) << "error to check for update err=" << err;
+                    emit showImportantNotifierBar("Failed connect to repository for check updates", //+err,
+                                                  ImportantNotificationColor::Red);
+                });
+
+        connect(m_updateChecker,
+                &UpdateChecker::errorLoadingBadges,
+                this,
+                [this](const QString &err)
+                {
+                    qCWarning(_app) << "error to load badges err=" << err;
+                    emit showImportantNotifierBar("Failed to load badges",//+err,
+                                                  ImportantNotificationColor::Red);
+                });
+
+
+
+        connect(m_updateChecker,
+                &UpdateChecker::badgesDownloaded,
+                this,
+                []()
+                {
+                    qCInfo(_app) << "badges downloaded";
+                });
+
+        //check for update
+        QString targetPlatform =  platformName();
+        if(targetPlatform=="Windows") targetPlatform="windows-x64";
+        else if(targetPlatform=="Linux") targetPlatform="linux-x64";
+        else if(targetPlatform=="Android") targetPlatform="android-arm8";
+        m_updateChecker->checkForUpdates(targetPlatform, myAppVersion()); //check for updates and get badges
+    }
+    else
+        qCCritical(_app) << "failed to setup update manager.";
 }
 
 
@@ -2275,6 +2285,36 @@ void User::loginToUdpSocket()
     sendUdp(data);
 }
 
+QString User::updateRepositoryAddress() const
+{
+    return m_updateRepositoryAddress;
+}
+
+void User::setUpdateRepositoryAddress(const QString &newUpdateRepositoryAddress)
+{
+    if (m_updateRepositoryAddress == newUpdateRepositoryAddress)
+        return;
+    m_updateRepositoryAddress = newUpdateRepositoryAddress;
+    m_settingsManager->setValue(APP_SETTING_UPDATE_REPOSITORY,m_updateRepositoryAddress);
+    qCInfo(_app) << "set app update repository to ="<<m_updateRepositoryAddress;
+    emit updateRepositoryAddressChanged();
+}
+
+bool User::checkUpdate() const
+{
+    return m_checkUpdate;
+}
+
+void User::setCheckUpdate(bool newCheckUpdate)
+{
+    if (m_checkUpdate == newCheckUpdate)
+        return;
+    m_checkUpdate = newCheckUpdate;
+    m_settingsManager->setValue(APP_SETTING_CHECKUPDATE,m_checkUpdate);
+    qCInfo(_app) << "set app checkupdate to ="<<m_checkUpdate;
+    emit checkUpdateChanged();
+}
+
 bool User::currentTextChannelSaveMessages() const
 {
     return m_currentTextChannelSaveMessages;
@@ -2989,6 +3029,26 @@ void User::initOrLoadSettings()
         m_settingsManager->setValue(APP_SETTING_VER, APP_VERSION);
         setMyAppVersion(APP_VERSION);
     }
+
+
+    //update settings
+    if(m_settingsManager->contains(APP_SETTING_CHECKUPDATE))
+        setCheckUpdate(m_settingsManager->value(APP_SETTING_CHECKUPDATE, UPDATE_DEFAULT_STATUS).toBool());
+    else //set default setting.
+    {
+        m_settingsManager->setValue(APP_SETTING_CHECKUPDATE, UPDATE_DEFAULT_STATUS);
+        setCheckUpdate(UPDATE_DEFAULT_STATUS);
+    }
+
+    //update repository url
+    if(m_settingsManager->contains(APP_SETTING_UPDATE_REPOSITORY))
+        setUpdateRepositoryAddress(m_settingsManager->value(APP_SETTING_UPDATE_REPOSITORY, UPDATE_DEFAULT_REPOSITORY).toString());
+    else //set default setting.
+    {
+        m_settingsManager->setValue(APP_SETTING_UPDATE_REPOSITORY, UPDATE_DEFAULT_REPOSITORY);
+        setUpdateRepositoryAddress(UPDATE_DEFAULT_REPOSITORY);
+    }
+
 
     // =================================== read and set audioinput settings
     if(m_settingsManager->contains(MIC_SETTING_RNN_STATUS))

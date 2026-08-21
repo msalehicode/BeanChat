@@ -16,6 +16,8 @@ public:
     void checkForUpdates(const QString &platform,
                          const QString &currentVersion);
 
+    QString m_latestPath;
+
 signals:
     void updateAvailable(const LatestResponse &response);
     void noUpdateAvailable();
@@ -24,12 +26,10 @@ signals:
     void errorLoadingBadges(const QString& error);
     void badgesDownloaded();
 
+
 private:
     void downloadBadges(const QString &url);
     QNetworkAccessManager m_network;
     LatestResponse m_latestResponse;
     BadgeManager *m_badgeManager = nullptr;
-
-    const QString m_latestPath =
-        "https://beanchat.ir/bc/api/latest.php";
 };

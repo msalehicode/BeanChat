@@ -5,7 +5,7 @@ project(BeanChat VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(APP_CURRENT_VERSION "0.31.84")
+set(APP_CURRENT_VERSION "0.32.84")
 set(APP_TitleName "BeanChat")
 set(APP_OrganizationName "orgBeanChat")
 set(APP_ApplicationName "appBeanChat")
@@ -159,6 +159,7 @@ qt_add_qml_module(appBeanChat
         ui/settingPages/CameraInputPage.qml
         ui/settingPages/AudioOutputPage.qml
         ui/settingPages/SettingSliderWithBoost.qml
+        ui/settingPages/UpdatePage.qml
 
         #message delegates
         ui/messageDelegates/MessageImage.qml
@@ -391,6 +392,11 @@ target_compile_definitions(appBeanChat PRIVATE
     D_PRINT_VIDEO_INFO=false
     D_PRINT_AUDIO_INFO=false #audio in and out + mixer
 
+
+    #update
+    UPDATE_DEFAULT_STATUS=true
+    UPDATE_DEFAULT_REPOSITORY="https://beanchat.ir/bc/api/latest.php"
+
     #microphone
     MIC_DEFAULT_SAMPLE_RATE=48000
     MIC_DEFAULT_CHANNELS=1
@@ -437,6 +443,8 @@ target_compile_definitions(appBeanChat PRIVATE
     MIC_DEFUALT_DEVICE_INDEX=0
 
     APP_SETTING_VER="App/Version"
+    APP_SETTING_CHECKUPDATE="App/CheckUpdates"
+    APP_SETTING_UPDATE_REPOSITORY="App/UpdateRepository"
 
     # qsettings group and keys , also these values are inside ui/settingPages/AudioInputPage.qml too
     MIC_SETTING_DEVICE="AudioInput/Device"
