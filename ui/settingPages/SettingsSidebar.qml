@@ -61,6 +61,10 @@ Item
             model:
             [
                 {
+                    title: "Profile",
+                    icon:"👤"
+                },
+                {
                     title: "Audio Input",
                     icon: "🎤"
                 },
@@ -73,21 +77,29 @@ Item
                     icon: "🎥"
                 },
                 {
+                    title: "Appearance",
+                    icon: "🎨"
+                },
+                {
+                    title: "Language",
+                    icon:"友"
+                },
+                {
+                    title: "Notifications",
+                    icon: "🔔"
+                },
+                {
+                    title: "Privacy & Safety",
+                    icon: "🛡"
+                },
+                {
                     title: "Updates",
                     icon: "⬆️"
+                },
+                {
+                    title: "About",
+                    icon: "❔"
                 }
-                // {
-                //     title: "Notifications",
-                //     icon: "🔔"
-                // },
-                // {
-                //     title: "Privacy & Safety",
-                //     icon: "🛡"
-                // },
-                // {
-                //     title: "Advanced",
-                //     icon: "⚙"
-                // }
             ]
 
             delegate: Rectangle

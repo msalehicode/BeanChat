@@ -5,7 +5,7 @@ project(BeanChat VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(APP_CURRENT_VERSION "0.32.84")
+set(APP_CURRENT_VERSION "0.32.85")
 set(APP_TitleName "BeanChat")
 set(APP_OrganizationName "orgBeanChat")
 set(APP_ApplicationName "appBeanChat")
@@ -124,6 +124,9 @@ qt_add_qml_module(appBeanChat
         ui/overlays/NotificationOverlay.qml
         ui/components/NotificationCard.qml
 
+        #components
+        ui/components/ThemePreview.qml
+
 
         #menu
         ui/MyServersItemMenu.qml
@@ -160,6 +163,12 @@ qt_add_qml_module(appBeanChat
         ui/settingPages/AudioOutputPage.qml
         ui/settingPages/SettingSliderWithBoost.qml
         ui/settingPages/UpdatePage.qml
+        ui/settingPages/AboutPage.qml
+        ui/settingPages/AppearancePage.qml
+        ui/settingPages/NotificationsPage.qml
+        ui/settingPages/PrivacyPage.qml
+        ui/settingPages/ProfilePage.qml
+        ui/settingPages/LanguagePage.qml
 
         #message delegates
         ui/messageDelegates/MessageImage.qml
