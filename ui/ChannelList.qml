@@ -643,6 +643,8 @@ Item
 
                     MouseArea
                     {
+                        id:connectionInfoMouseArea
+                        hoverEnabled: true
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
                         onClicked:
@@ -651,6 +653,8 @@ Item
                             parent.infoVisible = !parent.infoVisible
                         }
                     }
+                    ToolTip.visible: connectionInfoMouseArea.containsMouse
+                    ToolTip.text: "Connection Info"
 
                     Rectangle
                     {
@@ -968,6 +972,8 @@ Item
 
                     MouseArea
                     {
+                        id:openCameraMouseArea
+                        hoverEnabled: true
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
                         onClicked:
@@ -976,6 +982,8 @@ Item
                             user.isCameraOpen = !user.isCameraOpen
                         }
                     }
+                    ToolTip.visible: openCameraMouseArea.containsMouse
+                    ToolTip.text: user.isCameraOpen ? "Close Camera": "Open Camera"
                 }
 
                 Rectangle
@@ -991,10 +999,14 @@ Item
 
                     MouseArea
                     {
+                        id:sharescreenMouseArea
+                        hoverEnabled: true
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
                         onClicked: logger.action("clicked on sharescreen")
                     }
+                    ToolTip.visible: sharescreenMouseArea.containsMouse
+                    ToolTip.text: "Share Screen"
                 }
 
                 Rectangle
@@ -1010,6 +1022,8 @@ Item
 
                     MouseArea
                     {
+                        id:leaveChannelMouseArea
+                        hoverEnabled: true
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
                         onClicked:
@@ -1018,6 +1032,8 @@ Item
                             user.joinChannel(0,"") //go to default channel (channel less id is 0)
                         }
                     }
+                    ToolTip.visible: leaveChannelMouseArea.containsMouse
+                    ToolTip.text: "Leave Channel"
                 }
 
                 Rectangle
@@ -1034,6 +1050,8 @@ Item
 
                     MouseArea
                     {
+                        id:disconnectMouseArea
+                        hoverEnabled: true
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
                         onClicked:
@@ -1042,6 +1060,8 @@ Item
                             user.disconnect();
                         }
                     }
+                    ToolTip.visible: disconnectMouseArea.containsMouse
+                    ToolTip.text: "Disconnect"
                 }
 
 
@@ -1059,6 +1079,8 @@ Item
 
                     MouseArea
                     {
+                        id:serverWebsiteMouseArea
+                        hoverEnabled: true
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
                         onClicked:
@@ -1067,6 +1089,8 @@ Item
                             Qt.openUrlExternally(user.serverWebsite)
                         }
                     }
+                    ToolTip.visible: serverWebsiteMouseArea.containsMouse
+                    ToolTip.text: "Server's Website"
                 }
 
             }
@@ -1214,14 +1238,18 @@ Item
 
                     MouseArea
                     {
+                        id:muteMicrophoneMouseArea
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
+                        hoverEnabled: true
                         onClicked:
                         {
                             logger.action("clicked on mute/unmute microphone")
                             user.muteMicrophone = !user.muteMicrophone
                         }
                     }
+                    ToolTip.visible: muteMicrophoneMouseArea.containsMouse
+                    ToolTip.text: user.muteMicrophone? "Unmute" : "Mute"
                 }
 
                 Rectangle
@@ -1241,14 +1269,18 @@ Item
 
                     MouseArea
                     {
+                        id:deafHeadphoneMouseArea
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
+                        hoverEnabled: true
                         onClicked:
                         {
                             logger.action("clicked on deaf/undeaf headphone")
                             user.muteHeadphone = !user.muteHeadphone
                         }
                     }
+                    ToolTip.visible: deafHeadphoneMouseArea.containsMouse
+                    ToolTip.text: user.muteHeadphone? "Undeafen": "Deafen"
                 }
 
 
@@ -1266,14 +1298,18 @@ Item
 
                     MouseArea
                     {
+                        id:openSettingsMouseArea
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
+                        hoverEnabled: true
                         onClicked:
                         {
                             logger.action("clicked on user settings")
                             changePage("settings")
                         }
                     }
+                    ToolTip.visible: openSettingsMouseArea.containsMouse
+                    ToolTip.text: "Settings"
                 }
             }
         }
