@@ -1791,10 +1791,13 @@ void User::processPacket(const Packet& packet)
             //for soundmanager to play effect
             if(resp.oldChannelId>0) //when old channel id is 0 (channel less) dont play sound effect.
                 emit userLeft();
+
+
+            //remove left user from our currentChannelParticipant
+            m_currentChannelParticipant->removeUser(user);
         }
         else //user's action is not my concern, no sound effect or additional actions
             qCInfo(_app) << "user (" << resp.userId << ") has left " << resp.oldChannelId << " and joined to " << resp.channelId ;
-
 
 
         //update user's channelId
