@@ -7,6 +7,7 @@ import BeanChatClient 1.0
 import "constants/"
 Item
 {
+    anchors.fill: parent
     Rectangle
     {
         color: Theme.current.background

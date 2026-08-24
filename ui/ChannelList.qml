@@ -1279,49 +1279,6 @@ Item
         }
     }
 
-    // Right-edge handle
-    Rectangle
-    {
-        id: handle
-        width: channelList.handleWidth
-        height: parent.height
-        x: parent.width - width+channelList.handleWidth
-        y: 0
-        color: Theme.current.surface3
-
-        MouseArea
-        {
-            anchors.fill: parent
-            cursorShape: Qt.SizeHorCursor
-            property real startX: 0
-            property real startWidth: 0
-
-            onPressed: function(mouse)
-            {
-                logger.action("pressed on handle of channelList")
-                startX = mouse.x
-                startWidth = channelList.width
-            }
-
-            onPositionChanged: function(mouse)
-            {
-                if (pressed)
-                {
-                    let dx = mouse.x - startX
-                    let pos = Math.max(50, startWidth + dx);
-                    if(pos <channelList.handleMinimumWidth) //minimum with
-                        pos=channelList.handleMinimumWidth
-                    else if(pos>channelList.handleMaximumWidth) //max width
-                        pos=channelList.handleMaximumWidth
-
-                    channelList.width = pos
-                    logger.action("chaning position of channelList by handle")
-                }
-            }
-        }
-
-    }
-
 
     Rectangle
     {

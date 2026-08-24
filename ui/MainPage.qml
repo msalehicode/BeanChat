@@ -19,7 +19,7 @@ Item {
     Rectangle
     {
         anchors.fill: parent
-        color: "#05070b"
+        color: Theme.current.background
     }
 
 
@@ -153,6 +153,51 @@ Item {
                 //current Connected server name, list of channels and users inside them, user control buttons
             }
 
+            // Right-edge handle
+            Rectangle
+            {
+                id: handle
+                width: channelList.handleWidth
+                height: parent.height
+                x: parent.width - width+channelList.handleWidth
+                y: 0
+                color: Theme.current.surface3
+                MouseArea
+                {
+                    anchors.fill: parent
+                    cursorShape: Qt.SizeHorCursor
+                    property real startX: 0
+                    property real startWidth: 0
+
+                    onPressed: function(mouse)
+                    {
+                        logger.action("pressed on handle of channelList")
+                        startX = mouse.x
+                        startWidth = channelList.width
+                    }
+
+                    onPositionChanged: function(mouse)
+                    {
+                        if (pressed)
+                        {
+                            let dx = mouse.x - startX
+                            let pos = Math.max(50, startWidth + dx);
+                            if(pos <channelList.handleMinimumWidth) //minimum with
+                                pos=channelList.handleMinimumWidth
+                            else if(pos>channelList.handleMaximumWidth) //max width
+                                pos=channelList.handleMaximumWidth
+
+                            channelList.width = pos
+                            logger.action("chaning position of channelList by handle")
+                        }
+                    }
+                }
+
+            }
+
+
+
+            //VOICE????:
             CurrentChannelParticipants
             {
                 id:centerContentBase
@@ -160,16 +205,62 @@ Item {
                 //when joint a channel would display current channel users. with their status, camera feed, and ...
             }
 
+            //OR
+            //TEXT???????
             CurrentTextChannel
             {
                 id:textChannelContent
                 visible: user.currentTextChannelId>0
             }
+            //-----------------------------------
+
+
+            Rectangle
+            {
+                id: handleRight
+                width: handle.width
+                height: parent.height
+                x: -width / 2
+                y: 0
+                color: Theme.current.surface3
+
+                MouseArea
+                {
+                    anchors.fill: parent
+                    cursorShape: Qt.SizeHorCursor
+
+                    property real startX: 0
+                    property real startWidth: 0
+
+                    onPressed: function(mouse)
+                    {
+                        startX = mouse.x
+                        startWidth = rightPanel.width
+                        logger.action("pressed on righthandle")
+                    }
+
+                    onPositionChanged: function(mouse)
+                    {
+                        if (pressed)
+                        {
+                            let dx = mouse.x - startX
+                            let pos = Math.max(50, startWidth - dx);
+                            if (pos < 300)
+                                pos = 300
+                            else if (pos > 800)
+                                pos = 800
+
+                            rightPanel.width = pos
+                            logger.action("position of the right handle changed")
+                        }
+                    }
+                }
+            }
 
             Item
             {
                 id:rightPanel
-                width: 300
+                width: 300-handleRight.width
                 height: parent.height
                 clip: true
                 property int currentTab: 0
@@ -178,6 +269,10 @@ Item {
                 {
                     anchors.fill: parent
                     color: Theme.current.background
+                    visible: user.isConnectedToServer
+                    ConnectedUsers {}
+
+/*
                     ColumnLayout
                     {
                         anchors.fill: parent
@@ -307,50 +402,7 @@ Item {
                         }
                     }
 
-
-                    Rectangle
-                    {
-                        id: handleRight
-                        width: 15
-                        height: parent.height
-                        visible: user.isConnectedToServer
-                        x: -width / 2
-                        y: 0
-                        color: Theme.current.surface3
-
-                        MouseArea
-                        {
-                            anchors.fill: parent
-                            cursorShape: Qt.SizeHorCursor
-
-                            property real startX: 0
-                            property real startWidth: 0
-
-                            onPressed: function(mouse)
-                            {
-                                startX = mouse.x
-                                startWidth = rightPanel.width
-                                logger.action("pressed on righthandle")
-                            }
-
-                            onPositionChanged: function(mouse)
-                            {
-                                if (pressed)
-                                {
-                                    let dx = mouse.x - startX
-                                    let pos = Math.max(50, startWidth - dx);
-                                    if (pos < 300)
-                                        pos = 300
-                                    else if (pos > 800)
-                                        pos = 800
-
-                                    rightPanel.width = pos
-                                    logger.action("position of the right handle changed")
-                                }
-                            }
-                        }
-                    }
-
+*/
                 }
 
             }
