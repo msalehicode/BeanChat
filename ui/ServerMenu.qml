@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import "constants/"
 
 Rectangle
 {
@@ -14,8 +15,8 @@ Rectangle
     height: opened ? content.implicitHeight + 16 : 0
 
     clip: true
-    color: "#111214"
-    border.color: "#2b2d31"
+    color: Theme.current.surface3
+    border.color: Theme.current.border
     border.width: 1
     radius: 8
 
@@ -44,13 +45,15 @@ Rectangle
             background: Rectangle
             {
                 radius: 5
-                color: createChannelItem.hovered ? "#4752C4" : "transparent"
+                color: createChannelItem.hovered
+                       ? Theme.current.accentHover
+                       : "transparent"
             }
 
             contentItem: Text
             {
                 text: "➕  Create Channel..."
-                color: "white"
+                color: Theme.current.text
                 font.pixelSize: 14
                 verticalAlignment: Text.AlignVCenter
             }
@@ -68,13 +71,15 @@ Rectangle
             background: Rectangle
             {
                 radius: 5
-                color: settingsItem.hovered ? "#4752C4" : "transparent"
+                color: settingsItem.hovered
+                       ? Theme.current.accentHover
+                       : "transparent"
             }
 
             contentItem: Text
             {
                 text: "⚙  Server Settings"
-                color: "white"
+                color: Theme.current.text
                 font.pixelSize: 14
                 verticalAlignment: Text.AlignVCenter
             }

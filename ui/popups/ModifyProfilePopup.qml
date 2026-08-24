@@ -4,6 +4,9 @@ import QtQuick.Layouts
 import QtQuick.Controls.Material
 import QtQuick.Dialogs
 import "../settingPages"
+
+import "../constants/"
+
 Popup
 {
     id: profilePopup
@@ -19,9 +22,9 @@ Popup
 
     background: Rectangle
     {
-        color: "#313338"
+        color: Theme.current.background
         radius: 8
-        border.color: "#1E1F22"
+        border.color: Theme.current.surface3
     }
 
     enter: Transition
@@ -97,7 +100,7 @@ Popup
             Layout.fillWidth: true
             height: 82
 
-            color: "#313338"
+            color: Theme.current.background
 
             Column
             {
@@ -110,7 +113,7 @@ Popup
                 {
                     text: "User Profile"
 
-                    color: "white"
+                    color: Theme.current.text
 
                     font.pixelSize: 22
                     font.bold: true
@@ -120,7 +123,7 @@ Popup
                 {
                     text: "Update your username, identity and avatar."
 
-                    color: "#B5BAC1"
+                    color: Theme.current.textSecondary
 
                     font.pixelSize: 13
                 }
@@ -154,7 +157,7 @@ Popup
                     Layout.preferredHeight: 140
 
                     radius: 10
-                    color: "#2B2D31"
+                    color: Theme.current.surface
 
                     RowLayout
                     {
@@ -170,7 +173,7 @@ Popup
 
                             radius: width / 2
 
-                            color: "#1E1F22"
+                            color: Theme.current.surface3
 
                             clip: true
 
@@ -194,7 +197,7 @@ Popup
                                     profilePopup.avatarSource === ""
 
                                 text: "?"
-                                color: "white"
+                                color: Theme.current.text
 
                                 font.pixelSize: 36
                             }
@@ -218,17 +221,17 @@ Popup
                                     radius: 4
 
                                     color: changeAvatarButton.down
-                                           ? "#3F4147"
+                                           ? Theme.current.hover
                                            : "transparent"
 
                                     border.width: 1
-                                    border.color: "#555"
+                                    border.color: Theme.current.borderLight
                                 }
 
                                 contentItem: Text
                                 {
                                     text: parent.text
-                                    color: "white"
+                                    color: Theme.current.text
 
                                     horizontalAlignment: Text.AlignHCenter
                                     verticalAlignment: Text.AlignVCenter
@@ -254,17 +257,17 @@ Popup
                                 {
                                     radius: 4
 
-                                    color: removeAvatarButton.enabled ? "red" :
-                                            removeAvatarButton.down? "darkred" : "transparent"
+                                    color: removeAvatarButton.enabled ? Theme.current.danger :
+                                            removeAvatarButton.down? Theme.current.danger : "transparent"
 
                                     border.width: 1
-                                    border.color: "#555"
+                                    border.color: Theme.current.borderLight
                                 }
 
                                 contentItem: Text
                                 {
                                     text: parent.text
-                                    color: "white"
+                                    color: Theme.current.text
 
                                     horizontalAlignment: Text.AlignHCenter
                                     verticalAlignment: Text.AlignVCenter
@@ -277,7 +280,7 @@ Popup
                 Label
                 {
                     text: "USERNAME"
-                    color: "#B5BAC1"
+                    color: Theme.current.textSecondary
                     font.bold: true
                 }
 
@@ -288,22 +291,22 @@ Popup
                     Layout.fillWidth: true
 
                     placeholderText: "Username"
-                    placeholderTextColor: "white"
+                    placeholderTextColor: Theme.current.text
 
                     text: user.myUsername
-                    color: "white"
+                    color: Theme.current.text
 
                     background: Rectangle
                     {
                         radius: 6
-                        color: "#1E1F22"
+                        color: Theme.current.surface3
                     }
                 }
 
                 Label
                 {
                     text: !user.isConnectedToServer ? "IDENTITY" : "IDENTITY (CANNOT MODIFY WHEN YOU ARE CONNECTED)"
-                    color: "#B5BAC1"
+                    color: Theme.current.textSecondary
                     font.bold: true
                 }
                 SettingCombo
@@ -340,17 +343,17 @@ Popup
                         {
                             radius: 4
                             color: deleteIdentity.down
-                                   ? "darkred"
-                                   : "red"
+                                   ? Theme.current.danger
+                                   : Theme.current.danger
 
                             border.width: 1
-                            border.color: "#555"
+                            border.color: Theme.current.borderLight
                         }
 
                         contentItem: Text
                         {
                             text: parent.text
-                            color: "white"
+                            color: Theme.current.text
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                         }
@@ -378,17 +381,17 @@ Popup
                         {
                             radius: 4
                             color: renameIdentity.down
-                                   ? "#3F4147"
+                                   ? Theme.current.hover
                                    : "transparent"
 
                             border.width: 1
-                            border.color: "#555"
+                            border.color: Theme.current.borderLight
                         }
 
                         contentItem: Text
                         {
                             text: parent.text
-                            color: "white"
+                            color: Theme.current.text
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                         }
@@ -415,17 +418,17 @@ Popup
                         {
                             radius: 4
                             color: createIdentity.down
-                                   ? "#3F4147"
+                                   ? Theme.current.hover
                                    : "transparent"
 
                             border.width: 1
-                            border.color: "#555"
+                            border.color: Theme.current.borderLight
                         }
 
                         contentItem: Text
                         {
                             text: parent.text
-                            color: "white"
+                            color: Theme.current.text
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                         }
@@ -451,7 +454,7 @@ Popup
             Layout.fillWidth: true
             height: 64
 
-            color: "#2B2D31"
+            color: Theme.current.surface
 
             RowLayout
             {
@@ -476,18 +479,18 @@ Popup
                         radius: 4
 
                         color: cancelButton.down
-                               ? "#3F4147"
+                               ? Theme.current.hover
                                : "transparent"
 
                         border.width: 1
-                        border.color: "#555"
+                        border.color: Theme.current.borderLight
                     }
 
                     contentItem: Text
                     {
                         text: parent.text
 
-                        color: "white"
+                        color: Theme.current.text
 
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
@@ -530,15 +533,15 @@ Popup
                         radius: 4
 
                         color: saveButton.down
-                               ? "#4752C4"
-                               : "#5865F2"
+                               ? Theme.current.accentHover
+                               : Theme.current.accent
                     }
 
                     contentItem: Text
                     {
                         text: parent.text
 
-                        color: "white"
+                        color: Theme.current.text
 
                         font.bold: true
 

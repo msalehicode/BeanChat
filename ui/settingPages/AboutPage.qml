@@ -3,16 +3,18 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
 
+import "../constants/"
+
 Page
 {
     id: root
 
     Material.theme: Material.Dark
-    Material.accent: "#5865F2"
+    Material.accent: Theme.current.accent
 
     background: Rectangle
     {
-        color: "#313338"
+        color: Theme.current.background
     }
 
 
@@ -48,9 +50,9 @@ Page
 
             Label
             {
-                text: "About BeanChat"
+                text: "About"
 
-                color: "white"
+                color: Theme.current.text
 
                 font.pixelSize: 28
                 font.bold: true
@@ -61,7 +63,7 @@ Page
             {
                 text: "Information about this application"
 
-                color: "#B5BAC1"
+                color: Theme.current.textSecondary
 
                 font.pixelSize: 14
             }
@@ -79,8 +81,8 @@ Page
 
                 radius: 12
 
-                color: "#2B2D31"
-                border.color: "#404249"
+                color: Theme.current.surface
+                border.color: Theme.current.border
 
 
                 Column
@@ -111,7 +113,7 @@ Page
 
                         text: "BeanChat"
 
-                        color: "white"
+                        color: Theme.current.text
 
                         font.pixelSize: 26
 
@@ -127,7 +129,7 @@ Page
 
                         text: "Version "+ user.myAppVersion + " - " + user.buildType
 
-                        color: "#B5BAC1"
+                        color: Theme.current.textSecondary
 
                         horizontalAlignment: Text.AlignHCenter
                     }
@@ -145,9 +147,9 @@ Page
 
                 radius: 10
 
-                color: "#2B2D31"
+                color: Theme.current.surface
 
-                border.color: "#404249"
+                border.color: Theme.current.border
 
 
                 implicitHeight: githubColumn.implicitHeight + 32
@@ -173,7 +175,7 @@ Page
                         {
                             text: "Source Code"
 
-                            color: "white"
+                            color: Theme.current.text
 
                             font.pixelSize: 18
 
@@ -206,7 +208,7 @@ Page
                         "BeanChat is completely open source. " +
                         "You can inspect the code, suggest improvements or contribute."
 
-                        color: "#B5BAC1"
+                        color: Theme.current.textSecondary
 
                         wrapMode: Text.WordWrap
                     }
@@ -224,9 +226,9 @@ Page
 
                 radius: 10
 
-                color: "#2B2D31"
+                color: Theme.current.surface
 
-                border.color: "#404249"
+                border.color: Theme.current.border
 
 
                 implicitHeight: supportColumn.implicitHeight + 32
@@ -251,7 +253,7 @@ Page
                         {
                             text: "Support BeanChat"
 
-                            color: "white"
+                            color: Theme.current.text
 
                             font.pixelSize: 18
 
@@ -282,7 +284,7 @@ Page
                         "We appreciate everyone who helps BeanChat grow — whether through donations, bug reports, testing, feedback or contributions. " +
                         "To recognize our amazing community members, we created a badge system that highlights their valuable support and contributions."
 
-                        color: "#B5BAC1"
+                        color: Theme.current.textSecondary
 
                         wrapMode: Text.WordWrap
                     }
@@ -299,9 +301,9 @@ Page
 
                 radius: 10
 
-                color: "#2B2D31"
+                color: Theme.current.surface
 
-                border.color: "#404249"
+                border.color: Theme.current.border
 
 
                 implicitHeight: aboutTextColumn.implicitHeight + 32
@@ -322,7 +324,7 @@ Page
                     {
                         text: "About"
 
-                        color: "white"
+                        color: Theme.current.text
 
                         font.pixelSize: 18
 
@@ -339,14 +341,16 @@ Page
                         text:
                         "<style>
                             b {
-                                color: white;
+                                color: " + Theme.current.text + ";
                             }
+
                             .highlight {
-                                color: #5865F2;
+                                color: " + Theme.current.accent + ";
                                 font-weight: bold;
                             }
+
                             .green {
-                                color: #57F287;
+                                color: " + Theme.current.success + ";
                                 font-weight: bold;
                             }
                         </style>" +
@@ -373,7 +377,7 @@ Page
                         "Contact us: <span class='highlight'>support@BeanChat.ir</span><br><br>"+
 
                         "<b>Thank you for being part of the BeanChat community.</b> ❤️"
-                        color: "#B5BAC1"
+                        color: Theme.current.textSecondary
 
                         font.pixelSize: 14
 
@@ -395,9 +399,9 @@ Page
 
                 radius: 10
 
-                color: "#2B2D31"
+                color: Theme.current.surface
 
-                border.color: "#404249"
+                border.color: Theme.current.border
 
 
                 implicitHeight: resourcesColumn.implicitHeight + 32
@@ -418,7 +422,7 @@ Page
                     {
                         text: "Resources"
 
-                        color: "white"
+                        color: Theme.current.text
 
                         font.pixelSize: 18
 
@@ -432,7 +436,7 @@ Page
 
                         text: "Need help? Visit the documentation to learn how to install, configure and use BeanChat."
 
-                        color: "#B5BAC1"
+                        color: Theme.current.textSecondary
 
                         wrapMode: Text.WordWrap
                     }
@@ -521,9 +525,9 @@ Page
 
                 radius: 10
 
-                color: "#2B2D31"
+                color: Theme.current.surface
 
-                border.color: "#404249"
+                border.color: Theme.current.border
 
 
                 implicitHeight: techColumn.implicitHeight + 32
@@ -544,7 +548,7 @@ Page
                     {
                         text: "Built With"
 
-                        color: "white"
+                        color: Theme.current.text
 
                         font.pixelSize: 18
 
@@ -566,7 +570,7 @@ Page
                         "• Nayuki QR code\n" +
                         "• innosetup 6.7.3"
 
-                        color: "#B5BAC1"
+                        color: Theme.current.textSecondary
                     }
                 }
             }
@@ -581,7 +585,7 @@ Page
 
                 horizontalAlignment: Text.AlignHCenter
 
-                color: "#80848E"
+                color: Theme.current.textMuted
 
                 font.pixelSize: 12
 

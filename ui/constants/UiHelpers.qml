@@ -10,23 +10,23 @@ QtObject
         switch (status)
         {
         case Presence.Online:
-            return "lime"
+            return Theme.current.success
 
         case Presence.Idle:
-            return "orange"
+            return Theme.current.warning
 
         case Presence.Away:
-            return "yellow"
+            return Theme.current.warning
 
         case Presence.Busy:
-            return "red"
+            return Theme.current.danger
 
         case Presence.DoNotDisturb:
-            return "black"
+            return Theme.current.textDisabled
 
         case Presence.Offline:
         default:
-            return "gray"
+            return Theme.current.textMuted
         }
     }
 
@@ -34,22 +34,22 @@ QtObject
     {
         switch(relation)
         {
-            case Relationship.None: return "white"
-            case Relationship.Blocked: return "#FF7070"
-            case Relationship.Friend: return "lime"
+            case Relationship.None: return Theme.current.text
+            case Relationship.Blocked: return Theme.current.danger
+            case Relationship.Friend: return Theme.current.success
         }
     }
 
     function isTalkingColor(isMuted=false,relation=Relationship.None)
     {
         if(isMuted)
-            return "#FF0000"
+            return Theme.current.danger
 
         switch(relation)
         {
-            case Relationship.Blocked: return "#FF7070"
-            case Relationship.None: return "#acbbd9"
-            case Relationship.Friend: return "lime"
+            case Relationship.Blocked:return Theme.current.danger
+            case Relationship.None: return Theme.current.accent
+            case Relationship.Friend: return Theme.current.success
         }
     }
 

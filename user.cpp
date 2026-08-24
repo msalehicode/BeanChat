@@ -2285,6 +2285,20 @@ void User::loginToUdpSocket()
     sendUdp(data);
 }
 
+QString User::currentTheme() const
+{
+    return m_currentTheme;
+}
+
+void User::setCurrentTheme(const QString &newCurrentTheme)
+{
+    if (m_currentTheme == newCurrentTheme)
+        return;
+    m_currentTheme = newCurrentTheme;
+    m_settingsManager->setValue(APP_SETTING_THEME,m_currentTheme);
+    emit currentThemeChanged();
+}
+
 QString User::updateRepositoryAddress() const
 {
     return m_updateRepositoryAddress;
@@ -3030,6 +3044,14 @@ void User::initOrLoadSettings()
         setMyAppVersion(APP_VERSION);
     }
 
+
+    //try to read app theme
+    if(m_settingsManager->contains(APP_SETTING_THEME))
+        setCurrentTheme(m_settingsManager->value(APP_SETTING_THEME, APP_DEFAULT_THEME).toString());
+    else //set default setting.
+    {
+        setCurrentTheme(APP_DEFAULT_THEME);
+    }
 
     //update settings
     if(m_settingsManager->contains(APP_SETTING_CHECKUPDATE))

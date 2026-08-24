@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import "../constants/"
 
 Item
 {
@@ -33,13 +34,13 @@ Item
 
             radius: 8
 
-            color: "#1E1F22"
+            color: Theme.current.input
 
             border.width: 1
             border.color:
                 root.waitingForKey
-                    ? "#5865F2"
-                    : "#404249"
+                    ? Theme.current.accent
+                    : Theme.current.border
 
             Behavior on border.color
             {
@@ -53,7 +54,7 @@ Item
             {
                 anchors.centerIn: parent
 
-                color: "white"
+                color: Theme.current.text
 
                 text:
                     root.waitingForKey

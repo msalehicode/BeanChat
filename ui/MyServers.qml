@@ -1,8 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 
-// import QtQuick.Controls.Material
-// import QtQuick.Layouts
+import "constants/"
 
 Item
 {
@@ -10,7 +9,7 @@ Item
     height:parent.height
     Rectangle
     {
-        color: "transparent"
+        color: Theme.current.surface3
         anchors.fill: parent
     }
     Column
@@ -44,7 +43,7 @@ Item
             Rectangle
             {
                 id:beanChatNotificationIndicator
-                color: "red"
+                color: Theme.current.danger
                 width: 20
                 height: width
                 radius: width
@@ -57,7 +56,7 @@ Item
                 Text {
                     text: "64"
                     anchors.centerIn: parent
-                    color:"white"
+                    color: Theme.current.text
                     font.bold: true
                     font.pixelSize: 12
                 }
@@ -82,7 +81,7 @@ Item
         {
             width: parent.width
             height: 1
-            color: "#404249"
+            color: Theme.current.border
         }
 
         Rectangle
@@ -114,7 +113,7 @@ Item
                 height: width
                 radius: width / 2
 
-                color: "#0B1018"
+                color: Theme.current.surface2
 
 
                 Image
@@ -133,7 +132,7 @@ Item
                           ? model.name[0].toUpperCase()
                           : "?"
 
-                    color: "white"
+                    color: Theme.current.text
 
                     font.bold: true
                     font.pixelSize: 22
@@ -145,7 +144,7 @@ Item
                     radius: parent.radius
                     color: "transparent"
                     border.width: 3
-                    border.color: model.isActive ? "#57F287" : "#25314B"
+                    border.color: model.isActive ? Theme.current.success : Theme.current.border
                 }
 
                 Behavior on scale
@@ -163,12 +162,12 @@ Item
                     cursorShape: Qt.PointingHandCursor
                     onEntered:
                     {
-                        delegateRoot.color = "#182033"
+                        delegateRoot.color = Theme.current.hover
                         delegateRoot.scale = 1.12
                     }
                     onExited:
                     {
-                        delegateRoot.color = "#101624"
+                        delegateRoot.color = Theme.current.surface2
                         delegateRoot.scale = 1.0
                     }
 
@@ -210,18 +209,18 @@ Item
         Rectangle
         {
             id:addServer
-            color:"black"
+            color: Theme.current.surface2
             anchors.horizontalCenter:parent.horizontalCenter
             width:parent.width/1.5
             height: width
             radius: width
             border.width: 4
-            border.color: "purple"
+            border.color: Theme.current.accent
             Text
             {
                 text: "+"
                 font.pixelSize: 30
-                color: "purple"
+                color: Theme.current.accent
                 anchors.centerIn: parent
             }
             MouseArea

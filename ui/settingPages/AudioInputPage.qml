@@ -3,16 +3,18 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
 
+import "../constants/"
+
 Page
 {
     id: root
 
     Material.theme: Material.Dark
-    Material.accent: "#5865F2"
+    Material.accent: Theme.current.accent
 
     background: Rectangle
     {
-        color: "#313338"
+        color: Theme.current.background
     }
 
     Flickable
@@ -47,7 +49,7 @@ Page
             {
                 text: "Audio Input"
 
-                color: "white"
+                color: Theme.current.text
 
                 font.pixelSize: 28
                 font.bold: true
@@ -57,7 +59,7 @@ Page
             {
                 text: "Configure your input"
 
-                color: "#B5BAC1"
+                color: Theme.current.textSecondary
 
                 font.pixelSize: 14
             }
@@ -72,9 +74,9 @@ Page
 
                 radius: 10
 
-                color: "#2B2D31"
+                color: Theme.current.surface
 
-                border.color: "#404249"
+                border.color: Theme.current.border
 
                 implicitHeight: inputColumn.implicitHeight + 32
 
@@ -92,7 +94,7 @@ Page
                     {
                         text: "Input Device"
 
-                        color: "white"
+                        color: Theme.current.text
 
                         font.pixelSize: 18
                         font.bold: true
@@ -102,7 +104,7 @@ Page
                     {
                         text: "Choose the microphone BeanChat should use."
 
-                        color: "#B5BAC1"
+                        color: Theme.current.textSecondary
 
                         wrapMode: Text.WordWrap
                     }
@@ -130,7 +132,7 @@ Page
                     {
                         text: "Microphone Level"
 
-                        color: "white"
+                        color: Theme.current.text
 
                         font.bold: true
                     }
@@ -157,9 +159,9 @@ Page
 
                 radius: 10
 
-                color: "#2B2D31"
+                color: Theme.current.surface
 
-                border.color: "#404249"
+                border.color: Theme.current.border
 
                 implicitHeight: noiseColumn.implicitHeight + 32
 
@@ -176,7 +178,7 @@ Page
                     {
                         text: "Noise Suppression"
 
-                        color: "white"
+                        color: Theme.current.text
 
                         font.pixelSize: 18
                         font.bold: true
@@ -186,7 +188,7 @@ Page
                     {
                         text: "Reduce keyboard clicks and background sounds."
 
-                        color: "#B5BAC1"
+                        color: Theme.current.textSecondary
 
                         wrapMode: Text.WordWrap
                     }
@@ -241,9 +243,9 @@ Page
 
                 radius: 10
 
-                color: "#2B2D31"
+                color: Theme.current.surface
 
-                border.color: "#404249"
+                border.color: Theme.current.border
 
                 implicitHeight: gateColumn.implicitHeight + 32
 
@@ -260,7 +262,7 @@ Page
                     {
                         text: "Input Sensitivity"
 
-                        color: "white"
+                        color: Theme.current.text
 
                         font.pixelSize: 18
                         font.bold: true
@@ -270,7 +272,7 @@ Page
                     {
                         text: "Automatically transmit when your microphone reaches the selected level."
 
-                        color: "#B5BAC1"
+                        color: Theme.current.textSecondary
 
                         wrapMode: Text.WordWrap
                     }
@@ -338,9 +340,9 @@ Page
 
                 radius: 10
 
-                color: "#2B2D31"
+                color: Theme.current.surface
 
-                border.color: "#404249"
+                border.color: Theme.current.border
 
                 implicitHeight: pttColumn.implicitHeight + 32
 
@@ -357,7 +359,7 @@ Page
                     {
                         text: "Push To Talk"
 
-                        color: "white"
+                        color: Theme.current.text
 
                         font.pixelSize: 18
                         font.bold: true
@@ -367,7 +369,7 @@ Page
                     {
                         text: "Transmit only while holding your selected hotkey."
 
-                        color: "#B5BAC1"
+                        color: Theme.current.textSecondary
 
                         wrapMode: Text.WordWrap
                     }
@@ -425,7 +427,7 @@ Page
 
                 horizontalAlignment: Text.AlignHCenter
 
-                color: "#80848E"
+                color: Theme.current.textMuted
 
                 font.pixelSize: 12
 

@@ -3,16 +3,19 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
 
+import "../constants/"
+
+
 Page
 {
     id: root
 
     Material.theme: Material.Dark
-    Material.accent: "#5865F2"
+    Material.accent: Theme.current.accent
 
     background: Rectangle
     {
-        color: "#313338"
+        color: Theme.current.background
     }
 
     Flickable
@@ -47,7 +50,7 @@ Page
             {
                 text: "Video"
 
-                color: "white"
+                color: Theme.current.text
 
                 font.pixelSize: 28
                 font.bold: true
@@ -57,7 +60,7 @@ Page
             {
                 text: "Configure your camera."
 
-                color: "#B5BAC1"
+                color: Theme.current.textSecondary
 
                 font.pixelSize: 14
             }
@@ -73,9 +76,8 @@ Page
 
                 radius: 10
 
-                color: "#2B2D31"
-
-                border.color: "#404249"
+                color: Theme.current.surface
+                border.color: Theme.current.border
 
                 implicitHeight: cameraColumn.implicitHeight + 32
 
@@ -92,7 +94,7 @@ Page
                     {
                         text: "Camera"
 
-                        color: "white"
+                        color: Theme.current.text
 
                         font.pixelSize: 18
                         font.bold: true
@@ -102,7 +104,7 @@ Page
                     {
                         text: "Choose which camera BeanChat should use."
 
-                        color: "#B5BAC1"
+                        color: Theme.current.textSecondary
 
                         wrapMode: Text.WordWrap
                     }

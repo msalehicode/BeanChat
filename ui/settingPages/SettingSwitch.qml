@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-
+import "../constants/"
 Item
 {
     id: root
@@ -33,7 +33,9 @@ Item
 
         radius: height / 2
 
-        color: root.checked ? "#23A559" : "#4E5058"
+        color: root.checked
+               ? Theme.current.success
+               : Theme.current.textDisabled
 
         Behavior on color
         {
@@ -59,7 +61,7 @@ Item
            ? parent.width - width - 3
            : 3
 
-        color: "white"
+        color: Theme.current.text
 
         Behavior on x
         {

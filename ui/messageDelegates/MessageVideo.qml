@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtMultimedia
 
+import "../constants/"
+
 Item
 {
     id: root
@@ -30,7 +32,7 @@ Item
         Rectangle
         {
             radius: 8
-            color: "#2B2D31"
+            color: Theme.current.surface
 
             Text
             {
@@ -40,7 +42,7 @@ Item
                       ? Math.round(progress * 100) + "%"
                       : "Download Video"
 
-                color: "white"
+                color: Theme.current.text
             }
 
             ProgressBar
@@ -75,7 +77,7 @@ Item
 
         Rectangle
         {
-            color: "black"
+            color: Theme.current.background
 
             MediaPlayer
             {
@@ -130,7 +132,7 @@ Item
 
                     text: "▶"
 
-                    color: "white"
+                    color: Theme.current.text
 
                     font.pixelSize: 34
                 }
@@ -172,7 +174,7 @@ Item
                 anchors.top: parent.top
                 anchors.margins: 6
 
-                color: "white"
+                color: Theme.current.text
 
                 text:
                     Math.floor(player.position / 1000)

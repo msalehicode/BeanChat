@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import "../constants/"
+
 ComboBox
 {
     id: root
@@ -31,7 +33,7 @@ ComboBox
         {
             text: modelData
 
-            color: "white"
+            color: Theme.current.text
 
             font.pixelSize: 14
 
@@ -43,8 +45,8 @@ ComboBox
         background: Rectangle
         {
             color: parent.highlighted
-                   ? "#5865F2"
-                   : "#2B2D31"
+                   ? Theme.current.selection
+                   : Theme.current.surface
         }
     }
 
@@ -57,7 +59,7 @@ ComboBox
 
         text: "▼"
 
-        color: "#B5BAC1"
+        color: Theme.current.icon
 
         font.pixelSize: 10
     }
@@ -66,7 +68,7 @@ ComboBox
     {
         text: root.displayText
 
-        color: "white"
+        color: Theme.current.text
 
         font.pixelSize: 14
 
@@ -83,12 +85,12 @@ ComboBox
 
         border.color:
             root.visualFocus
-                ? "#5865F2"
+                ? Theme.current.accent
                 : (root.hovered
-                      ? "#6D6F78"
-                      : "#1E1F22")
+                      ? Theme.current.borderLight
+                      : Theme.current.inputBorder)
 
-        color: "#1E1F22"
+        color: Theme.current.input
 
         Behavior on border.color
         {
@@ -110,10 +112,8 @@ ComboBox
         background: Rectangle
         {
             radius: 8
-
-            color: "#111214"
-
-            border.color: "#404249"
+            color: Theme.current.surface3
+            border.color: Theme.current.border
         }
 
         contentItem: ListView

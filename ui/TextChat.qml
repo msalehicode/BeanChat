@@ -16,7 +16,7 @@ Item
     Rectangle
     {
         anchors.fill: parent
-        color: "transparent"
+        color: Theme.current.background
     }
     property string selectedFilePath: ""
     property string selectedFileName: ""
@@ -30,7 +30,7 @@ Item
             return;
         }
 
-        textSelectedFileName.color="white"
+        textSelectedFileName.color = Theme.current.text
         root.uploadedFileAttachedId=0
         root.selectedFilePath=""
         root.selectedFileName=""
@@ -60,7 +60,7 @@ Item
 
             user.sendFile(root.selectedFilePath)
             root.uploadingFile=true
-            textSelectedFileName.color="grey"
+            textSelectedFileName.color = Theme.current.textMuted
         }
     }
 
@@ -98,7 +98,7 @@ Item
         }
 
         height: 60
-        color: "#080B10"
+        color: Theme.current.surface3
         clip: true
 
         Row
@@ -110,7 +110,7 @@ Item
             Text
             {
                 text: "Chat in " + user.myChannelName
-                color: "white"
+                color: Theme.current.text
                 font.pixelSize: 18
                 font.bold: true
                 anchors.verticalCenter: parent.verticalCenter
@@ -158,12 +158,12 @@ Item
             {
                 width: 4
                 radius: width / 2
-                color: "#839ac7"
+                color: Theme.current.icon
             }
 
             background: Rectangle
             {
-                color: "#3c5484"
+                color: Theme.current.surface2
             }
         }
 
@@ -206,7 +206,7 @@ Item
             {
                 anchors.fill: parent
                 color: hoverHandler.hovered
-                       ? "#080B10"
+                       ? Theme.current.hover
                        : "transparent"
                 z: -1
             }
@@ -236,10 +236,10 @@ Item
                     height: 40
                     radius: 20
 
-                    color: noAvatarLetter.visible ? avatarBg : "transparent"
+                    color: noAvatarLetter.visible ? Theme.current.surface3 : "transparent"
                     border.width: 1
 
-                    border.color: "#2C3B57"
+                    border.color: Theme.current.border
 
                     Text
                     {
@@ -247,7 +247,7 @@ Item
                         anchors.centerIn: parent
                         text:  model.senderName.charAt(0).toUpperCase()
                         visible: !userAvatar.visible
-                        color: "white"
+                        color: Theme.current.text
                         font.bold: true
                     }
                     Image
@@ -287,7 +287,7 @@ Item
                         anchors.bottomMargin: -1
 
                         border.width: 2
-                        border.color: bg2
+                        border.color: Theme.current.surface2
 
                         color: UiHelpers.statusColor(model.senderStatus)
                     }
@@ -330,7 +330,7 @@ Item
                         Text
                         {
                             text: model.timestamp
-                            color: "#949BA4"
+                            color: Theme.current.textMuted
                             font.pixelSize: 11
                         }
                     }
@@ -420,7 +420,7 @@ Item
                             wrapMode: TextEdit.Wrap
                             textFormat: TextEdit.RichText
 
-                            color: "#DBDEE1"
+                            color: Theme.current.userText
 
                             text: delegatedItem.makeLinksClickable(model.textMessage)
 
@@ -464,7 +464,7 @@ Item
                                   : (messageContentBase.implicitHeight>50
                                         ?messageContentBase.implicitHeight : 50)
 
-                        color: "black"   // dark transparent
+                        color: Theme.current.surface3
                         opacity: 0.5
                         radius: 15
 
@@ -478,7 +478,7 @@ Item
                             Text
                             {
                                 text: "Blocked content"
-                                color: "white"
+                                color: Theme.current.text
                                 font.bold: true
                                 horizontalAlignment: Text.AlignHCenter
                             }
@@ -486,7 +486,7 @@ Item
                             Text
                             {
                                 text: "Click to reveal"
-                                color: "#cccccc"
+                                color: Theme.current.textSecondary
                                 horizontalAlignment: Text.AlignHCenter
                             }
                         }
@@ -524,8 +524,8 @@ Item
 
         anchors.bottomMargin: 12
         radius: width / 2
-        color: "#141C2B"
-        border.color: "#2C3B57"
+        color: Theme.current.surface2
+        border.color: Theme.current.border
         z:100
         Image
         {
@@ -595,7 +595,7 @@ Item
             bottom: parent.bottom
         }
 
-        color: "#05070b"
+        color: Theme.current.background
 
         height: inputBackground.height + 16
 
@@ -614,7 +614,7 @@ Item
 
             radius: 8
 
-            color: "#080B10"
+            color: Theme.current.surface3
 
             Row
             {
@@ -660,7 +660,7 @@ Item
 
                     text: selectedFileName
 
-                    color: "white"
+                    color: Theme.current.text
 
                     elide: Text.ElideRight
                 }
@@ -674,7 +674,7 @@ Item
 
                     radius: 13
 
-                    color: "#3B3E45"
+                    color: Theme.current.hover
 
                     anchors.verticalCenter: parent.verticalCenter
 
@@ -682,7 +682,7 @@ Item
                     {
                         anchors.centerIn: parent
                         text: "✕"
-                        color: "white"
+                        color: Theme.current.text
                     }
 
                     MouseArea
@@ -717,7 +717,7 @@ Item
             enabled: !root.uploadingFile //only enable when upload is not in process
             opacity: root.uploadingFile ? 0.5 : 1
             radius: 8
-            color: "#080B10"
+            color: Theme.current.surface3
 
             height: Math.min(
                         Math.max(messageInput.contentHeight + 24, 48),
@@ -742,7 +742,7 @@ Item
 
                     anchors.verticalCenter: parent.verticalCenter
 
-                    color: "#2B2D31"
+                    color: Theme.current.surface
 
                     Image
                     {
@@ -782,7 +782,7 @@ Item
 
                         wrapMode: TextEdit.Wrap
 
-                        color: "#DBDEE1"
+                        color: Theme.current.userText
 
                         background: Rectangle
                         {
@@ -815,7 +815,7 @@ Item
                     width: 40
                     height: 40
                     radius: 20
-                    color: "#5865F2"
+                    color: Theme.current.accent
                     anchors.verticalCenter: parent.verticalCenter
 
                     Image
@@ -867,10 +867,10 @@ Item
 
             anchors.centerIn: parent
 
-            color: "#2B2D31"
+            color: Theme.current.surface
 
             border.width: 1
-            border.color: "#1E1F22"
+            border.color: Theme.current.surface3
 
             Column
             {
@@ -887,7 +887,7 @@ Item
                     font.pixelSize: 20
                     font.bold: true
 
-                    color: "white"
+                    color: Theme.current.text
                 }
 
                 Text
@@ -896,7 +896,7 @@ Item
 
                     text: root.errorDialogMessage
 
-                    color: "#DBDEE1"
+                    color: Theme.current.userText
 
                     wrapMode: Text.WordWrap
 
@@ -918,7 +918,9 @@ Item
 
                         radius: 6
 
-                        color: okMouse.containsMouse ? "#6D8CF5" : "#5865F2"
+                        color: okMouse.containsMouse
+                               ? Theme.current.accentHover
+                               : Theme.current.accent
 
                         Text
                         {
@@ -926,7 +928,7 @@ Item
 
                             text: "OK"
 
-                            color: "white"
+                            color: Theme.current.text
 
                             font.bold: true
                         }
@@ -1008,11 +1010,11 @@ Item
             if(status===true)
             {
                 root.uploadedFileAttachedId=attachId
-                textSelectedFileName.color="white"
+                textSelectedFileName.color = Theme.current.text
             }
             else
             {
-                textSelectedFileName.color="red"
+                textSelectedFileName.color = Theme.current.danger
                 root.showError("Upload Failed", error)
                 root.resetAttachFile()
             }

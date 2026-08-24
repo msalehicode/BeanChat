@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 
+import "constants/"
 Popup
 {
     id: root
@@ -30,8 +31,8 @@ Popup
     background: Rectangle
     {
         radius: 8
-        color: "#111214"
-        border.color: "#2b2d31"
+        color: Theme.current.surface3
+        border.color: Theme.current.border
         border.width: 1
     }
 
@@ -87,7 +88,7 @@ Popup
                 Text
                 {
                     text: root.serverName
-                    color: "white"
+                    color: Theme.current.text
                     font.pixelSize: 15
                     font.bold: true
                     width: implicitWidth>root.width/1.50 ? root.width/1.50 : implicitWidth
@@ -97,7 +98,7 @@ Popup
                 Text
                 {
                     text: root.ip + ":" + root.port
-                    color: "#949ba4"
+                    color: Theme.current.textMuted
                     font.pixelSize: 12
                     width: implicitWidth>root.width/1.50 ? root.width/1.50 : implicitWidth
                     elide: Text.ElideMiddle
@@ -118,13 +119,13 @@ Popup
             background: Rectangle
             {
                 radius: 5
-                color: connectItem.hovered ? "#4752C4" : "transparent"
+                color: connectItem.hovered ? Theme.current.accentHover : "transparent"
             }
 
             contentItem: Text
             {
                 text: "🔌  Connect"
-                color: "white"
+                color: Theme.current.text
                 font.pixelSize: 14
                 verticalAlignment: Text.AlignVCenter
             }
@@ -143,13 +144,13 @@ Popup
             background: Rectangle
             {
                 radius: 5
-                color: disconnectItem.hovered ? "#4752C4" : "transparent"
+                color: disconnectItem.hovered ? Theme.current.accentHover : "transparent"
             }
 
             contentItem: Text
             {
                 text: "🔌  Disconnect"
-                color: "white"
+                color: Theme.current.text
                 font.pixelSize: 14
                 verticalAlignment: Text.AlignVCenter
             }
@@ -169,13 +170,13 @@ Popup
             background: Rectangle
             {
                 radius: 5
-                color: modifyItem.hovered ? "#4752C4" : "transparent"
+                color: modifyItem.hovered ? Theme.current.accentHover : "transparent"
             }
 
             contentItem: Text
             {
                 text: "✏️  Modify"
-                color: "white"
+                color: Theme.current.text
                 font.pixelSize: 14
                 verticalAlignment: Text.AlignVCenter
             }
@@ -195,13 +196,13 @@ Popup
             background: Rectangle
             {
                 radius: 5
-                color: shareServerQRCode.hovered ? "#4752C4" : "transparent"
+                color: shareServerQRCode.hovered ? Theme.current.accentHover : "transparent"
             }
 
             contentItem: Text
             {
                 text: "🔗 Share via QR Code"
-                color: "white"
+                color: Theme.current.text
                 font.pixelSize: 14
                 verticalAlignment: Text.AlignVCenter
             }
@@ -221,13 +222,13 @@ Popup
             background: Rectangle
             {
                 radius: 5
-                color: shareServerCode.hovered ? "#4752C4" : "transparent"
+                color: shareServerCode.hovered ? Theme.current.accentHover : "transparent"
             }
 
             contentItem: Text
             {
                 text: "🔗 Share via ServerCode"
-                color: "white"
+                color: Theme.current.text
                 font.pixelSize: 14
                 verticalAlignment: Text.AlignVCenter
             }
@@ -246,13 +247,13 @@ Popup
             background: Rectangle
             {
                 radius: 5
-                color: deleteItem.hovered ? "#DA373C" : "transparent"
+                color: deleteItem.hovered ? Theme.current.danger : "transparent"
             }
 
             contentItem: Text
             {
                 text: "🗑  Delete"
-                color: deleteItem.hovered ? "white" : "#ED4245"
+                color: deleteItem.hovered ? Theme.current.text : Theme.current.danger
                 font.pixelSize: 14
                 verticalAlignment: Text.AlignVCenter
             }

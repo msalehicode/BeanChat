@@ -3,6 +3,8 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
 
+import "../constants/"
+
 Popup
 {
     id: root
@@ -28,9 +30,9 @@ Popup
 
     background: Rectangle
     {
-        color: "#313338"
+        color: Theme.current.background
         radius: 8
-        border.color: "#1e1f22"
+        border.color: Theme.current.input
     }
 
     ColumnLayout
@@ -42,7 +44,7 @@ Popup
         Text
         {
             text: "Password Required"
-            color: "white"
+            color: Theme.current.text
             font.pixelSize: 24
             font.bold: true
             Layout.alignment: Qt.AlignHCenter
@@ -51,7 +53,7 @@ Popup
         Text
         {
             text: "Enter password for channel:"
-            color: "#b5bac1"
+            color: Theme.current.textSecondary
             Layout.alignment: Qt.AlignHCenter
         }
 
@@ -59,7 +61,7 @@ Popup
         Text
         {
             text: root.channelName
-            color: "#5865f2"
+            color: Theme.current.accent
             font.bold: true
             font.pixelSize: 18
 
@@ -73,7 +75,7 @@ Popup
         Text
         {
             text: "PASSWORD"
-            color: "#b5bac1"
+            color: Theme.current.textSecondary
             font.bold: true
             font.pixelSize: 12
         }
@@ -86,17 +88,17 @@ Popup
 
             echoMode: TextInput.Password
             placeholderText: "Enter channel password"
-            placeholderTextColor: "white"
+            placeholderTextColor: Theme.current.text
 
-            color: "white"
+            color: Theme.current.text
 
             onAccepted: joinButton.clicked()
 
             background: Rectangle
             {
                 radius: 4
-                color: "#1e1f22"
-                border.color: parent.activeFocus ? "#5865f2" : "#111214"
+                color: Theme.current.input
+                border.color: parent.activeFocus ? Theme.current.accent : Theme.current.inputBorder
             }
         }
 
@@ -119,17 +121,17 @@ Popup
                     radius: 4
 
                     color: cancelButton.down
-                           ? "#3F4147"
+                           ? Theme.current.pressed
                            : "transparent"
 
                     border.width: 1
-                    border.color: "#555"
+                    border.color: Theme.current.borderLight
                 }
 
                 contentItem: Text
                 {
                     text: parent.text
-                    color: "white"
+                    color: Theme.current.text
 
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
@@ -161,17 +163,17 @@ Popup
                     radius: 4
 
                     color: joinButton.down
-                           ?  "#4752C4"
-                           : "#5865F2"
+                           ?  Theme.current.accentHover
+                           : Theme.current.accent
 
                     border.width: 1
-                    border.color: "#555"
+                    border.color: Theme.current.borderLight
                 }
 
                 contentItem: Text
                 {
                     text: parent.text
-                    color: "white"
+                    color: Theme.current.text
 
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter

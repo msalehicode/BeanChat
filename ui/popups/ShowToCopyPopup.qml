@@ -3,6 +3,8 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
 
+import "../constants/"
+
 Popup
 {
     id: root
@@ -29,9 +31,9 @@ Popup
 
     background: Rectangle
     {
-        color: "#313338"
+        color: Theme.current.background
         radius: 8
-        border.color: "#1e1f22"
+        border.color: Theme.current.surface3
     }
 
     ColumnLayout
@@ -43,7 +45,7 @@ Popup
         Text
         {
             text: root.titleText
-            color: "white"
+            color: Theme.current.text
             font.pixelSize: 24
             font.bold: true
             Layout.alignment: Qt.AlignHCenter
@@ -54,7 +56,7 @@ Popup
         Text
         {
             text: root.descriptionText
-            color: "#b5bac1"
+            color: Theme.current.textSecondary
             Layout.alignment: Qt.AlignHCenter
             Layout.maximumWidth: parent.width
             elide: Text.ElideRight
@@ -67,8 +69,8 @@ Popup
             Layout.preferredHeight: 52
 
             radius: 8
-            color: "#2b2d31"
-            border.color: "#1e1f22"
+            color: Theme.current.surface
+            border.color: Theme.current.surface3
 
             RowLayout
             {
@@ -79,7 +81,7 @@ Popup
                 Text
                 {
                     text: root.value
-                    color: "white"
+                    color: Theme.current.text
 
                     font.family: "Consolas"    // or "monospace"
                     font.pixelSize: 18
@@ -100,7 +102,7 @@ Popup
                     Layout.fillHeight: true
 
                     radius: 6
-                    color: copyLabel.text === "Copied!" ? "#3BA55D" : "#5865F2"
+                    color: copyLabel.text === "Copied!" ? Theme.current.success : Theme.current.accent
 
                     Behavior on color
                     {
@@ -125,7 +127,7 @@ Popup
                         id: copyLabel
                         anchors.centerIn: parent
                         text: "Copy"
-                        color: "white"
+                        color: Theme.current.text
                         font.bold: true
 
                         Behavior on opacity
@@ -178,14 +180,14 @@ Popup
 
             radius: 8
 
-            color: "#5865F2"
+            color: Theme.current.accent
             Layout.alignment: Qt.AlignHCenter
 
             Text
             {
                 anchors.centerIn: parent
                 text: "CLOSE"
-                color: "white"
+                color: Theme.current.text
                 font.bold: true
             }
 

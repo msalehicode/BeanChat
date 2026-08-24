@@ -1,5 +1,7 @@
 import QtQuick
 import QtQuick.Controls
+import "../constants/"
+
 
 Item
 {
@@ -19,9 +21,8 @@ Item
 
         radius: height / 2
 
-        color: "#1E1F22"
-
-        border.color: "#404249"
+        color: Theme.current.input
+        border.color: Theme.current.border
 
         Rectangle
         {
@@ -38,9 +39,9 @@ Item
             color:
             {
                 if(root.currentLevel < root.threshold)
-                    return "#ED4245"
+                    return Theme.current.danger
 
-                return "#23A559"
+                return Theme.current.success
             }
 
             Behavior on width
@@ -67,7 +68,7 @@ Item
 
             y: -4
 
-            color: "#FFFFFF"
+            color: Theme.current.text
         }
     }
 }

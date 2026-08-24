@@ -5,16 +5,18 @@ import QtQuick.Controls.Material
 import QtQuick.Dialogs
 import "../settingPages"
 import "../popups"
+import "../constants/"
+
 Page
 {
     id: profilePage
 
     Material.theme: Material.Dark
-    Material.accent: "#5865F2"
+    Material.accent: Theme.current.accent
 
     background: Rectangle
     {
-        color: "#313338"
+        color: Theme.current.background
     }
 
     property string avatarSource: ""
@@ -71,7 +73,7 @@ Page
             {
                 text: "User Profile"
 
-                color: "white"
+                color: Theme.current.text
 
                 font.pixelSize: 28
                 font.bold: true
@@ -87,8 +89,8 @@ Page
 
                 radius: 10
 
-                color: "#2B2D31"
-                border.color: "#404249"
+                color: Theme.current.surface
+                border.color: Theme.current.border
 
                 implicitHeight: avatarContent.implicitHeight + 32
 
@@ -105,7 +107,7 @@ Page
                     {
                         text: "Profile Picture"
 
-                        color: "white"
+                        color: Theme.current.text
 
                         font.pixelSize: 18
                         font.bold: true
@@ -124,7 +126,7 @@ Page
 
                             radius: width / 2
 
-                            color: "#1E1F22"
+                            color: Theme.current.input
 
                             clip: true
 
@@ -147,7 +149,7 @@ Page
 
                                 text: "?"
 
-                                color: "white"
+                                color: Theme.current.text
 
                                 font.pixelSize: 36
                             }
@@ -185,7 +187,7 @@ Page
                                 {
                                     text: parent.text
 
-                                    color: "white"
+                                    color: Theme.current.text
 
                                     horizontalAlignment:
                                         Text.AlignHCenter
@@ -216,20 +218,20 @@ Page
                                     radius: 4
 
                                     color: removeAvatarButton.down
-                                           ? "darkred"
+                                           ? Theme.current.danger
                                            : removeAvatarButton.enabled
-                                             ? "red"
+                                             ? Theme.current.danger
                                              : "transparent"
 
                                     border.width: 1
-                                    border.color: "#555"
+                                    border.color: Theme.current.danger
                                 }
 
                                 contentItem: Text
                                 {
                                     text: parent.text
 
-                                    color: "white"
+                                    color: Theme.current.text
 
                                     horizontalAlignment:
                                         Text.AlignHCenter
@@ -253,8 +255,8 @@ Page
 
                 radius: 10
 
-                color: "#2B2D31"
-                border.color: "#404249"
+                color: Theme.current.surface
+                border.color: Theme.current.border
 
                 implicitHeight: usernameContent.implicitHeight + 32
 
@@ -271,7 +273,7 @@ Page
                     {
                         text: "Username"
 
-                        color: "white"
+                        color: Theme.current.text
 
                         font.pixelSize: 18
                         font.bold: true
@@ -284,17 +286,17 @@ Page
                         width: parent.width
 
                         placeholderText: "Username"
-                        placeholderTextColor: "#72767D"
+                        placeholderTextColor: Theme.current.inputPlaceholder
 
                         text: user.myUsername
 
-                        color: "white"
+                        color: Theme.current.text
 
                         background: Rectangle
                         {
                             radius: 6
 
-                            color: "#1E1F22"
+                            color: Theme.current.input
                         }
                     }
                 }
@@ -310,8 +312,8 @@ Page
 
                 radius: 10
 
-                color: "#2B2D31"
-                border.color: "#404249"
+                color: Theme.current.surface
+                border.color: Theme.current.border
 
                 implicitHeight: identityContent.implicitHeight + 32
 
@@ -328,7 +330,7 @@ Page
                     {
                         text: "Identity"
 
-                        color: "white"
+                        color: Theme.current.text
 
                         font.pixelSize: 18
                         font.bold: true
@@ -343,7 +345,7 @@ Page
                             ? "Select your identity."
                             : "NOTE: Identity cannot be modified while connected to a server."
 
-                        color: "#B5BAC1"
+                        color: Theme.current.textSecondary
 
                         wrapMode: Text.WordWrap
                     }
@@ -381,18 +383,18 @@ Page
                                 radius: 4
 
                                 color: deleteIdentity.down
-                                       ? "darkred"
-                                       : "red"
+                                       ? Theme.current.danger
+                                       : Theme.current.danger
 
                                 border.width: 1
-                                border.color: "#555"
+                                border.color: Theme.current.danger
                             }
 
                             contentItem: Text
                             {
                                 text: parent.text
 
-                                color: "white"
+                                color: Theme.current.text
 
                                 horizontalAlignment: Text.AlignHCenter
 
@@ -430,18 +432,18 @@ Page
                                 radius: 4
 
                                 color: renameIdentity.down
-                                       ? "#3F4147"
+                                       ? Theme.current.pressed
                                        : "transparent"
 
                                 border.width: 1
-                                border.color: "#555"
+                                border.color: Theme.current.borderLight
                             }
 
                             contentItem: Text
                             {
                                 text: parent.text
 
-                                color: "white"
+                                color: Theme.current.text
 
                                 horizontalAlignment:
                                     Text.AlignHCenter
@@ -478,18 +480,18 @@ Page
                                 radius: 4
 
                                 color: createIdentity.down
-                                       ? "#3F4147"
+                                       ? Theme.current.pressed
                                        : "transparent"
 
                                 border.width: 1
-                                border.color: "#555"
+                                border.color: Theme.current.borderLight
                             }
 
                             contentItem: Text
                             {
                                 text: parent.text
 
-                                color: "white"
+                                color: Theme.current.text
 
                                 horizontalAlignment: Text.AlignHCenter
 
@@ -536,14 +538,14 @@ Page
                     {
                         radius: 4
                         color: saveButton.down
-                               ? "#4752C4"
-                               : "#5865F2"
+                               ? Theme.current.accentPressed
+                               : Theme.current.accent
                     }
 
                     contentItem: Text
                     {
                         text: parent.text
-                        color: "white"
+                        color: Theme.current.text
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment:Text.AlignVCenter

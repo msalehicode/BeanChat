@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtMultimedia
 
+import "../constants/"
+
 Item
 {
     id: root
@@ -31,7 +33,7 @@ Item
         Rectangle
         {
             radius: 8
-            color: "#2B2D31"
+            color: Theme.current.surface2
 
             Text
             {
@@ -39,7 +41,7 @@ Item
 
                 anchors.centerIn: parent
 
-                color: "white"
+                color: Theme.current.text
 
                 text: downloading
                       ? Math.round(progress*100)+"%"
@@ -78,7 +80,7 @@ Item
         Rectangle
         {
             radius:8
-            color:"#2B2D31"
+            color: Theme.current.surface2
 
             MediaPlayer
             {
@@ -148,7 +150,7 @@ Item
                         Text
                         {
                             text: formatTime(player.position)
-                            color:"white"
+                            color: Theme.current.text
                         }
 
                         Item
@@ -159,7 +161,7 @@ Item
                         Text
                         {
                             text: formatTime(player.duration)
-                            color:"white"
+                            color: Theme.current.text
                         }
                     }
                 }

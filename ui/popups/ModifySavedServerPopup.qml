@@ -3,6 +3,8 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
 
+import "../constants/"
+
 Popup
 {
     id: root
@@ -17,9 +19,9 @@ Popup
 
     background: Rectangle
     {
-        color: "#313338"
+        color: Theme.current.background
         radius: 8
-        border.color: "#1e1f22"
+        border.color: Theme.current.surface3
     }
 
 
@@ -80,7 +82,7 @@ Popup
         {
             Layout.fillWidth: true
             height: 82
-            color: "#313338"
+            color: Theme.current.background
 
             Column
             {
@@ -91,7 +93,7 @@ Popup
                 Text
                 {
                     text: "Modify Server"
-                    color: "white"
+                    color: Theme.current.text
                     font.pixelSize: 22
                     font.bold: true
                 }
@@ -99,7 +101,7 @@ Popup
                 Text
                 {
                     text: "Update this server's information."
-                    color: "#B5BAC1"
+                    color: Theme.current.textSecondary
                     font.pixelSize: 13
                 }
             }
@@ -126,7 +128,7 @@ Popup
                 Label
                 {
                     text: "SERVER NAME"
-                    color: "#B5BAC1"
+                    color: Theme.current.textSecondary
                     font.bold: true
                     font.pixelSize: 11
                 }
@@ -138,26 +140,26 @@ Popup
                     Layout.fillWidth: true
                     height: 40
 
-                    color: "white"
+                    color: Theme.current.text
                     placeholderText: "BeanChat Server"
-                    placeholderTextColor: "white"
+                    placeholderTextColor: Theme.current.text
                     text:currentName
 
                     background: Rectangle
                     {
                         radius: 6
-                        color: "#1E1F22"
+                        color: Theme.current.surface3
                         border.width: nameField.activeFocus ? 2 : 1
                         border.color: nameField.activeFocus
-                                      ? "#5865F2"
-                                      : "#202225"
+                                      ? Theme.current.accent
+                                      : Theme.current.inputBorder
                     }
                 }
 
                 Label
                 {
                     text: "IP ADDRESS"
-                    color: "#B5BAC1"
+                    color: Theme.current.textSecondary
                     font.bold: true
                     font.pixelSize: 11
                 }
@@ -169,23 +171,23 @@ Popup
                     Layout.fillWidth: true
                     height: 40
 
-                    color: "white"
+                    color: Theme.current.text
                     text: currentIp
                     background: Rectangle
                     {
                         radius: 6
-                        color: "#1E1F22"
+                        color: Theme.current.surface3
                         border.width: ipField.activeFocus ? 2 : 1
                         border.color: ipField.activeFocus
-                                      ? "#5865F2"
-                                      : "#202225"
+                                      ? Theme.current.accent
+                                      : Theme.current.inputBorder
                     }
                 }
 
                 Label
                 {
                     text: "PORT"
-                    color: "#B5BAC1"
+                    color: Theme.current.textSecondary
                     font.bold: true
                     font.pixelSize: 11
                 }
@@ -197,18 +199,18 @@ Popup
                     Layout.fillWidth: true
                     height: 40
 
-                    color: "white"
+                    color: Theme.current.text
                     text:Number(currentPort)
                     // inputMethodHints: Qt.ImhDigitsOnly
 
                     background: Rectangle
                     {
                         radius: 6
-                        color: "#1E1F22"
+                        color: Theme.current.surface3
                         border.width: portField.activeFocus ? 2 : 1
                         border.color: portField.activeFocus
-                                      ? "#5865F2"
-                                      : "#202225"
+                                      ? Theme.current.accent
+                                      : Theme.current.inputBorder
                     }
                 }
 
@@ -227,7 +229,7 @@ Popup
             Layout.fillWidth: true
             height: 64
 
-            color: "#2B2D31"
+            color: Theme.current.surface
 
             RowLayout
             {
@@ -249,17 +251,17 @@ Popup
                     {
                         radius: 4
                         color: cancelButton.down
-                               ? "#3F4147"
+                               ? Theme.current.pressed
                                : "transparent"
 
                         border.width: 1
-                        border.color: "#555"
+                        border.color: Theme.current.border
                     }
 
                     contentItem: Text
                     {
                         text: parent.text
-                        color: "white"
+                        color: Theme.current.text
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
@@ -281,14 +283,14 @@ Popup
                     {
                         radius: 4
                         color: saveButton.down
-                               ? "#4752C4"
-                               : "#5865F2"
+                               ? Theme.current.accentHover
+                               : Theme.current.accent
                     }
 
                     contentItem: Text
                     {
                         text: parent.text
-                        color: "white"
+                        color: Theme.current.text
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter

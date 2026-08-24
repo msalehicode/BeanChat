@@ -10,14 +10,13 @@ Rectangle
     property string text: ""
     property int type: 0
 
-    color: "#2b2d31"
+    color: Theme.current.surface
     radius: 8
 
     border.width: 1
-    border.color: "#3a3d45"
+    border.color: Theme.current.border
 
-    // width: Math.min(450, implicitWidth)
-    width:  450
+    width: 450
     implicitHeight: Math.max(56, message.implicitHeight + 24)
 
     Rectangle
@@ -33,11 +32,20 @@ Rectangle
         {
             switch(root.type)
             {
-                case NotificationTypes.info: return "#3498db"
-                case NotificationTypes.success: return "#2ecc71"
-                case NotificationTypes.warning: return "#f1c40f"
-                case NotificationTypes.error: return "#e74c3c"
-                default: return "#3498db"
+                case NotificationTypes.info:
+                    return Theme.current.info
+
+                case NotificationTypes.success:
+                    return Theme.current.success
+
+                case NotificationTypes.warning:
+                    return Theme.current.warning
+
+                case NotificationTypes.error:
+                    return Theme.current.danger
+
+                default:
+                    return Theme.current.info
             }
         }
     }
@@ -59,11 +67,20 @@ Rectangle
             {
                 switch(root.type)
                 {
-                case NotificationTypes.info: return "#3498db"
-                case NotificationTypes.success: return "#2ecc71"
-                case NotificationTypes.warning: return "#f1c40f"
-                case NotificationTypes.error: return "#e74c3c"
-                default: return "white"
+                    case NotificationTypes.info:
+                        return Theme.current.info
+
+                    case NotificationTypes.success:
+                        return Theme.current.success
+
+                    case NotificationTypes.warning:
+                        return Theme.current.warning
+
+                    case NotificationTypes.error:
+                        return Theme.current.danger
+
+                    default:
+                        return Theme.current.text
                 }
             }
 
@@ -86,7 +103,7 @@ Rectangle
 
             Layout.fillWidth: true
 
-            color: "white"
+            color: Theme.current.text
 
             text: root.text
 
@@ -103,7 +120,9 @@ Rectangle
             height: 28
             radius: 14
 
-            color: mouse.containsMouse ? "#3b3d43" : "transparent"
+            color: mouse.containsMouse
+                   ? Theme.current.hover
+                   : "transparent"
 
             Text
             {
@@ -111,7 +130,9 @@ Rectangle
 
                 text: "✕"
 
-                color: mouse.containsMouse ? "white" : "#b9bbbe"
+                color: mouse.containsMouse
+                       ? Theme.current.iconActive
+                       : Theme.current.iconMuted
 
                 font.pixelSize: 15
             }

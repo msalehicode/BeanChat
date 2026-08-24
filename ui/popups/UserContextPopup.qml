@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Controls
 
+import "../constants/"
+
 Popup {
     id: root
 
@@ -17,8 +19,8 @@ Popup {
 
     background: Rectangle {
         radius: 8
-        color: "#313338"
-        border.color: "#1E1F22"
+        color: Theme.current.background
+        border.color: Theme.current.border
         border.width: 1
     }
 
@@ -33,7 +35,7 @@ Popup {
 
         Text {
             text: root.username
-            color: "white"
+            color: Theme.current.text
             font.pixelSize: 16
             font.bold: true
             elide: Text.ElideRight
@@ -42,7 +44,7 @@ Popup {
         Rectangle {
             width: parent.width
             height: 1
-            color: "#404249"
+            color: Theme.current.border
         }
 
         //-----------------------------------------
@@ -54,7 +56,7 @@ Popup {
                   (root.clientUser
                        ? Math.round(root.clientUser.volume)
                        : 100) + "%"
-            color: "#B5BAC1"
+            color: Theme.current.textSecondary
             font.pixelSize: 12
         }
 
@@ -89,13 +91,13 @@ Popup {
                 height: 4
 
                 radius: 2
-                color: "#4E5058"
+                color: Theme.current.borderLight
 
                 Rectangle {
                     width: volumeSlider.visualPosition * parent.width
                     height: parent.height
                     radius: parent.radius
-                    color: "#5865F2"
+                    color: Theme.current.accent
                 }
             }
 
@@ -106,10 +108,10 @@ Popup {
 
                 radius: width / 2
 
-                color: "white"
+                color: Theme.current.text
 
                 border.width: 1
-                border.color: "#DCDDDE"
+                border.color: Theme.current.borderLight
 
                 x: volumeSlider.leftPadding
                    + volumeSlider.visualPosition
@@ -136,7 +138,7 @@ Popup {
         Rectangle {
             width: parent.width
             height: 1
-            color: "#404249"
+            color: Theme.current.border
         }
 
         //-----------------------------------------
@@ -166,7 +168,7 @@ Popup {
 
             contentItem: Text {
                 text: muteButton.text
-                color: "#F2F3F5"
+                color: Theme.current.text
                 font.pixelSize: 14
                 font.weight: Font.DemiBold
 
@@ -178,13 +180,13 @@ Popup {
                 radius: 8
 
                 color: muteButton.down
-                       ? "#6D6F78"
+                       ? Theme.current.pressed
                        : muteButton.hovered
-                         ? "#555861"
-                         : "#43464D"
+                         ? Theme.current.hover
+                         : Theme.current.surface
 
                 border.width: 1
-                border.color: "#2B2D31"
+                border.color: Theme.current.border
 
                 Behavior on color {
                     ColorAnimation { duration: 120 }
@@ -194,7 +196,7 @@ Popup {
         Rectangle {
             width: parent.width
             height: 1
-            color: "#404249"
+            color: Theme.current.border
         }
 
     }

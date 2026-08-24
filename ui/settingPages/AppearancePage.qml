@@ -2,41 +2,29 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
-import "../components"
 
+import BeanChat
+
+import "../components"
+import "../constants"
 Page
 {
     id: root
 
     Material.theme: Material.Dark
-    Material.accent: "#5865F2"
+    Material.accent: Theme.current.accent
 
-    property string selectedTheme: "discord"
+    property string selectedTheme: user.currentTheme
 
     background: Rectangle
     {
-        color: "#313338"
-    }
-
-    function selectTheme(theme)
-    {
-        selectedTheme = theme
-
-        // Connect this to your C++/User theme system.
-        //
-        // Example:
-        // user.theme = theme
-        //
-        // Or:
-        // user.setTheme(theme)
+        color: Theme.current.background
     }
 
     Flickable
     {
         anchors.fill: parent
-
         clip: true
-
         contentWidth: width
         contentHeight: settingsColumn.implicitHeight + 40
 
@@ -47,11 +35,8 @@ Page
             id: settingsColumn
 
             width: Math.min(parent.width - 80, 820)
-
             anchors.horizontalCenter: parent.horizontalCenter
-
             spacing: 24
-
             topPadding: 32
             bottomPadding: 40
 
@@ -63,9 +48,7 @@ Page
             Label
             {
                 text: "Appearance"
-
-                color: "white"
-
+                color: Theme.current.text
                 font.pixelSize: 28
                 font.bold: true
             }
@@ -73,9 +56,7 @@ Page
             Label
             {
                 text: "Customize the look and feel of BeanChat"
-
-                color: "#B5BAC1"
-
+                color: Theme.current.textSecondary
                 font.pixelSize: 14
             }
 
@@ -87,21 +68,16 @@ Page
             Rectangle
             {
                 width: parent.width
-
                 radius: 10
-
-                color: "#2B2D31"
-                border.color: "#404249"
-
+                color: Theme.current.surface
+                border.color: Theme.current.border
                 implicitHeight: themesColumn.implicitHeight + 32
 
                 Column
                 {
                     id: themesColumn
-
                     anchors.fill: parent
                     anchors.margins: 16
-
                     spacing: 18
 
 
@@ -112,15 +88,12 @@ Page
                     Column
                     {
                         width: parent.width
-
                         spacing: 4
 
                         Label
                         {
                             text: "Themes"
-
-                            color: "white"
-
+                            color: Theme.current.text
                             font.pixelSize: 18
                             font.bold: true
                         }
@@ -128,13 +101,9 @@ Page
                         Label
                         {
                             width: parent.width
-
                             text: "Choose a theme for BeanChat. You can change the appearance whenever you want."
-
-                            color: "#B5BAC1"
-
+                            color: Theme.current.textSecondary
                             font.pixelSize: 13
-
                             wrapMode: Text.WordWrap
                         }
                     }
@@ -147,41 +116,34 @@ Page
                     GridLayout
                     {
                         width: parent.width
-
                         columns: width >= 700 ? 2 : 1
-
                         columnSpacing: 14
                         rowSpacing: 14
 
-
                         ///////////////////////////////////////////////////
-                        // DISCORD
+                        // DARK THEME
                         ///////////////////////////////////////////////////
 
                         Rectangle
                         {
-                            id: discordTheme
-
+                            id: darkTheme
                             Layout.fillWidth: true
                             Layout.preferredHeight: 225
-
                             radius: 10
-
                             color: "#232428"
-
                             border.width:
-                                selectedTheme === "discord"
+                                selectedTheme === "dark"
                                 ? 5
                                 : 1
 
                             border.color:
-                                selectedTheme === "discord"
+                                selectedTheme === "dark"
                                 ? "#5865F2"
-                                : discordMouse.containsMouse
+                                : darkMouse.containsMouse
                                   ? "#5865F2"
                                   : "#404249"
 
-                            scale: discordMouse.containsMouse ? 1.015 : 1
+                            scale: darkMouse.containsMouse ? 1.015 : 1
 
                             Behavior on scale
                             {
@@ -195,9 +157,7 @@ Page
                             {
                                 anchors.fill: parent
                                 anchors.margins: 12
-
                                 spacing: 9
-
 
                                 ///////////////////////////////////////////////////
                                 // PREVIEW
@@ -233,24 +193,18 @@ Page
 
                                     Label
                                     {
-                                        text: "Discord"
-
+                                        text: "Dark"
                                         color: "white"
-
                                         font.pixelSize: 15
                                         font.bold: true
-
                                         Layout.fillWidth: true
                                     }
 
                                     Label
                                     {
-                                        visible: selectedTheme === "discord"
-
+                                        visible: selectedTheme === "dark"
                                         text: "✓"
-
                                         color: "#5865F2"
-
                                         font.pixelSize: 18
                                         font.bold: true
                                     }
@@ -259,61 +213,50 @@ Page
                                 Label
                                 {
                                     width: parent.width
-
                                     text: "Discord-inspired dark interface"
-
                                     color: "#B5BAC1"
-
                                     font.pixelSize: 12
                                 }
                             }
 
                             MouseArea
                             {
-                                id: discordMouse
-
+                                id: darkMouse
                                 anchors.fill: parent
-
                                 hoverEnabled: true
-
                                 cursorShape: Qt.PointingHandCursor
-
                                 onClicked:
                                 {
-                                    selectTheme("discord")
+                                    Theme.setTheme("dark")
                                 }
                             }
                         }
 
 
                         ///////////////////////////////////////////////////
-                        // TEAMSPEAK 3
+                        // LIGHT THEME
                         ///////////////////////////////////////////////////
 
                         Rectangle
                         {
-                            id: teamspeakTheme
-
+                            id: lightTheme
                             Layout.fillWidth: true
                             Layout.preferredHeight: 225
-
                             radius: 10
-
                             color: "#E9ECEF"
-
                             border.width:
-                                selectedTheme === "teamspeak"
+                                selectedTheme === "light"
                                 ? 5
                                 : 1
 
                             border.color:
-                                selectedTheme === "teamspeak"
+                                selectedTheme === "light"
                                 ? "#2580C2"
-                                : teamspeakMouse.containsMouse
+                                : lightMouse.containsMouse
                                   ? "#2580C2"
                                   : "#404249"
 
-                            scale: teamspeakMouse.containsMouse ? 1.015 : 1
+                            scale: lightMouse.containsMouse ? 1.015 : 1
 
                             Behavior on scale
                             {
@@ -365,24 +308,18 @@ Page
 
                                     Label
                                     {
-                                        text: "TeamSpeak 3"
-
+                                        text: "Light"
                                         color: "#202428"
-
                                         font.pixelSize: 15
                                         font.bold: true
-
                                         Layout.fillWidth: true
                                     }
 
                                     Label
                                     {
-                                        visible: selectedTheme === "teamspeak"
-
+                                        visible: selectedTheme === "light"
                                         text: "✓"
-
                                         color: "#2580C2"
-
                                         font.pixelSize: 18
                                         font.bold: true
                                     }
@@ -391,61 +328,51 @@ Page
                                 Label
                                 {
                                     width: parent.width
-
-                                    text: "Classic TeamSpeak 3 light appearance"
-
+                                    text: "Classic light appearance"
                                     color: "#626970"
-
                                     font.pixelSize: 12
                                 }
                             }
 
                             MouseArea
                             {
-                                id: teamspeakMouse
-
+                                id: lightMouse
                                 anchors.fill: parent
-
                                 hoverEnabled: true
-
                                 cursorShape: Qt.PointingHandCursor
-
                                 onClicked:
                                 {
-                                    selectTheme("teamspeak")
+                                    Theme.setTheme("light")
                                 }
                             }
                         }
 
 
                         ///////////////////////////////////////////////////
-                        // GAMER
+                        // GREEN
                         ///////////////////////////////////////////////////
 
                         Rectangle
                         {
-                            id: gamerTheme
-
+                            id: greenTheme
                             Layout.fillWidth: true
                             Layout.preferredHeight: 225
-
                             radius: 10
-
                             color: "#080A0A"
 
                             border.width:
-                                selectedTheme === "gamer"
+                                selectedTheme === "green"
                                 ? 5
                                 : 1
 
                             border.color:
-                                selectedTheme === "gamer"
+                                selectedTheme === "green"
                                 ? "#44FF00"
-                                : gamerMouse.containsMouse
+                                : greenMouse.containsMouse
                                   ? "#44FF00"
                                   : "#303530"
 
-                            scale: gamerMouse.containsMouse ? 1.015 : 1
+                            scale: greenMouse.containsMouse ? 1.015 : 1
 
                             Behavior on scale
                             {
@@ -459,9 +386,7 @@ Page
                             {
                                 anchors.fill: parent
                                 anchors.margins: 12
-
                                 spacing: 9
-
 
                                 ///////////////////////////////////////////////////
                                 // PREVIEW
@@ -497,24 +422,18 @@ Page
 
                                     Label
                                     {
-                                        text: "Razer"
-
+                                        text: "Green"
                                         color: "white"
-
                                         font.pixelSize: 15
                                         font.bold: true
-
                                         Layout.fillWidth: true
                                     }
 
                                     Label
                                     {
-                                        visible: selectedTheme === "gamer"
-
+                                        visible: selectedTheme === "green"
                                         text: "✓"
-
                                         color: "#44FF00"
-
                                         font.pixelSize: 18
                                         font.bold: true
                                     }
@@ -523,61 +442,51 @@ Page
                                 Label
                                 {
                                     width: parent.width
-
-                                    text: "RGB gaming aesthetic inspired by gaming hardware"
-
+                                    text: "Razer-inspired green gaming interface"
                                     color: "#7E897E"
-
                                     font.pixelSize: 12
                                 }
                             }
 
                             MouseArea
                             {
-                                id: gamerMouse
-
+                                id: greenMouse
                                 anchors.fill: parent
-
                                 hoverEnabled: true
-
                                 cursorShape: Qt.PointingHandCursor
-
                                 onClicked:
                                 {
-                                    selectTheme("gamer")
+                                    Theme.setTheme("green")
                                 }
                             }
                         }
 
 
                         ///////////////////////////////////////////////////
-                        // STEAM
+                        // DARKBLUE
                         ///////////////////////////////////////////////////
 
                         Rectangle
                         {
-                            id: steamTheme
-
+                            id: darkblueTheme
                             Layout.fillWidth: true
                             Layout.preferredHeight: 225
-
                             radius: 10
-
                             color: "#171D25"
 
                             border.width:
-                                selectedTheme === "steam"
+                                selectedTheme === "darkblue"
                                 ? 5
                                 : 1
 
                             border.color:
-                                selectedTheme === "steam"
+                                selectedTheme === "darkblue"
                                 ? "#1A9FFF"
-                                : steamMouse.containsMouse
+                                : darkblueMouse.containsMouse
                                   ? "#1A9FFF"
                                   : "#303943"
 
-                            scale: steamMouse.containsMouse ? 1.015 : 1
+                            scale: darkblueMouse.containsMouse ? 1.015 : 1
 
                             Behavior on scale
                             {
@@ -591,9 +500,7 @@ Page
                             {
                                 anchors.fill: parent
                                 anchors.margins: 12
-
                                 spacing: 9
-
 
                                 ///////////////////////////////////////////////////
                                 // PREVIEW
@@ -629,24 +536,18 @@ Page
 
                                     Label
                                     {
-                                        text: "Steam"
-
+                                        text: "DarkBlue"
                                         color: "white"
-
                                         font.pixelSize: 15
                                         font.bold: true
-
                                         Layout.fillWidth: true
                                     }
 
                                     Label
                                     {
-                                        visible: selectedTheme === "steam"
-
+                                        visible: selectedTheme === "darkblue"
                                         text: "✓"
-
                                         color: "#1A9FFF"
-
                                         font.pixelSize: 18
                                         font.bold: true
                                     }
@@ -655,28 +556,21 @@ Page
                                 Label
                                 {
                                     width: parent.width
-
-                                    text: "Steam-inspired dark gaming interface"
-
+                                    text: "Steam-inspired darkblue gaming interface"
                                     color: "#8F98A4"
-
                                     font.pixelSize: 12
                                 }
                             }
 
                             MouseArea
                             {
-                                id: steamMouse
-
+                                id: darkblueMouse
                                 anchors.fill: parent
-
                                 hoverEnabled: true
-
                                 cursorShape: Qt.PointingHandCursor
-
                                 onClicked:
                                 {
-                                    selectTheme("steam")
+                                    Theme.setTheme("darkblue")
                                 }
                             }
                         }
@@ -692,13 +586,9 @@ Page
             Label
             {
                 width: parent.width
-
                 horizontalAlignment: Text.AlignHCenter
-
-                color: "#80848E"
-
+                color: Theme.current.textMuted
                 font.pixelSize: 12
-
                 text: "BeanChat appearance settings."
             }
 

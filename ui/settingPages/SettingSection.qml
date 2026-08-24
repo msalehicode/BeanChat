@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import "../constants/"
+
 Item
 {
     id: root
@@ -34,7 +36,7 @@ Item
 
             text: root.title
 
-            color: "white"
+            color: Theme.current.text
 
             font.pixelSize: 18
             font.bold: true
@@ -54,7 +56,7 @@ Item
 
             text: root.description
 
-            color: "#B5BAC1"
+            color: Theme.current.textSecondary
 
             font.pixelSize: 13
 
@@ -84,7 +86,7 @@ Item
 
             height: 1
 
-            color: "#3F4147"
+            color: Theme.current.border
 
             opacity: 0.85
         }

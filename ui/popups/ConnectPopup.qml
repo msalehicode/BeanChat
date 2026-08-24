@@ -3,6 +3,8 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
 
+import "../constants/"
+
 Popup
 {
     id: root
@@ -27,9 +29,9 @@ Popup
 
     background: Rectangle
     {
-        color: "#313338"
+        color: Theme.current.background
         radius: 8
-        border.color: "#1e1f22"
+        border.color: Theme.current.border
     }
 
     ColumnLayout
@@ -41,7 +43,7 @@ Popup
         Text
         {
             text: "Connect to Server"
-            color: "white"
+            color: Theme.current.text
             font.pixelSize: 24
             font.bold: true
             Layout.alignment: Qt.AlignHCenter
@@ -50,7 +52,7 @@ Popup
         Text
         {
             text: "Enter the serverCode or Address and Port to connect"
-            color: "#b5bac1"
+            color: Theme.current.textSecondary
             font.pixelSize: 14
             Layout.alignment: Qt.AlignHCenter
         }
@@ -60,7 +62,7 @@ Popup
         Text
         {
             text: "SERVER CODE"
-            color: "#b5bac1"
+            color: Theme.current.textSecondary
             font.bold: true
             font.pixelSize: 12
         }
@@ -72,16 +74,18 @@ Popup
             Layout.fillWidth: true
 
             placeholderText: "ABCD-EFGH-IJKL"
-            placeholderTextColor: "#888"
+            placeholderTextColor: Theme.current.inputPlaceholder
             property bool isDecoded:false;
 
-            color: "white"
+            color: Theme.current.text
 
             background: Rectangle
             {
                 radius: 4
-                color: "#1e1f22"
-                border.color: parent.activeFocus ? "#5865F2" : "#111214"
+                color: Theme.current.input
+                border.color: parent.activeFocus
+                              ? Theme.current.accent
+                              : Theme.current.inputBorder
             }
             onAccepted: serverCodeField.isDecoded===true ? buttonConnect.clicked() : null
 
@@ -111,13 +115,13 @@ Popup
             {
                 Layout.fillWidth: true
                 height: 4
-                color: "#444"
+                color: Theme.current.border
             }
 
             Text
             {
                 text: "OR"
-                color: "#b5bac1"
+                color: Theme.current.textSecondary
                 font.bold: true
             }
 
@@ -125,7 +129,7 @@ Popup
             {
                 Layout.fillWidth: true
                 height: 4
-                color: "#444"
+                color: Theme.current.border
             }
         }
 
@@ -146,7 +150,7 @@ Popup
                 Text
                 {
                     text: "ADDRESS"
-                    color: "#b5bac1"
+                    color: Theme.current.textSecondary
                     font.bold: true
                     font.pixelSize: 12
                 }
@@ -158,16 +162,18 @@ Popup
                     Layout.fillWidth: true
 
                     placeholderText: "example.com or 0.0.0.0"
-                    placeholderTextColor: "#888"
-                    color: "white"
+                    placeholderTextColor: Theme.current.inputPlaceholder
+                    color: Theme.current.text
 
                     onAccepted: buttonConnect.clicked()
 
                     background: Rectangle
                     {
                         radius: 4
-                        color: "#1e1f22"
-                        border.color: parent.activeFocus ? "#5865f2" : "#111214"
+                        color: Theme.current.input
+                        border.color: parent.activeFocus
+                                      ? Theme.current.accent
+                                      : Theme.current.inputBorder
                     }
 
                     onTextChanged:
@@ -185,7 +191,7 @@ Popup
                 Text
                 {
                     text: "PORT"
-                    color: "#b5bac1"
+                    color: Theme.current.textSecondary
                     font.bold: true
                     font.pixelSize: 12
                 }
@@ -198,7 +204,7 @@ Popup
 
                     text: "9987"
                     placeholderText: "9987"
-                    placeholderTextColor: "#888"
+                    placeholderTextColor: Theme.current.inputPlaceholder
 
                     validator: IntValidator
                     {
@@ -206,7 +212,7 @@ Popup
                         top: 65535
                     }
 
-                    color: "white"
+                    color: Theme.current.text
 
                     onAccepted: buttonConnect.clicked()
 
@@ -218,8 +224,10 @@ Popup
                     background: Rectangle
                     {
                         radius: 4
-                        color: "#1e1f22"
-                        border.color: parent.activeFocus ? "#5865f2" : "#111214"
+                        color: Theme.current.input
+                        border.color: parent.activeFocus ?
+                                          Theme.current.accent
+                                        : Theme.current.inputBorder
                     }
                 }
             }
@@ -248,15 +256,15 @@ Popup
 
                     anchors.verticalCenter: parent.verticalCenter
 
-                    color: saveThisServerStatus.checked ? "#5865F2" : "#1E1F22"
-                    border.color: "#5865F2"
+                    color: saveThisServerStatus.checked ? Theme.current.accent : Theme.current.input
+                    border.color: Theme.current.accent
 
                     Text
                     {
                         anchors.centerIn: parent
                         text: "✓"
                         visible: saveThisServerStatus.checked
-                        color: "white"
+                        color: Theme.current.selectionText
                         font.bold: true
                         font.pixelSize: 12
                     }
@@ -267,7 +275,7 @@ Popup
                     anchors.verticalCenter: parent.verticalCenter
 
                     text: "ADD TO MY SERVERS"
-                    color: "white"
+                    color: Theme.current.text
                     font.pixelSize: 14
                 }
             }
@@ -286,11 +294,11 @@ Popup
                 radius: 8
 
                 color: cancelArea.containsMouse
-                           ? "#3F4147"
+                           ? Theme.current.hover
                            : "transparent"
 
                 border.width: 1
-                border.color: "#555"
+                border.color: Theme.current.borderLight
 
                 Layout.alignment: Qt.AlignVCenter
 
@@ -299,7 +307,7 @@ Popup
                 {
                     anchors.centerIn: parent
                     text: "Cancel"
-                    color: "white"
+                    color: Theme.current.text
                     font.bold: true
                 }
 
@@ -325,11 +333,11 @@ Popup
                 enabled: false
 
                 color: !buttonConnect.enabled
-                       ? "#444"
-                       : connectArea.containsMouse ? "#4752C4" : "#5865F2"
+                       ? Theme.current.textDisabled
+                       : connectArea.containsMouse ? Theme.current.accentHover : Theme.current.accentHover
 
                 border.width: 1
-                border.color: "#555"
+                border.color: Theme.current.borderLight
 
                 Layout.alignment: Qt.AlignVCenter
 
@@ -345,7 +353,7 @@ Popup
                 {
                     anchors.centerIn: parent
                     text: "Connect"
-                    color: "white"
+                    color: Theme.current.text
                     font.bold: true
                 }
 

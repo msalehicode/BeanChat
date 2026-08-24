@@ -4,19 +4,21 @@ import QtQuick.Layouts
 import QtQuick.Controls.Material
 
 import "./settingPages/"
+import "constants/"
+
 Page
 {
     id: root
 
     Material.theme: Material.Dark
-    Material.accent: "#5865F2"
+    Material.accent: Theme.current.accent
 
     property int currentPage: 0
     property bool weOpenedMic:false;
 
     background: Rectangle
     {
-        color: "#313338"
+        color: Theme.current.background
     }
 
 
@@ -36,7 +38,7 @@ Page
                 width: rectangleSideBar.width
                 height: parent.height
 
-                color: "#2B2D31"
+                color: Theme.current.surface
             }
             RoundButton
             {
@@ -73,7 +75,7 @@ Page
                 Layout.preferredWidth: 240
                 Layout.fillHeight: true
 
-                color: "#2B2D31"
+                color: Theme.current.surface
 
                 SettingsSidebar
                 {
@@ -97,7 +99,7 @@ Page
                 Layout.fillWidth: true
                 Layout.fillHeight: true
 
-                color: "#313338"
+                color: Theme.current.background
 
                 StackLayout
                 {

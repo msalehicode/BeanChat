@@ -328,6 +328,9 @@ public:
     QString updateRepositoryAddress() const;
     void setUpdateRepositoryAddress(const QString &newUpdateRepositoryAddress);
 
+    QString currentTheme() const;
+    void setCurrentTheme(const QString &newCurrentTheme);
+
 signals:
 
     void myIdChanged();
@@ -451,6 +454,8 @@ signals:
 
     void updateRepositoryAddressChanged();
 
+    void currentThemeChanged();
+
 private slots:
     void onPcmDecoded(quint64 senderId, QByteArray pcm);
 
@@ -472,6 +477,8 @@ private:
     void processPacket(const Packet& packet);
     void loginToUdpSocket();
 
+    //appereance
+    QString m_currentTheme;
 
     //voice
     QThread m_voiceThread;
@@ -659,6 +666,7 @@ private:
     Q_PROPERTY(bool currentTextChannelSaveMessages READ currentTextChannelSaveMessages WRITE setCurrentTextChannelSaveMessages NOTIFY currentTextChannelSaveMessagesChanged FINAL)
     Q_PROPERTY(bool checkUpdate READ checkUpdate WRITE setCheckUpdate NOTIFY checkUpdateChanged FINAL)
     Q_PROPERTY(QString updateRepositoryAddress READ updateRepositoryAddress WRITE setUpdateRepositoryAddress NOTIFY updateRepositoryAddressChanged FINAL)
+    Q_PROPERTY(QString currentTheme READ currentTheme WRITE setCurrentTheme NOTIFY currentThemeChanged FINAL)
 };
 
 #endif // USER_H

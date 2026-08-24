@@ -5,7 +5,7 @@ project(BeanChat VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(APP_CURRENT_VERSION "0.32.85")
+set(APP_CURRENT_VERSION "0.33.85")
 set(APP_TitleName "BeanChat")
 set(APP_OrganizationName "orgBeanChat")
 set(APP_ApplicationName "appBeanChat")
@@ -97,6 +97,7 @@ set_source_files_properties(
     ui/managers/NotificationManager.qml
     ui/constants/NotificationTypes.qml
     ui/constants/UiHelpers.qml
+    ui/constants/Theme.qml
     PROPERTIES QT_QML_SINGLETON_TYPE TRUE
 )
 
@@ -178,6 +179,14 @@ qt_add_qml_module(appBeanChat
         # ui/messageDelegates/MessageFile.qml
 
 
+        # theme
+        ui/constants/Theme.qml
+
+        #themes
+        ui/themes/DarkTheme.qml #discord like
+        ui/themes/LightTheme.qml #teamspeak like
+        ui/themes/GreenTheme.qml #razer like
+        ui/themes/DarkblueTheme.qml #steam like
 
     SOURCES
         user.h user.cpp
@@ -417,6 +426,9 @@ target_compile_definitions(appBeanChat PRIVATE
     OPUS_DEFAULT_FRAMESIZE=960
     OPUS_MAX_PACKET_SIZE=4000
 
+    #theme
+    APP_DEFAULT_THEME="dark"
+
     #speaker
     SPEAKER_DEFAULT_SAMPLE_RATE=48000
     SPEAKER_DEFAULT_CHANNEL=1
@@ -454,6 +466,7 @@ target_compile_definitions(appBeanChat PRIVATE
     APP_SETTING_VER="App/Version"
     APP_SETTING_CHECKUPDATE="App/CheckUpdates"
     APP_SETTING_UPDATE_REPOSITORY="App/UpdateRepository"
+    APP_SETTING_THEME="App/Theme"
 
     # qsettings group and keys , also these values are inside ui/settingPages/AudioInputPage.qml too
     MIC_SETTING_DEVICE="AudioInput/Device"

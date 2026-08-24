@@ -22,7 +22,7 @@ Item
     Rectangle
     {
         anchors.fill: parent
-        color: "#141C2B"
+        color: Theme.current.background
     }
     Column
     {
@@ -34,7 +34,7 @@ Item
             width: parent.width
             height: 60
             visible: user.isConnectedToServer
-            color: "#080B10"
+            color: Theme.current.surface3
 
             property bool opened: false
 
@@ -50,7 +50,7 @@ Item
                     font.bold: true
                     elide: Text.ElideRight
                     wrapMode: Text.NoWrap
-                    color: "white"
+                    color: Theme.current.text
                 }
 
                 Text {
@@ -58,7 +58,7 @@ Item
                     width: parent.width-34
                     elide: Text.ElideRight
                     wrapMode: Text.NoWrap
-                    color: "white"
+                    color: Theme.current.text
                 }
             }
 
@@ -127,12 +127,12 @@ Item
                 {
                     width: 4
                     radius: width / 2
-                    color: "#839ac7"
+                    color: Theme.current.icon
                 }
 
                 background: Rectangle
                 {
-                    color: "#3c5484"
+                    color: Theme.current.surface2
                 }
             }
             delegate: Column
@@ -148,11 +148,11 @@ Item
                     height: 43
                     radius: height
                     anchors.horizontalCenter: parent.horizontalCenter
-                    border.color: model.saveChats ? "green" : "#2C3B57"
+                    border.color: model.saveChats ? Theme.current.success : Theme.current.border
                     border.width: 2
                     color: dragHover
-                           ? "#243149"
-                           : (channelMouseArea.containsMouse ? "#1C273A" : "#0B1018")
+                           ? Theme.current.selected
+                           : (channelMouseArea.containsMouse ? Theme.current.hover : Theme.current.surface2)
 
                     Row
                     {
@@ -171,7 +171,7 @@ Item
                         Text
                         {
                             text:"#"
-                            color: "grey"
+                            color: Theme.current.channelText
                             font.pixelSize: 15
                             visible:  model.channelType===ChannelType.Text
                             anchors.verticalCenter: parent.verticalCenter
@@ -184,7 +184,7 @@ Item
                             text: channelName
                             font.pixelSize: 15
                             font.bold:  model.channelType===ChannelType.Text && user.currentTextChannelId===model.channelId
-                            color: "white"
+                            color: Theme.current.channelTextActive
                             width: implicitWidth>250 ? 250 : implicitWidth
                             elide: Text.ElideRight
                         }
@@ -192,7 +192,7 @@ Item
                         Rectangle
                         {
                             id:unreadMessagesCountIndicator
-                            color: "red"
+                            color: Theme.current.danger
                             width: 20
                             height: width
                             radius: width
@@ -201,7 +201,7 @@ Item
                             Text {
                                 text: model.channelUnreadMessagesCount
                                 anchors.centerIn: parent
-                                color:"white"
+                                color: Theme.current.text
                                 font.bold: true
                                 font.pixelSize: 12
                             }
@@ -404,11 +404,11 @@ Item
                             height: parent.height
                             radius: height
 
-                            border.color: "#2C3B57"
+                            border.color: Theme.current.border
                             border.width: 1
                             color: userMouseArea.containsMouse
-                                   ? "#192436"
-                                   : "#101722"
+                                   ? Theme.current.hover
+                                   : Theme.current.surface2
                             RowLayout
                             {
                                 anchors.fill: parent
@@ -424,7 +424,7 @@ Item
                                     Layout.preferredHeight: 27
 
                                     radius: width / 2
-                                    color: noAvatarLetter.visible ? avatarBg : "transparent"
+                                    color: noAvatarLetter.visible ? Theme.current.surface3 : "transparent"
 
                                     Text
                                     {
@@ -432,7 +432,7 @@ Item
                                         anchors.centerIn: parent
                                         visible: modelData.avatarPath === ""
                                         text:  modelData.username.charAt(0).toUpperCase()
-                                        color: "white"
+                                        color: Theme.current.text
                                         font.pixelSize: 16
                                     }
 
@@ -461,7 +461,7 @@ Item
                                         border.width:  modelData.isTalking ? 3 : 1
 
                                         border.color: modelData.isTalking ? UiHelpers.isTalkingColor(modelData.isLocalMuted,modelData.relationship)
-                                                      : "#2C3B57"
+                                                      : Theme.current.border
 
                                         z: -1
                                     }
@@ -592,7 +592,7 @@ Item
         Rectangle
         {
             id: userStuffOnServer
-            color: "#080B10"
+            color: Theme.current.surface3
             width: parent.width
             visible: user.isConnectedToServer
             height: 50
@@ -661,8 +661,8 @@ Item
 
                         radius: 8
 
-                        color: "#111214"
-                        border.color: "#333333"
+                        color: Theme.current.surface3
+                        border.color: Theme.current.border
 
                         anchors.bottom: parent.top
                         anchors.bottomMargin: 16
@@ -685,7 +685,9 @@ Item
                                 topMargin:10
                             }
 
-                            color: mAreaCloseConnectionInfo.containsMouse ? "red" : "#3b3d43"
+                            color: mAreaCloseConnectionInfo.containsMouse
+                                   ? Theme.current.danger
+                                   : Theme.current.hover
 
                             Text
                             {
@@ -693,7 +695,9 @@ Item
 
                                 text: "✕"
 
-                                color: mAreaCloseConnectionInfo.containsMouse ? "white" : "#b9bbbe"
+                                color: mAreaCloseConnectionInfo.containsMouse
+                                       ? Theme.current.text
+                                       : Theme.current.textSecondary
 
                                 font.pixelSize: 15
                             }
@@ -725,14 +729,14 @@ Item
                             {
                                 id:connnectionInfoLabel
                                 text: "Connection Info"
-                                color: "white"
+                                color: Theme.current.text
                                 font.bold: true
                             }
 
                             Text
                             {
                                 text: "Ping: " + user.myPing + " ms"
-                                color: "#b5bac1"
+                                color: Theme.current.textSecondary
                             }
 
 
@@ -752,7 +756,7 @@ Item
                                        Layout.columnSpan: 3
                                        Layout.fillWidth: true
                                        height: 1
-                                       color: "#3f4147"
+                                       color: Theme.current.border
                                    }
 
                                    // Column widths
@@ -765,7 +769,7 @@ Item
                                    Text
                                     {
                                         text: "Voice"
-                                        color: "#b5bac1"
+                                        color: Theme.current.textSecondary
                                         font.bold: true
                                         Layout.preferredWidth: 70
                                         elide: Text.ElideRight
@@ -774,7 +778,7 @@ Item
                                     Text
                                     {
                                         text: "Video"
-                                        color: "#b5bac1"
+                                        color: Theme.current.textSecondary
                                         font.bold: true
                                         Layout.preferredWidth: 70
                                         elide: Text.ElideRight
@@ -782,21 +786,21 @@ Item
                                     Text
                                     {
                                         text: "Packet Loss:"
-                                        color: "#b5bac1"
+                                        color: Theme.current.textSecondary
                                         elide: Text.ElideRight
                                     }
 
                                     Text
                                     {
                                         text: Number(user.myVoicePacketLoss).toFixed(2) + "%"
-                                        color: "#b5bac1"
+                                        color: Theme.current.textSecondary
                                         Layout.preferredWidth: 70
                                         elide: Text.ElideRight
                                     }
                                     Text
                                     {
                                         text: Number(user.myVideoPacketLoss).toFixed(2) + "%"
-                                        color: "#b5bac1"
+                                        color: Theme.current.textSecondary
                                         Layout.preferredWidth: 70
                                         elide: Text.ElideRight
                                     }
@@ -807,7 +811,7 @@ Item
                                         Layout.columnSpan: 3
                                         Layout.fillWidth: true
                                         height: 1
-                                        color: "#3f4147"
+                                        color: Theme.current.border
                                     }
 
                                     Text
@@ -819,7 +823,7 @@ Item
                                     Text
                                      {
                                          text: "Sent"
-                                         color: "#b5bac1"
+                                         color: Theme.current.textSecondary
                                          font.bold: true
                                          Layout.preferredWidth: 70
                                          elide: Text.ElideRight
@@ -828,7 +832,7 @@ Item
                                      Text
                                      {
                                          text: "Received"
-                                         color: "#b5bac1"
+                                         color: Theme.current.textSecondary
                                          font.bold: true
                                          Layout.preferredWidth: 70
                                          elide: Text.ElideRight
@@ -836,14 +840,14 @@ Item
                                     Text
                                     {
                                         text: "Packets:"
-                                        color: "#b5bac1"
+                                        color: Theme.current.textSecondary
                                         elide: Text.ElideRight
                                     }
 
                                     Text
                                     {
                                         text: user.totalPacketsSent
-                                        color: "#b5bac1"
+                                        color: Theme.current.textSecondary
                                         Layout.preferredWidth: 70
                                         elide: Text.ElideRight
                                     }
@@ -851,7 +855,7 @@ Item
                                     Text
                                     {
                                         text: user.totalPacketsReceived
-                                        color: "#b5bac1"
+                                        color: Theme.current.textSecondary
                                         Layout.preferredWidth: 70
                                         elide: Text.ElideRight
                                     }
@@ -860,14 +864,14 @@ Item
                                     Text
                                     {
                                         text: "Data:"
-                                        color: "#b5bac1"
+                                        color: Theme.current.textSecondary
                                         elide: Text.ElideRight
                                     }
 
                                     Text
                                     {
                                         text: user.totalBytesSent
-                                        color: "#b5bac1"
+                                        color: Theme.current.textSecondary
                                         Layout.preferredWidth: 70
                                         elide: Text.ElideRight
                                     }
@@ -875,7 +879,7 @@ Item
                                     Text
                                     {
                                         text: user.totalBytesReceived
-                                        color: "#b5bac1"
+                                        color: Theme.current.textSecondary
                                         Layout.preferredWidth: 70
                                         elide: Text.ElideRight
                                     }
@@ -894,7 +898,7 @@ Item
                     Text
                     {
                         text: user.serverName
-                        color: "white"
+                        color: Theme.current.text
                         font.bold: true
                         font.pixelSize: 14
                         width: implicitWidth>250 ? 250 : implicitWidth
@@ -927,7 +931,7 @@ Item
                             Text
                             {
                                 text: user.myChannelName
-                                color: "#dadce0"
+                                color: Theme.current.textSecondary
                                 font.pixelSize: 12
                                 anchors.verticalCenter: parent.verticalCenter
                                 width: implicitWidth>250 ? 250 : implicitWidth
@@ -1071,7 +1075,7 @@ Item
         Rectangle
         {
             id: userStuff
-            color: "#05070b"
+            color: Theme.current.surface3
             width: parent.width
             height: 65
 
@@ -1092,13 +1096,13 @@ Item
                     height: width
                     radius: width / 2
 
-                    color: avatarBg
+                    color: Theme.current.surface3
                     Text
                     {
                         anchors.centerIn: parent
                         visible: user.myAvatarPath === ""
                         text:  user.myUsername.charAt(0).toUpperCase()
-                        color: "white"
+                        color: Theme.current.text
                         font.pixelSize: 16
                     }
 
@@ -1139,7 +1143,7 @@ Item
                         anchors.bottomMargin: -1
 
                         border.width: 2
-                        border.color: bg2   // same as panel background
+                        border.color: Theme.current.surface3
 
                         color: UiHelpers.statusColor(user.myStatus)
                         MouseArea
@@ -1166,7 +1170,7 @@ Item
                 {
                     id: usernameOnUserStuff
                     text: user.myUsername
-                    color: "white"
+                    color: Theme.current.text
                     anchors.verticalCenter: parent.verticalCenter
                     MouseArea
                     {
@@ -1283,7 +1287,7 @@ Item
         height: parent.height
         x: parent.width - width+channelList.handleWidth
         y: 0
-        color: "#05070b"
+        color: Theme.current.surface3
 
         MouseArea
         {
@@ -1325,7 +1329,7 @@ Item
         anchors.fill: parent
         z: 998
         visible: serverTitle.opened
-        color:"black"
+        color: Theme.current.surface3
         opacity: 0.3
         MouseArea
         {

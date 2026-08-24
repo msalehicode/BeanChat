@@ -1,0 +1,95 @@
+import QtQuick
+
+QtObject
+{
+    ///////////////////////////////////////////////////////
+    // BACKGROUNDS
+    ///////////////////////////////////////////////////////
+
+    property color background: "#313338"
+    property color surface: "#2B2D31"
+    property color surface2: "#232428"
+    property color surface3: "#1E1F22"
+
+    ///////////////////////////////////////////////////////
+    // TEXT
+    ///////////////////////////////////////////////////////
+
+    property color text: "#FFFFFF"
+    property color textSecondary: "#B5BAC1"
+    property color textMuted: "#80848E"
+    property color textDisabled: "#4E5058"
+
+    ///////////////////////////////////////////////////////
+    // ICONS
+    ///////////////////////////////////////////////////////
+
+    property color icon: "#B5BAC1"
+    property color iconMuted: "#80848E"
+    property color iconActive: "#FFFFFF"
+    property color iconDisabled: "#4E5058"
+
+    ///////////////////////////////////////////////////////
+    // ACCENT
+    ///////////////////////////////////////////////////////
+
+    property color accent: "#5865F2"
+    property color accentHover: "#4752C4"
+    property color accentPressed: "#3C45A5"
+
+    ///////////////////////////////////////////////////////
+    // INTERACTION
+    ///////////////////////////////////////////////////////
+
+    property color hover: "#404249"
+    property color pressed: "#35373C"
+    property color selected: "#404249"
+
+    ///////////////////////////////////////////////////////
+    // BORDERS
+    ///////////////////////////////////////////////////////
+
+    property color border: "#404249"
+    property color borderLight: "#4E5058"
+
+    ///////////////////////////////////////////////////////
+    // STATUS
+    ///////////////////////////////////////////////////////
+
+    property color success: "#23A559"
+    property color warning: "#F0B232"
+    property color danger: "#ED4245"
+    property color info: "#00A8FC"
+
+    ///////////////////////////////////////////////////////
+    // INPUTS
+    ///////////////////////////////////////////////////////
+
+    property color input: "#1E1F22"
+    property color inputHover: "#111214"
+    property color inputBorder: "#1E1F22"
+    property color inputPlaceholder: "#6D6F78"
+
+    ///////////////////////////////////////////////////////
+    // CHANNELS
+    ///////////////////////////////////////////////////////
+
+    property color channelText: "#949BA4"
+    property color channelTextActive: "#FFFFFF"
+    property color channelIcon: "#949BA4"
+    property color channelIconActive: "#FFFFFF"
+
+    ///////////////////////////////////////////////////////
+    // USER LIST
+    ///////////////////////////////////////////////////////
+
+    property color userText: "#DBDEE1"
+    property color userTextMuted: "#949BA4"
+
+    ///////////////////////////////////////////////////////
+    // SELECTION
+    ///////////////////////////////////////////////////////
+
+    property color selection: "#5865F2"
+    property color selectionText: "#FFFFFF"
+}

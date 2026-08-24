@@ -2,17 +2,19 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
+import "../constants/"
+
 
 Page
 {
     id: root
 
     Material.theme: Material.Dark
-    Material.accent: "#5865F2"
+    Material.accent: Theme.current.accent
 
     background: Rectangle
     {
-        color: "#313338"
+        color: Theme.current.background
     }
 
 
@@ -50,7 +52,7 @@ Page
             {
                 text: "Language"
 
-                color: "white"
+                color: Theme.current.text
 
                 font.pixelSize: 28
                 font.bold: true
@@ -60,7 +62,7 @@ Page
             {
                 text: "Choose the language used throughout BeanChat."
 
-                color: "#B5BAC1"
+                color: Theme.current.textSecondary
 
                 font.pixelSize: 14
 
@@ -78,9 +80,8 @@ Page
 
                 radius: 10
 
-                color: "#2B2D31"
-
-                border.color: "#404249"
+                color: Theme.current.surface
+                border.color: Theme.current.border
 
                 implicitHeight: languageContent.implicitHeight + 32
 
@@ -100,7 +101,7 @@ Page
                     {
                         text: "Interface Language"
 
-                        color: "white"
+                        color: Theme.current.text
 
                         font.pixelSize: 18
                         font.bold: true
@@ -111,7 +112,7 @@ Page
                     {
                         text: "Select the language you want BeanChat to use."
 
-                        color: "#B5BAC1"
+                        color: Theme.current.textSecondary
 
                         wrapMode: Text.WordWrap
                     }

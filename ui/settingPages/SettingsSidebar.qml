@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
+import "../constants/"
 
 Item
 {
@@ -12,7 +13,7 @@ Item
     Rectangle
     {
         anchors.fill: parent
-        color: "#2B2D31"
+        color: Theme.current.surface
     }
 
     ColumnLayout
@@ -29,9 +30,9 @@ Item
 
         Label
         {
-            text: "USER SETTINGS"
+            text: "SETTINGS"
 
-            color: "#949BA4"
+            color: Theme.current.channelText
 
             font.pixelSize: 12
             font.bold: true
@@ -113,8 +114,8 @@ Item
                 property bool selected: index === root.currentIndex
 
                 color:
-                    selected ? "#404249"
-                             : hovered ? "#35373C"
+                    selected ? Theme.current.selected
+                             : hovered ? Theme.current.pressed
                                        : "transparent"
 
                 Behavior on color
@@ -166,8 +167,8 @@ Item
                         text: modelData.title
 
                         color:
-                            selected ? "white"
-                                     : "#DBDEE1"
+                            selected ? Theme.current.text
+                                     : Theme.current.userText
 
                         font.pixelSize: 14
                         font.bold: selected
@@ -186,7 +187,7 @@ Item
 
             height: 1
 
-            color: "#3F4147"
+            color: Theme.current.border
         }
 
         Label
@@ -195,7 +196,7 @@ Item
 
             text: "BeanChat"
 
-            color: "#B5BAC1"
+            color: Theme.current.textSecondary
 
             font.bold: true
         }
@@ -206,7 +207,7 @@ Item
 
             text: user.myAppVersion + " - " + user.buildType
 
-            color: "#B5BAC1"
+            color: Theme.current.textSecondary
 
             font.pixelSize: 11
             font.bold: true

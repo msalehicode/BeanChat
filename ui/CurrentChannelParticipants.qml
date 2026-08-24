@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import CustomVideo 1.0
 import QtQuick.Controls
 import BeanChatClient 1.0
+import BeanChat
 import "constants/"
 Item
 {
@@ -15,7 +16,7 @@ Item
         anchors.fill: parent
         anchors.left: parent.left
         anchors.leftMargin: channelList.handleWidth
-        color: "#141C2B"
+        color: Theme.current.background
 
 
         GridView
@@ -98,11 +99,11 @@ Item
                     id:baseUserParticipantInfo
                     anchors.fill: parent
                     radius: parent.radius
-                    color: model.isCameraOpen ? "transparent" : "#0B1018"
+                    color: model.isCameraOpen ? "transparent" : Theme.current.surface3
                     border.width: 4
                     border.color: model.isTalking ?
                                       UiHelpers.isTalkingColor(model.isLocalMuted, model.relation)
-                                      : "#2C3B57"
+                                      : Theme.current.border
 
                     Rectangle
                     {
@@ -112,8 +113,8 @@ Item
                         radius: width/2
                         visible: !model.isCameraOpen
                         anchors.centerIn: parent
-                        color: noAvatarLetter.visible ? avatarBg : "transparent"
-                        border.color: "#2C3B57"
+                        color: noAvatarLetter.visible ? Theme.current.surface3 : "transparent"
+                        border.color: Theme.current.border
                         border.width: 1
                         Text
                         {
@@ -121,7 +122,7 @@ Item
                             anchors.centerIn: parent
                             visible: model.avatarPath === ""
                             text:  model.username.charAt(0).toUpperCase()
-                            color: "white"
+                            color: Theme.current.text
                             font.pixelSize: 16
                         }
                         Image

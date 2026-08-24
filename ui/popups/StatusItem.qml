@@ -1,11 +1,13 @@
 import QtQuick
 import QtQuick.Controls
 
+import "../constants/"
+
 ItemDelegate
 {
     id: root
 
-    property color color: "white"
+    property color color: Theme.current.text
 
     implicitWidth: 190
     implicitHeight: 38
@@ -13,7 +15,7 @@ ItemDelegate
     background: Rectangle
     {
         radius: 6
-        color: root.hovered ? "#4752C4" : "transparent"
+        color: root.hovered ? Theme.current.accentHover : "transparent"
     }
 
     contentItem: Row
@@ -33,7 +35,7 @@ ItemDelegate
         Text
         {
             text: root.text
-            color: "white"
+            color: Theme.current.text
             font.pixelSize: 14
             anchors.verticalCenter: parent.verticalCenter
         }

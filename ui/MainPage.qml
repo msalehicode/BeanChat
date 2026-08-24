@@ -7,15 +7,12 @@ import QtQuick.Layouts
 
 import "popups/"
 import BeanChatClient 1.0
+import "constants/"
 
 Item {
     anchors.fill: parent
     readonly property int widthBase: 250 //uses for userlist and chanenlist
 
-
-    readonly property color bg1 : "#414247"
-    readonly property color bg2: "#121315"
-    readonly property color avatarBg: "#040833"
     readonly property int iconH: 22
     readonly property int iconW: 22
 
@@ -33,8 +30,8 @@ Item {
         Item
         {
             id:importantNotifierBar
-            property string nColor:"red"
-            property string ntextColor:"white"
+            property string nColor:Theme.current.danger
+            property string ntextColor:Theme.current.text
             property string nText: "Example important notification text"
             property string nActionButtonText: "Button"
             property var nActionButtonTask:null
@@ -60,7 +57,7 @@ Item {
                     width: 100
                     height: parent.height-6
                     radius: 6
-                    color:  "black"
+                    color:  Theme.current.inputHover
                     visible: importantNotifierBar.nActionButtonTask!==null
                     anchors
                     {
@@ -73,7 +70,7 @@ Item {
                     {
                         anchors.centerIn: parent
                         text: importantNotifierBar.nActionButtonText
-                        color: "white"
+                        color: Theme.current.text
                         font.bold: true
                     }
 
@@ -105,7 +102,7 @@ Item {
                     width: 22
                     height: 22
                     radius: 6
-                    color:  "black"
+                    color:  Theme.current.inputHover
                     anchors
                     {
                         right:parent.right
@@ -117,7 +114,7 @@ Item {
                     {
                         anchors.centerIn: parent
                         text: "X"
-                        color: "white"
+                        color: Theme.current.text
                         font.bold: true
                     }
 
@@ -180,7 +177,7 @@ Item {
                 Rectangle
                 {
                     anchors.fill: parent
-                    color: "#141C2B"
+                    color: Theme.current.background
                     ColumnLayout
                     {
                         anchors.fill: parent
@@ -198,7 +195,7 @@ Item {
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: 40
 
-                                color: rightPanel.currentTab === 0 ? "#839ac7" : "#05070b"
+                                color: rightPanel.currentTab === 0 ? Theme.current.accentPressed : Theme.current.surface3
 
                                 Row
                                 {
@@ -213,7 +210,7 @@ Item {
                                     Text
                                     {
                                         text: "Users"
-                                        color: "white"
+                                        color: Theme.current.text
                                         anchors.verticalCenter: parent.verticalCenter
                                     }
                                 }
@@ -235,7 +232,7 @@ Item {
                             {
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: 40
-                                color: rightPanel.currentTab === 1 ? "#839ac7" : "#05070b"
+                                color: rightPanel.currentTab === 1 ? Theme.current.accentPressed : Theme.current.surface3
 
                                 Row
                                 {
@@ -251,7 +248,7 @@ Item {
                                     Text
                                     {
                                         text: "Chat"
-                                        color: "white"
+                                        color: Theme.current.text
                                         anchors.verticalCenter: parent.verticalCenter
                                     }
 
@@ -264,7 +261,7 @@ Item {
                                         height: width
                                         radius: width / 2
 
-                                        color: "red"
+                                        color: Theme.current.danger
                                         anchors.verticalCenter: parent.verticalCenter
 
 
@@ -272,7 +269,7 @@ Item {
                                         {
                                             anchors.centerIn: parent
                                             text: user.chatUnreadMessages > 99 ? "99+" : user.chatUnreadMessages
-                                            color: "white"
+                                            color: Theme.current.text
                                             font.pixelSize: 12
                                             font.bold: true
                                         }
@@ -319,7 +316,7 @@ Item {
                         visible: user.isConnectedToServer
                         x: -width / 2
                         y: 0
-                        color: "#05070b"
+                        color: Theme.current.surface3
 
                         MouseArea
                         {
@@ -541,12 +538,12 @@ Item {
         anchors.fill: parent
         visible: user.connectionStatus===ConnectionStatus.Connecting
                  || user.connectionStatus===ConnectionStatus.Disconnecting ? true : false
-        color:"black"
+        color:Theme.current.inputHover
         opacity: 0.8
         z:999999
         Text
         {
-            color:"white"
+            color:Theme.current.text
             anchors.centerIn: parent
             font.pixelSize: 30
             text: user.connectionStatus===ConnectionStatus.Connecting ? "Connecting ...."
@@ -579,8 +576,8 @@ Item {
         {
             if(nColor===3) //bluc update,
             {
-                importantNotifierBar.nColor="#5865F2"
-                importantNotifierBar.ntextColor="white"
+                importantNotifierBar.nColor=Theme.current.accent
+                importantNotifierBar.ntextColor=Theme.current.text
                 importantNotifierBar.nText=nText
                 importantNotifierBar.nActionButtonText="UPDATE NOW"
                 importantNotifierBar.nActionButtonTask= function()
@@ -591,8 +588,8 @@ Item {
             }
             else
             {
-                importantNotifierBar.nColor="red"
-                importantNotifierBar.ntextColor="white"
+                importantNotifierBar.nColor=Theme.current.danger
+                importantNotifierBar.ntextColor=Theme.current.text
                 importantNotifierBar.nText=nText
                 importantNotifierBar.nActionButtonText=""
                 importantNotifierBar.nActionButtonTask=null

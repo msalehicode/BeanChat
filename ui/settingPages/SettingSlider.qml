@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import "../constants/"
+
 Item
 {
     id: root
@@ -37,7 +39,7 @@ Item
 
             horizontalAlignment: Text.AlignRight
 
-            color: "#B5BAC1"
+            color: Theme.current.textSecondary
 
             text:
             {

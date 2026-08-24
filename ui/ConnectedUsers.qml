@@ -9,7 +9,7 @@ Item
 {
     Rectangle
     {
-        color: "transparent"
+        color: Theme.current.background
         anchors.fill: parent
     }
 
@@ -25,7 +25,7 @@ Item
             width: parent.width
             height: 60
 
-            color: "#080B10"
+            color: Theme.current.surface3
 
             Text
             {
@@ -33,7 +33,7 @@ Item
 
                 text: "Server Users (" + user.connectedUsersCount + "/" + user.serverMaxUsers + ")"
 
-                color: "white"
+                color: Theme.current.text
                 font.pixelSize: 18
                 font.bold: true
             }
@@ -60,12 +60,12 @@ Item
                 {
                     implicitWidth: 8
                     radius: width / 2
-                    color: "#839ac7"
+                    color: Theme.current.iconMuted
                 }
 
                 background: Rectangle
                 {
-                    color: "#3c5484"
+                    color: Theme.current.surface2
                 }
             }
 
@@ -75,11 +75,11 @@ Item
                 anchors.horizontalCenter: parent.horizontalCenter
                 height: 60
                 radius: height
-                border.color: "#2C3B57"
+                border.color: Theme.current.border
                 border.width: 2
                 color: userMouseArea.containsMouse
-                       ? "#1C273A"
-                       : "#0B1018"
+                       ? Theme.current.hover
+                       : Theme.current.surface2
 
                 Row
                 {
@@ -94,7 +94,7 @@ Item
                         height: width
                         radius: width / 2
 
-                        color: noAvatarLetter.visible ? avatarBg : "transparent"
+                        color: noAvatarLetter.visible ? Theme.current.surface3 : "transparent"
 
                         Text
                         {
@@ -102,7 +102,7 @@ Item
                             anchors.centerIn: parent
                             visible: model.userAvatarPath === ""
                             text:  model.userName.charAt(0).toUpperCase()
-                            color: "white"
+                            color: Theme.current.text
                             font.pixelSize: 16
                         }
 
@@ -131,7 +131,7 @@ Item
                             anchors.bottomMargin: -1
 
                             border.width: 2
-                            border.color: bg2   // same as panel background
+                            border.color: Theme.current.surface2
 
                             color: UiHelpers.statusColor(model.userStatus)
                         }

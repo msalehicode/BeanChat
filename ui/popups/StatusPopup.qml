@@ -18,8 +18,8 @@ Popup
     background: Rectangle
     {
         radius: 8
-        color: "#111214"
-        border.color: "#2b2d31"
+        color: Theme.current.input
+        border.color: Theme.current.surface
         border.width: 1
     }
 

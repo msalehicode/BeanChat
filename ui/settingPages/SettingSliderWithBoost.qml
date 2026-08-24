@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
+import "../constants/"
+
 Item
 {
     id: root
@@ -42,7 +44,7 @@ Item
                     height: 6
 
                     radius: 3
-                    color: "#3A3D44"
+                    color: Theme.current.border
                 }
 
                 // Boost area: 100% -> 200%
@@ -55,7 +57,7 @@ Item
                     height: 6
 
                     radius: 3
-                    color: "#D94A4A"
+                    color: Theme.current.danger
                 }
 
                 // 100% divider
@@ -68,7 +70,7 @@ Item
                     width: 2
                     height: 10
 
-                    color: "#FFFFFF"
+                    color: Theme.current.text
                 }
 
                 // Current value
@@ -81,7 +83,9 @@ Item
                     height: 6
 
                     radius: 3
-                    color: slider.value > 100 ? "#FF5555" : "#B5BAC1"
+                    color: slider.value > 100
+                           ? Theme.current.danger
+                           : Theme.current.icon
                 }
             }
         }
@@ -93,8 +97,8 @@ Item
             horizontalAlignment: Text.AlignRight
 
             color: slider.value > 100
-                   ? "#FF5555"
-                   : "#B5BAC1"
+                   ? Theme.current.danger
+                   : Theme.current.textSecondary
 
             text:
             {

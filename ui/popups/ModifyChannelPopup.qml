@@ -3,6 +3,8 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
 
+import "../constants/"
+
 Popup
 {
     id: root
@@ -30,9 +32,9 @@ Popup
 
     background: Rectangle
     {
-        color: "#313338"
+        color: Theme.current.background
         radius: 8
-        border.color: "#1E1F22"
+        border.color: Theme.current.input
     }
 
     onOpened:
@@ -88,7 +90,7 @@ Popup
         {
             Layout.fillWidth: true
             height: 82
-            color: "#313338"
+            color: Theme.current.background
 
             Column
             {
@@ -99,7 +101,7 @@ Popup
                 Text
                 {
                     text: "Channel Settings"
-                    color: "white"
+                    color: Theme.current.text
                     font.pixelSize: 22
                     font.bold: true
                 }
@@ -107,7 +109,7 @@ Popup
                 Text
                 {
                     text: "Edit your voice channel settings."
-                    color: "#B5BAC1"
+                    color: Theme.current.textSecondary
                     font.pixelSize: 13
                 }
             }
@@ -134,7 +136,7 @@ Popup
                 Label
                 {
                     text: "CHANNEL NAME"
-                    color: "#B5BAC1"
+                    color: Theme.current.textSecondary
                     font.bold: true
                     font.pixelSize: 11
                 }
@@ -147,26 +149,26 @@ Popup
                     height: 40
                     onAccepted: saveButton.clicked()
 
-                    color: "white"
+                    color: Theme.current.text
                     placeholderText: "General"
-                    placeholderTextColor: "white"
+                    placeholderTextColor: Theme.current.text
 
                     background: Rectangle
                     {
                         radius: 6
-                        color: "#1E1F22"
+                        color: Theme.current.input
 
                         border.width: channelNameField.activeFocus ? 2 : 1
                         border.color: channelNameField.activeFocus
-                                      ? "#5865F2"
-                                      : "#202225"
+                                      ? Theme.current.accent
+                                      : Theme.current.inputBorder
                     }
                 }
 
                 Label
                 {
                     text: "CHANNEL PASSWORD"
-                    color: "#B5BAC1"
+                    color: Theme.current.textSecondary
                     font.bold: true
                     font.pixelSize: 11
                 }
@@ -179,10 +181,10 @@ Popup
                     height: 40
                     onAccepted: saveButton.clicked()
 
-                    color: "white"
+                    color: Theme.current.text
 
                     placeholderText: "Leave empty to keep current password"
-                    placeholderTextColor: "white"
+                    placeholderTextColor: Theme.current.text
 
                     echoMode: TextInput.Password
                     onFocusChanged:
@@ -194,12 +196,12 @@ Popup
                     background: Rectangle
                     {
                         radius: 6
-                        color: "#1E1F22"
+                        color: Theme.current.input
 
                         border.width: passwordField.activeFocus ? 2 : 1
                         border.color: passwordField.activeFocus
-                                      ? "#5865F2"
-                                      : "#202225"
+                                      ? Theme.current.accent
+                                      : Theme.current.inputBorder
                     }
                 }
 
@@ -221,15 +223,15 @@ Popup
 
                             anchors.verticalCenter: parent.verticalCenter
 
-                            color: saveChatsCheck.checked ? "#5865F2" : "#1E1F22"
-                            border.color: "#5865F2"
+                            color: saveChatsCheck.checked ? Theme.current.accent : Theme.current.input
+                            border.color: Theme.current.accent
 
                             Text
                             {
                                 anchors.centerIn: parent
                                 text: "✓"
                                 visible: saveChatsCheck.checked
-                                color: "white"
+                                color: Theme.current.text
                                 font.bold: true
                                 font.pixelSize: 12
                             }
@@ -239,7 +241,7 @@ Popup
                         {
                             anchors.verticalCenter: parent.verticalCenter
                             text: "Save chat history"
-                            color: "white"
+                            color: Theme.current.text
                             font.pixelSize: 14
                         }
                     }
@@ -259,7 +261,7 @@ Popup
         {
             Layout.fillWidth: true
             height: 64
-            color: "#2B2D31"
+            color: Theme.current.surface
 
             RowLayout
             {
@@ -290,17 +292,17 @@ Popup
                         radius: 4
 
                         color: deleteButton.down
-                               ? "darkred"
-                               : "red"
+                               ? Theme.current.accentPressed
+                               : Theme.current.danger
 
                         border.width: 1
-                        border.color: "#555"
+                        border.color: Theme.current.borderLight
                     }
 
                     contentItem: Text
                     {
                         text: parent.text
-                        color: "white"
+                        color: Theme.current.text
 
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
@@ -321,17 +323,17 @@ Popup
                         radius: 4
 
                         color: cancelButton.down
-                               ? "#3F4147"
+                               ? Theme.current.pressed
                                : "transparent"
 
                         border.width: 1
-                        border.color: "#555"
+                        border.color: Theme.current.borderLight
                     }
 
                     contentItem: Text
                     {
                         text: parent.text
-                        color: "white"
+                        color: Theme.current.text
 
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
@@ -360,16 +362,16 @@ Popup
                         radius: 4
 
                         color: !saveButton.enabled
-                               ? "#444"
+                               ? Theme.current.textDisabled
                                : saveButton.down
-                                 ? "#4752C4"
-                                 : "#5865F2"
+                                 ? Theme.current.accentHover
+                                 : Theme.current.accent
                     }
 
                     contentItem: Text
                     {
                         text: parent.text
-                        color: "white"
+                        color: Theme.current.text
                         font.bold: true
 
                         horizontalAlignment: Text.AlignHCenter

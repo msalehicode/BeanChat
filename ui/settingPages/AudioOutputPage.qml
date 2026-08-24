@@ -3,16 +3,18 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
 
+import "../constants/"
+
 Page
 {
     id: root
 
     Material.theme: Material.Dark
-    Material.accent: "#5865F2"
+    Material.accent: Theme.current.accent
 
     background: Rectangle
     {
-        color: "#313338"
+        color: Theme.current.background
     }
 
     Flickable
@@ -47,7 +49,7 @@ Page
             {
                 text: "Audio Output"
 
-                color: "white"
+                color: Theme.current.text
 
                 font.pixelSize: 28
                 font.bold: true
@@ -57,7 +59,7 @@ Page
             {
                 text: "Configure your output"
 
-                color: "#B5BAC1"
+                color: Theme.current.textSecondary
 
                 font.pixelSize: 14
             }
@@ -72,9 +74,9 @@ Page
 
                 radius: 10
 
-                color: "#2B2D31"
+                color: Theme.current.surface
 
-                border.color: "#404249"
+                border.color: Theme.current.surface
 
                 implicitHeight: content.implicitHeight + 32
 
@@ -91,7 +93,7 @@ Page
                     {
                         text: "Output Device"
 
-                        color: "white"
+                        color: Theme.current.text
 
                         font.pixelSize: 18
                         font.bold: true
@@ -101,7 +103,7 @@ Page
                     {
                         text: "Choose where incoming voice will be played."
 
-                        color: "#B5BAC1"
+                        color: Theme.current.textSecondary
 
                         wrapMode: Text.WordWrap
                     }
@@ -142,8 +144,8 @@ Page
             {
                 width: parent.width
                 radius: 10
-                color: "#2B2D31"
-                border.color: "#404249"
+                color: Theme.current.surface
+                border.color: Theme.current.border
                 implicitHeight: content.implicitHeight + 32
 
                 Column
@@ -156,7 +158,7 @@ Page
                     Label
                     {
                         text: "Output Volume"
-                        color: "white"
+                        color: Theme.current.text
                         font.pixelSize: 18
                         font.bold: true
                     }
@@ -164,7 +166,7 @@ Page
                     Label
                     {
                         text: "Change overall output volume"
-                        color: "#B5BAC1"
+                        color: Theme.current.textSecondary
                         wrapMode: Text.WordWrap
                     }
 
@@ -198,9 +200,9 @@ Page
 
                 radius: 10
 
-                color: "#2B2D31"
+                color: Theme.current.surface
 
-                border.color: "#404249"
+                border.color: Theme.current.border
 
                 implicitHeight: content.implicitHeight + 32
 
@@ -215,7 +217,7 @@ Page
                     {
                         text: "Sound Effect/Pack Volume"
 
-                        color: "white"
+                        color: Theme.current.text
 
                         font.pixelSize: 18
                         font.bold: true
@@ -225,7 +227,7 @@ Page
                     {
                         text: "Change Interface sound Effects/Pack output volume"
 
-                        color: "#B5BAC1"
+                        color: Theme.current.textSecondary
 
                         wrapMode: Text.WordWrap
                     }

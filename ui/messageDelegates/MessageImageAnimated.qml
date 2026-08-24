@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Controls
 
+import "../constants/"
+
 Item
 {
     id: root
@@ -11,7 +13,7 @@ Item
 
 
     property string statusText: "Download Image"
-    property color statusColor: "white"
+    property color statusColor: Theme.current.text
 
     property real progress: 0
     property bool downloading: false
@@ -37,7 +39,7 @@ Item
 
         Rectangle
         {
-            color: "#2B2D31"
+            color: Theme.current.input
             radius: 8
 
             Text
@@ -108,7 +110,7 @@ Item
                    visible: downloadedImage.status === Image.Error
 
                    text: "Failed to load animated image"
-                   color: "red"
+                   color: Theme.current.error
                }
 
             MouseArea
@@ -161,7 +163,7 @@ Item
             downloading = false
             console.log("load ainmated image failed.. att id=",id)
             root.statusText= "download failed error: " +reason
-            root.statusColor ="red"
+            root.statusColor =Theme.current.error
         }
 
     }

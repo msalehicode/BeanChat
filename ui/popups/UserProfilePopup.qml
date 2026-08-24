@@ -25,7 +25,7 @@ Popup
     background: Rectangle
     {
         radius: 14
-        color: "#2B2D31"
+        color: Theme.current.surface3
     }
 
     Rectangle
@@ -37,14 +37,14 @@ Popup
         height: 80
 
         radius: 14
-        color: "#5865F2"
+        color: Theme.current.accent
 
         Rectangle
         {
             anchors.bottom: parent.bottom
             width: parent.width
             height: radius
-            color: "#5865F2"
+            color: Theme.current.accent
         }
     }
 
@@ -59,10 +59,10 @@ Popup
         anchors.top: banner.bottom
         anchors.topMargin: -48
 
-        color: avatarBg
+        color: Theme.current.surface3
 
         border.width: 4
-        border.color: "#2B2D31"
+        border.color: Theme.current.border
 
         clip: true
 
@@ -86,7 +86,7 @@ Popup
 
             text:  clientUser.username.charAt(0).toUpperCase()
 
-            color: "white"
+            color: Theme.current.text
             font.pixelSize: 34
             font.bold: true
         }
@@ -101,7 +101,7 @@ Popup
             anchors.bottom: parent.bottom
 
             border.width: 3
-            border.color: "#2B2D31"
+            border.color: Theme.current.surface
 
             color: UiHelpers.statusColor(clientUser.status)
         }
@@ -152,7 +152,7 @@ Popup
 
                 text: clientUser.description.length>0? clientUser.description : "Default description"
 
-                color: "#B5BAC1"
+                color: Theme.current.textSecondary
 
                 font.pixelSize: 13
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere
@@ -161,7 +161,7 @@ Popup
             Label
             {
                 text: "NOTE"
-                color: "#B5BAC1"
+                color: Theme.current.textSecondary
                 font.bold: true
                 width: parent.width
                 visible: !clientUser.self //dont show for self
@@ -171,10 +171,10 @@ Popup
             {
                 id: userNoteField
                 placeholderText: "enter note for this user"
-                placeholderTextColor: "white"
+                placeholderTextColor: Theme.current.inputPlaceholder
                 width: parent.width
                 text: clientUser.note.length>0? clientUser.note : ""
-                color: "white"
+                color: Theme.current.text
                 visible: !clientUser.self //dont show for self
                 function updateNote()
                 {
@@ -189,7 +189,7 @@ Popup
                 background: Rectangle
                 {
                     radius: 6
-                    color: "#1E1F22"
+                    color: Theme.current.surface
                 }
             }
 
@@ -197,13 +197,13 @@ Popup
             {
                 width: parent.width
                 height: 1
-                color: "#404249"
+                color: Theme.current.border
             }
 
             Label
             {
                 text: "INFO"
-                color: "#B5BAC1"
+                color: Theme.current.textSecondary
                 font.bold: true
                 width: parent.width
             }
@@ -212,7 +212,7 @@ Popup
             {
                 width: parent.width
                 radius: 8
-                color: "#1E1F22"
+                color: Theme.current.input
 
                 implicitHeight: infoColumn.implicitHeight + 20
 
@@ -228,7 +228,7 @@ Popup
                     Text
                     {
                         text: "ID (" + clientUser.id +")"
-                        color: "#949BA4"
+                        color: Theme.current.channelText
                         font.pixelSize: 11
                         font.bold: true
                     }
@@ -239,14 +239,14 @@ Popup
                         width: parent.width
                         height: 38
                         radius: 8
-                        color: "#2B2D31"
-                        border.color: "#1e1f22"
+                        color: Theme.current.surface
+                        border.color: Theme.current.input
                         clip:true
                         Text
                         {
                             id:identityText
                             text: clientUser.identity
-                            color: "white"
+                            color: Theme.current.text
                             width: parent.width-65
                             font.family: "Consolas"    // or "monospace"
                             font.pixelSize: 12
@@ -267,7 +267,7 @@ Popup
                             width: 55
                             height: parent.height-6
                             radius: 6
-                            color: copyLabel.text === "Copied!" ? "#3BA55D" : "#5865F2"
+                            color: copyLabel.text === "Copied!" ? Theme.current.success : Theme.current.accent
                             anchors
                             {
                                 right:parent.right
@@ -298,7 +298,7 @@ Popup
                                 id: copyLabel
                                 anchors.centerIn: parent
                                 text: "Copy"
-                                color: "white"
+                                color: Theme.current.text
                                 font.bold: true
 
                                 Behavior on opacity
@@ -355,7 +355,7 @@ Popup
                            Text
                            {
                                text: "STATUS"
-                               color: "#949BA4"
+                               color: Theme.current.channelText
                                font.pixelSize: 11
                                font.bold: true
                            }
@@ -460,7 +460,7 @@ Popup
                     Text
                     {
                         text: "CURRENT CHANNEL"
-                        color: "#949BA4"
+                        color: Theme.current.channelText
                         visible: clientUser.status!==Presence.Offline
                         font.pixelSize: 11
                         font.bold: true
@@ -471,7 +471,7 @@ Popup
                         width: parent.width
                         height: 38
                         radius: 10
-                        color: "#2B2D31"
+                        color: Theme.current.surface
                         visible: clientUser.status!==Presence.Offline
                         Text
                         {
@@ -484,7 +484,7 @@ Popup
                                 verticalCenter: parent.verticalCenter
                             }
 
-                            color: "white"
+                            color: Theme.current.text
                             font.pixelSize: 15
                             width: parent.width-leftMargin
                             elide: Text.ElideRight
@@ -502,13 +502,13 @@ Popup
                             anchors.verticalCenter: parent.verticalCenter
                             radius: 8
 
-                            color: "#5865F2"
+                            color: Theme.current.accent
 
                             Text
                             {
                                 anchors.centerIn: parent
                                 text: "Join"
-                                color: "white"
+                                color: Theme.current.text
                                 font.bold: true
                             }
 
@@ -548,7 +548,7 @@ Popup
                     Text
                     {
                         text: "APP VERSION"
-                        color: "#949BA4"
+                        color: Theme.current.channelText
                         visible: clientUser.status!==Presence.Offline
                         font.pixelSize: 11
                         font.bold: true
@@ -559,7 +559,7 @@ Popup
                         width: parent.width
                         height: 38
                         radius: 10
-                        color: "#2B2D31"
+                        color: Theme.current.surface
                         visible: clientUser.status!==Presence.Offline
                         Text
                         {
@@ -571,7 +571,7 @@ Popup
                                 verticalCenter: parent.verticalCenter
                             }
 
-                            color: "white"
+                            color: Theme.current.text
                             font.pixelSize: 15
                             width: parent.width-leftMargin
                             elide: Text.ElideRight
@@ -594,13 +594,13 @@ Popup
 
                     radius: 8
 
-                    color: "#5865F2"
+                    color: Theme.current.accent
 
                     Text
                     {
                         anchors.centerIn: parent
                         text: "Send Message"
-                        color: "white"
+                        color: Theme.current.text
                         font.bold: true
                     }
 
@@ -623,13 +623,13 @@ Popup
 
                     radius: 8
 
-                    color: "#3A3C42"
+                    color: Theme.current.surface2
 
                     Text
                     {
                         anchors.centerIn: parent
                         text: "Call"
-                        color: "white"
+                        color: Theme.current.text
                         font.bold: true
                     }
 

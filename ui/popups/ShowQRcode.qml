@@ -3,6 +3,8 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
 
+import "../constants/"
+
 Popup
 {
     id: root
@@ -29,9 +31,9 @@ Popup
 
     background: Rectangle
     {
-        color: "#313338"
+        color: Theme.current.background
         radius: 8
-        border.color: "#1e1f22"
+        border.color: Theme.current.surface3
     }
 
     ColumnLayout
@@ -43,7 +45,7 @@ Popup
         Text
         {
             text: root.titleText
-            color: "white"
+            color: Theme.current.text
             font.pixelSize: 24
             font.bold: true
             Layout.alignment: Qt.AlignHCenter
@@ -54,7 +56,7 @@ Popup
         Text
         {
             text: root.descriptionText
-            color: "#b5bac1"
+            color: Theme.current.textSecondary
             Layout.alignment: Qt.AlignHCenter
             Layout.maximumWidth: parent.width
             elide: Text.ElideRight
@@ -85,14 +87,14 @@ Popup
 
             radius: 8
 
-            color: "#5865F2"
+            color: Theme.current.accent
             Layout.alignment: Qt.AlignHCenter
 
             Text
             {
                 anchors.centerIn: parent
                 text: "CLOSE"
-                color: "white"
+                color: Theme.current.text
                 font.bold: true
             }
 
