@@ -392,6 +392,8 @@ Popup
                                                 "../icons/user-is-friend.png" : "../icons/user-add-friend.png"
                                MouseArea
                                {
+                                   id:friendUserMouseArea
+                                   hoverEnabled: true
                                    anchors.fill: parent
                                    cursorShape: Qt.PointingHandCursor
                                    onClicked:
@@ -410,6 +412,8 @@ Popup
                                        }
                                    }
                                }
+                               ToolTip.visible: friendUserMouseArea.containsMouse
+                               ToolTip.text: clientUser.relationship===Relationship.None? "Add Friend" : "Remove Friend"
                            }
                            Image
                            {
@@ -428,6 +432,7 @@ Popup
                                            "../icons/user-is-blocked" : "../icons/user-add-block.png"
                                MouseArea
                                {
+                                   id:blockUserMouseArea
                                    anchors.fill: parent
                                    cursorShape: Qt.PointingHandCursor
                                    onClicked:
@@ -450,6 +455,8 @@ Popup
                                        }
                                    }
                                }
+                               ToolTip.visible: blockUserMouseArea.containsMouse
+                               ToolTip.text: clientUser.relationship===Relationship.Blocked? "Unblock User" : "Block User"
                            }
 
                        }
