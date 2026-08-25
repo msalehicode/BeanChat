@@ -5,7 +5,7 @@ project(BeanChat VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(APP_CURRENT_VERSION "0.33.89")
+set(APP_CURRENT_VERSION "0.33.90")
 set(APP_TitleName "BeanChat")
 set(APP_OrganizationName "orgBeanChat")
 set(APP_ApplicationName "appBeanChat")
@@ -390,8 +390,8 @@ target_compile_definitions(appBeanChat PRIVATE
 
     #timers
     CHANNEL_MODEL_TALKING_TIMER_INTERAVL=100 #check last time of user talk time then update their isTalking status
-    TRY_RECONNECT_TIMER_INTERVAL=3000 #when connection lost every 3seconds try to reconnect.
-    TRY_RECONNECT_MAX_COUNT=50
+    TRY_RECONNECT_TIMER_INTERVAL=2500 #when connection lost every 2.5seconds try to reconnect.
+    TRY_RECONNECT_MAX_COUNT=200
     CHANNEL_MODEL_TALKING_TIMEOUT=100 #If no voice packet has been received for more than 100 milliseconds, consider the user no longer talking
     UDP_CONNECTION_LOST_TIMER_INTERVAL=10000 #10s, when udp conneted would start this and on each udp request-ping received from server, reset connection timeout to later know is udp connection still alive or not
 
