@@ -68,10 +68,10 @@ or browse
 
 | Platform | Status | Stage | Version | Download |
 |-----------|--------|--------|--------|--------|
-| 🗄️ Server | ✅ | Beta | 0.21.26 | [⬇️](https://beanchat.ir/bc/#server) |
-| 🪟 Windows Client | ✅ | Beta | v0.29.62 | [⬇️ beta](https://beanchat.ir/bc/#downloads) |
-| 🤖 Android Client | 🛠️ | Debug | v?.?.? | [⬇️ debug](https://beanchat.ir/bc/#downloads) |
-| 🐧 Linux Client | ✅ | Beta | v0.29.62 | Working on |
+| 🗄️ Server | ✅ | Beta | 0.23.28 | [⬇️](https://beanchat.ir/bc/#server) |
+| 🪟 Windows Client | ✅ | Beta | v0.33.90 | [⬇️ beta](https://beanchat.ir/bc/#downloads) |
+| 🤖 Android Client | - | - | - | - |
+| 🐧 Linux Client | 🛠️ | Beta | v0.33.90 | Working on |
 | 🍎 macOS Client | - | - | - | - |
 | 📱 iOS Client | - | - | - | - |
 
@@ -143,7 +143,12 @@ https://github.com/user-attachments/assets/9dd1aafb-20a4-4aa3-b21d-816efbbe39e1
 29. **text channel type** with save and load messages
     - send file is possible
     - can keep them private with password
-    - also can be temporary (won't save and load chats) 
+    - also can be temporary (won't save and load chats)
+30. **global badges** for users (donators, testers, developer, ..).
+31. **auto reconnect when connection lost to server** with like 200 attempts and whether user was on a voice channel would rejoin him.
+32. user can **manually change update repository**, even can **disable check for updates** or **manually check for updates**.
+33. **Real time switch theme** available themes are: Dark, Light, DarkBlue, Green
+
 ---
 
 # 🛠 Building
