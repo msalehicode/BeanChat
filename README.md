@@ -93,11 +93,39 @@ or browse
 
 ---
 
-## 🎥 Preview v0.17.4
-https://github.com/user-attachments/assets/9dd1aafb-20a4-4aa3-b21d-816efbbe39e1
+## 📸 Screenshots v0.33.90
 
+<p align="center">
+  <img src="screenshots/v0.33.90/main.png" width="48%">
+  <img src="screenshots/v0.33.90/mainvoice.png" width="48%">
+</p>
 
+<p align="center">
+  <img src="screenshots/v0.33.90/connect.png" width="31%">
+  <img src="screenshots/v0.33.90/servercode.png" width="31%">
+  <img src="screenshots/v0.33.90/qrcode.png" width="31%">
+</p>
 
+<p align="center">
+  <img src="screenshots/v0.33.90/createchannel.png" width="31%">
+  <img src="screenshots/v0.33.90/channelsetting.png" width="31%">
+  <img src="screenshots/v0.33.90/status.png" width="31%">
+</p>
+
+<p align="center">
+  <img src="screenshots/v0.33.90/profile.png" width="48%">
+  <img src="screenshots/v0.33.90/userprofile.png" width="48%">
+</p>
+
+<p align="center">
+  <img src="screenshots/v0.33.90/settingsinput.png" width="31%">
+  <img src="screenshots/v0.33.90/settingsoutput.png" width="31%">
+  <img src="screenshots/v0.33.90/settingsprofile.png" width="31%">
+</p>
+
+<p align="center">
+  <img src="screenshots/v0.33.90/settingstheme.png" width="31%">
+</p>
 
 
 ---
